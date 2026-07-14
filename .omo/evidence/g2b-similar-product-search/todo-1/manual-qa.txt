@@ -1,0 +1,28 @@
+Todo 1 E0 CLI manual QA
+
+1. Help surface
+argv: uv run python tools/validate_e0.py --help
+exit_code: 0
+stdout_sha256: cebcced9114915287003cc58c457f19767edbb795bdffcc47cb7cbc6a4691a39
+stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+observable: usage, positional manifest, -h/--help options visible
+
+2. Valid synthetic external package
+argv: uv run python tools/validate_e0.py .omo/evidence/g2b-similar-product-search/todo-1/tmp/manifest.json
+exit_code: 0
+stdout_sha256: 9ff48d22a07e684c8946834308ef2964b46d8ec70cf3a8c5c927dc02f5a91edd
+stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+observable: records=2 files=1, no labels or source bytes created or changed
+
+3. Omitted declared file
+argv: uv run python tools/validate_e0.py .omo/evidence/g2b-similar-product-search/todo-1/tmp/missing-manifest.json
+exit_code: 2
+stdout_sha256: c030823ccdff38a3253bc344c7a9c330b2def781e18989a313c7670d2f26829f
+stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+observable: typed E0 missing-file message, omitted path visible, no secret content
+
+4. Cleanup
+path: .omo/evidence/g2b-similar-product-search/todo-1/tmp
+result: removed after QA; no synthetic package retained
+
+Redaction: no service key or user secret supplied; hashes cover literal captured streams.

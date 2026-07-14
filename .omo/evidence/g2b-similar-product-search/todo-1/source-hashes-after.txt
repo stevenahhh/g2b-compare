@@ -1,0 +1,6 @@
+command: C:\Program Files\Git\bin\bash.exe -lc 'sha256sum -c docs/source-artifacts.sha256'
+exit_code: 0
+docs/reference/조달청_OpenAPI참고자료_나라장터_종합쇼핑몰품목정보서비스_1.3.docx: OK
+dataset/250725-전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 내역서.xlsx: OK
+dataset/순천 향교 CCTV 구매 설치 - 내역서(관급)(0706수정).xlsx: OK
+dataset/전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 - 내역서(관급)(최종).xlsx: OK

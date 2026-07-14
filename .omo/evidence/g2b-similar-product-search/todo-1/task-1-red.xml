@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.102" timestamp="2026-07-14T16:03:15.688172+09:00" hostname="steve"><testcase classname="tests.unit.test_config" name="test_configuration_boundary_exists" time="0.002"><failure message="AssertionError: Todo 1 configuration boundary is missing&#10;assert False">def test_configuration_boundary_exists() -&gt; None:
+        # Given: the declared Todo 1 source layout
+        config_module = Path("src/g2b_compare/config.py")
+    
+        # When: the configuration boundary is inspected
+        exists = config_module.is_file()
+    
+        # Then: the production configuration implementation must be present
+&gt;       assert exists, "Todo 1 configuration boundary is missing"
+E       AssertionError: Todo 1 configuration boundary is missing
+E       assert False
+
+tests\unit\test_config.py:12: AssertionError</failure></testcase></testsuite></testsuites>

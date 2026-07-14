@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.199" timestamp="2026-07-14T16:38:29.978952+09:00" hostname="steve"><testcase classname="tests.acceptance.test_todo_1" name="test_failure_scenario_matches_registry_contract[missing-sync-key]" time="0.007" /></testsuite></testsuites>

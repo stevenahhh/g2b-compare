@@ -1,0 +1,55 @@
+Todo 1 verifier fix 1 transcript
+
+Finding 1: missing-sync-key registry regex did not match actual Pydantic output.
+Test-first change: acceptance now invokes SyncSettings.model_validate({}), captures the
+real ValidationError, and checks its class and message against the registry.
+
+RED
+argv: uv run pytest tests/acceptance/test_todo_1.py -q -k missing-sync-key --junitxml=.omo/evidence/g2b-similar-product-search/todo-1/fix-1/red.xml
+exit_code: 1
+observable: registry regex G2B_SERVICE_KEY did not match actual service_key ValidationError
+red_xml_sha256: f3d83cdd2582416f8f1cdecc67f91fd07553bcfb3858cd34dcf4a9d76df20221
+
+Registry fix
+file: tests/acceptance/expected-failures.json
+change: todo-1/missing-sync-key message_regex G2B_SERVICE_KEY -> service_key
+
+GREEN
+argv: uv run pytest tests/acceptance/test_todo_1.py -q -k missing-sync-key --junitxml=.omo/evidence/g2b-similar-product-search/todo-1/fix-1/green.xml
+exit_code: 0
+observable: 1 passed, 13 deselected
+green_xml_sha256: 23078f6bd987be579accd77ee75f05b8731a85cdea843af4b25bc5aaec0d9e5e
+
+Finding 2: acceptance previously checked only non-empty registry strings.
+Fix: all 13 scenarios now invoke real source/config/E0 boundaries and assert the
+registered exception class plus regex against the observed exception.
+Refactor: node definitions remain in test_todo_1.py; source/config and E0 scenario
+runners are split into todo_1_scenarios.py and todo_1_e0_cases.py to keep every
+Python file below 250 pure LOC.
+
+Final verification
+argv: uv run pytest tests/unit tests/acceptance/test_todo_1.py -q
+exit_code: 0
+observable: 34 passed
+argv: uv run basedpyright tests/acceptance/test_todo_1.py tests/acceptance/todo_1_scenarios.py tests/acceptance/todo_1_e0_cases.py src/g2b_compare/config.py src/g2b_compare/evaluation/e0_schema.py
+exit_code: 0
+observable: 0 errors, 0 warnings, 0 notes
+argv: uv run ruff format --check .
+exit_code: 0
+observable: 16 files already formatted
+argv: uv run ruff check .
+exit_code: 0
+observable: all checks passed
+argv: uv run check-no-excuse-rules.py tests/acceptance/test_todo_1.py tests/acceptance/todo_1_scenarios.py tests/acceptance/todo_1_e0_cases.py src/g2b_compare/config.py src/g2b_compare/evaluation/e0_schema.py
+exit_code: 0
+observable: no violations in 5 files
+argv: uv run pytest tests/acceptance/test_todo_1.py -q (run 1)
+exit_code: 0
+observable: 14 passed
+argv: uv run pytest tests/acceptance/test_todo_1.py -q (run 2)
+exit_code: 0
+observable: 14 passed
+
+Git/commit actions: not performed.
+base_commit: WORKTREE_UNCOMMITTED
+green_commit: WORKTREE_UNCOMMITTED

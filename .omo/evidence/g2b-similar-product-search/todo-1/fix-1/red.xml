@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.333" timestamp="2026-07-14T16:31:29.026333+09:00" hostname="steve"><testcase classname="tests.acceptance.test_todo_1" name="test_failure_scenario_matches_registry_contract[missing-sync-key]" time="0.010"><failure message="AssertionError: assert None is not None&#10; +  where None = &lt;function search at 0x00000271A26154E0&gt;('G2B_SERVICE_KEY', '1 validation error for SyncSettings\nservice_key\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing')&#10; +    where &lt;function search at 0x00000271A26154E0&gt; = re.search&#10; +    and   'G2B_SERVICE_KEY' = FailureContract(assertion_class='ValidationError', message_regex='G2B_SERVICE_KEY').message_regex&#10; +    and   '1 validation error for SyncSettings\nservice_key\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing' = FailureObservation(assertion_class='ValidationError', message='1 validation error for SyncSettings\nservice_key\n  Fie...ssing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing').message">scenario = 'missing-sync-key'
+tmp_path = WindowsPath('C:/Users/steve/AppData/Local/Temp/pytest-of-steve/pytest-724/test_failure_scenario_matches_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000271A589D820&gt;
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=SCENARIOS)
+    def test_failure_scenario_matches_registry_contract(
+        scenario: Scenario,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+    ) -&gt; None:
+        # Given: a registered failure contract and its real boundary input
+        registry = TypeAdapter(dict[str, FailureContract]).validate_json(
+            Path("tests/acceptance/expected-failures.json").read_bytes()
+        )
+        contract = registry[f"todo-1/{scenario}"]
+    
+        # When: the real production boundary rejects the scenario
+        observation = _observe_failure(scenario, tmp_path, monkeypatch)
+    
+        # Then: the actual exception class and message satisfy the registry
+        assert observation.assertion_class == contract.assertion_class
+&gt;       assert re.search(contract.message_regex, observation.message) is not None
+E       AssertionError: assert None is not None
+E        +  where None = &lt;function search at 0x00000271A26154E0&gt;('G2B_SERVICE_KEY', '1 validation error for SyncSettings\nservice_key\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing')
+E        +    where &lt;function search at 0x00000271A26154E0&gt; = re.search
+E        +    and   'G2B_SERVICE_KEY' = FailureContract(assertion_class='ValidationError', message_regex='G2B_SERVICE_KEY').message_regex
+E        +    and   '1 validation error for SyncSettings\nservice_key\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing' = FailureObservation(assertion_class='ValidationError', message='1 validation error for SyncSettings\nservice_key\n  Fie...ssing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing').message
+
+tests\acceptance\test_todo_1.py:136: AssertionError</failure></testcase></testsuite></testsuites>

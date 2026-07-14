@@ -1,0 +1,15 @@
+{
+  "todo-1/missing-source-artifact": {"assertion_class": "SourceArtifactError", "message_regex": "source artifact.*missing"},
+  "todo-1/missing-hash-baseline": {"assertion_class": "SourceBaselineError", "message_regex": "hash baseline.*missing"},
+  "todo-1/unexpected-source-count": {"assertion_class": "SourceCountError", "message_regex": "expected 4 source artifacts"},
+  "todo-1/missing-sync-key": {"assertion_class": "ValidationError", "message_regex": "service_key"},
+  "todo-1/public-bind": {"assertion_class": "ValidationError", "message_regex": "127\\.0\\.0\\.1"},
+  "todo-1/arbitrary-host": {"assertion_class": "ValidationError", "message_regex": "127\\.0\\.0\\.1"},
+  "todo-1/http-base": {"assertion_class": "ValidationError", "message_regex": "HTTPS"},
+  "todo-1/bad-budget": {"assertion_class": "ValidationError", "message_regex": "daily.*budget"},
+  "todo-1/e0-missing-file": {"assertion_class": "E0MissingFileError", "message_regex": "missing"},
+  "todo-1/e0-schema": {"assertion_class": "E0SchemaError", "message_regex": "schema"},
+  "todo-1/e0-count": {"assertion_class": "E0CountError", "message_regex": "count"},
+  "todo-1/e0-stratum": {"assertion_class": "E0StratumError", "message_regex": "stratum"},
+  "todo-1/e0-hash": {"assertion_class": "E0HashError", "message_regex": "hash"}
+}
