@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import os
+import json
 import re
-import xml.etree.ElementTree as ET
+from hashlib import sha256
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import ClassVar, Final, Literal
 
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter
@@ -47,9 +47,20 @@ SCENARIOS = (
     "request-manifest-key-leak",
 )
 MIGRATION = Path("src/g2b_compare/db/migrations/0001_initial.sql")
-RED_JUNIT = Path(".omo/evidence/g2b-similar-product-search/todo-3/task-3-red.xml")
 REGISTRY = Path("tests/acceptance/expected-failures.json")
-CAPTURE_RED_ENV: Final = "G2B_TODO3_CAPTURE_RED"
+RED_PROVENANCE = Path("tests/acceptance/fixtures/todo3-red-provenance.json")
+RED_PROVENANCE_SHA256: Final = (
+    "df2619717995ca450bda7c2d0d131dd979de857d9fa5fd14c4bafac75c89ebc0"
+)
+RED_NODES_SHA256: Final = (
+    "653f126a0c10325f9ccdd7ffc9f2c0d5f65b596df804dda62c618b6b152c5564"
+)
+SYNTHETIC_LIMITATION: Final = (
+    "The source JUnit was produced by an environment-gated synthetic harness; "
+    "it records registry contracts but does not prove production scenario-boundary "
+    "failures."
+)
+SCENARIO_TEST_NAME: Final = "test_failure_scenario_matches_registry_contract"
 
 
 class FailureContract(BaseModel):
@@ -59,62 +70,57 @@ class FailureContract(BaseModel):
     message_regex: str
 
 
-class RegisteredRedError(AssertionError):
-    pass
+class RedFailureRecord(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    test_name: str
+    assertion_class: str
+    message: str
+    contract_sha256: str
 
 
-RED_MESSAGES: Final[dict[str, str]] = {
-    "kill-before-rename": "raw blob atomic rename is unavailable",
-    "kill-before-pointer": "active source pointer must remain unchanged",
-    "fk": "foreign key constraints must be enforced",
-    "duplicate-source-key": "duplicate source key rejected",
-    "canonical-json-xml-equivalence": "JSON and XML canonical records are equivalent",
-    "canonical-key-order-equivalence": "key order canonical records are equivalent",
-    "relevant-content-change": "relevant content fingerprint must change",
-    "price-only-no-requeue": "price-only change must not requeue",
-    "cross-operation-offer-key": "operation and offer key form identity",
-    "attribute-origin-missing": "attribute origin is missing",
-    "attribute-state-missing": "active product requires exactly one state",
-    "attribute-state-transition": "invalid attribute state transition",
-    "attribute-deleted-upstream": "deleted upstream attribute is removed",
-    "attribute-complete-empty": "complete-empty requires zero records",
-    "attribute-partial-page-retains-old": "partial page must retain prior rows",
-    "attribute-coverage-count": "attribute coverage must equal active products",
-    "request-fingerprint-collision": "request fingerprint collision detected",
-    "duplicate-window-page": "duplicate window page rejected",
-    "cross-operation-request-sha": "operation participates in request fingerprint",
-    "quota-concurrent-ceiling": "concurrent quota ceiling enforced",
-    "quota-crash-after-reserve": "crash leaves reserved call consumed",
-    "quota-retry-reservation": "retry receives new reservation",
-    "db-lock": "database locked within busy timeout",
-    "bad-migration": "migration failed on schema version drift",
-    "prune-active-raw": "active source raw is retained",
-    "prune-active-attribute-origin": "active attribute origin raw is retained",
-    "prune-materialization-origin": "materialization origin raw is retained",
-    "missing-origin-page": "origin page is missing",
-    "materialization-digest-collision": "materialization digest collision detected",
-    "raw-sha-mismatch": "raw SHA mismatch detected",
-    "corrupt-gzip": "gzip payload is corrupt",
-    "text-plain-raw": "text/plain raw payload is preserved",
-    "request-manifest-key-leak": "request manifest service key must be redacted",
-}
-HAPPY_RED_MESSAGE: Final = "Todo 3 database lifecycle is unavailable"
+class RedCaptureReceipt(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    kind: Literal["synthetic-contract-receipt"]
+    feature_base_commit: Literal["bd299c0d5db284ec2df23f1a29792aba2e4c6c34"]
+    recorded_commit: Literal["5453599ea2db3d03dd46d0ed41684a31a963162e"]
+    source_junit_sha256: Literal[
+        "d933a0d0d0d7f54da60d3c5dd5692dff4d057bfd0fdb227329821612d9d1bf91"
+    ]
+    command: str
+    exit_code: Literal[1]
+    limitation: str
+
+
+class RedProvenance(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    schema_version: Literal["1"]
+    capture: RedCaptureReceipt
+    nodes_sha256: str
+    nodes: dict[str, RedFailureRecord]
+
+
+@pytest.fixture(scope="session")
+def _audit_preserved_red_contracts() -> None:
+    encoded = RED_PROVENANCE.read_bytes()
+    tampered = encoded.replace(b'"exit_code": 1', b'"exit_code": 0', 1)
+    assert tampered != encoded
+    with pytest.raises(AssertionError, match="receipt SHA mismatch"):
+        _audit_red_provenance(tampered)
+    _audit_red_provenance(encoded)
+
+
+pytestmark = pytest.mark.usefixtures(_audit_preserved_red_contracts.__name__)
 
 
 def test_happy(tmp_path: Path) -> None:
     # Given: the Todo 3 migration contract
-    contract = _failure_contracts()["todo-3/happy"]
-    if os.getenv(CAPTURE_RED_ENV) == "1":
-        RegisteredRedError.__name__ = contract.assertion_class
-        RegisteredRedError.__qualname__ = contract.assertion_class
-        raise RegisteredRedError(HAPPY_RED_MESSAGE)
     assert MIGRATION.is_file()
     # When: the complete successor and materialization lifecycle runs
     HAPPY_RUNNER(tmp_path)
     # Then: the real SQLite observables are asserted by the runner
-    failure_class, failure_message = _preserved_red_node("test_happy")
-    assert failure_class == contract.assertion_class
-    assert re.search(contract.message_regex, failure_message) is not None
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS, ids=SCENARIOS)
@@ -123,37 +129,57 @@ def test_failure_scenario_matches_registry_contract(
     tmp_path: Path,
 ) -> None:
     # Given: one registered Todo 3 failure scenario
-    contract = _failure_contracts()[f"todo-3/{scenario}"]
-    if os.getenv(CAPTURE_RED_ENV) == "1":
-        RegisteredRedError.__name__ = contract.assertion_class
-        RegisteredRedError.__qualname__ = contract.assertion_class
-        raise RegisteredRedError(RED_MESSAGES[scenario])
     runner = SCENARIO_RUNNERS[scenario]
     # When: its real temporary database/filesystem contract is exercised
     runner(tmp_path)
     # Then: its binary observable is asserted by the runner
-    failure_class, failure_message = _preserved_red_failure(scenario)
-    assert failure_class == contract.assertion_class
-    assert re.search(contract.message_regex, failure_message) is not None
 
 
 def _failure_contracts() -> dict[str, FailureContract]:
     return TypeAdapter(dict[str, FailureContract]).validate_json(REGISTRY.read_bytes())
 
 
-def _preserved_red_failure(scenario: str) -> tuple[str, str]:
-    expected_name = f"test_failure_scenario_matches_registry_contract[{scenario}]"
-    return _preserved_red_node(expected_name)
-
-
-def _preserved_red_node(expected_name: str) -> tuple[str, str]:
-    root = ET.parse(RED_JUNIT).getroot()  # noqa: S314
-    for testcase in root.iter("testcase"):
-        if testcase.attrib.get("name") != expected_name:
-            continue
-        failure = testcase.find("failure")
-        assert failure is not None
-        message = failure.attrib["message"]
-        qualified_class = message.partition(":")[0]
-        return qualified_class.rsplit(".", 1)[-1], message
-    pytest.fail(f"preserved RED node missing: {expected_name}")
+def _audit_red_provenance(encoded: bytes) -> None:
+    normalized = encoded.replace(b"\r\n", b"\n")
+    assert sha256(normalized).hexdigest() == RED_PROVENANCE_SHA256, (
+        "RED provenance receipt SHA mismatch"
+    )
+    provenance = RedProvenance.model_validate_json(encoded)
+    assert provenance.capture.limitation == SYNTHETIC_LIMITATION
+    expected_keys = {"todo-3/happy"} | {
+        f"todo-3/{scenario}" for scenario in SCENARIOS
+    }
+    assert set(provenance.nodes) == expected_keys
+    canonical_nodes = {
+        key: {
+            "assertion_class": failure.assertion_class,
+            "contract_sha256": failure.contract_sha256,
+            "message": failure.message,
+            "test_name": failure.test_name,
+        }
+        for key, failure in provenance.nodes.items()
+    }
+    canonical = json.dumps(
+        canonical_nodes,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    assert provenance.nodes_sha256 == RED_NODES_SHA256
+    assert sha256(canonical).hexdigest() == RED_NODES_SHA256
+    contracts = _failure_contracts()
+    for registry_key, failure in provenance.nodes.items():
+        contract = contracts[registry_key]
+        expected_name = (
+            "test_happy"
+            if registry_key == "todo-3/happy"
+            else f"{SCENARIO_TEST_NAME}[{registry_key.removeprefix('todo-3/')}]"
+        )
+        assert failure.test_name == expected_name
+        assert failure.assertion_class == contract.assertion_class
+        assert re.search(contract.message_regex, failure.message) is not None
+        digest_input = (
+            f"{registry_key}\0{failure.test_name}\0"
+            f"{failure.assertion_class}\0{failure.message}"
+        )
+        assert sha256(digest_input.encode()).hexdigest() == failure.contract_sha256

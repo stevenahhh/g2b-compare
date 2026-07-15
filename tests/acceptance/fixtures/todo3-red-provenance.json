@@ -1,0 +1,219 @@
+{
+  "schema_version": "1",
+  "capture": {
+    "kind": "synthetic-contract-receipt",
+    "feature_base_commit": "bd299c0d5db284ec2df23f1a29792aba2e4c6c34",
+    "recorded_commit": "5453599ea2db3d03dd46d0ed41684a31a963162e",
+    "source_junit_sha256": "d933a0d0d0d7f54da60d3c5dd5692dff4d057bfd0fdb227329821612d9d1bf91",
+    "command": "$env:G2B_TODO3_CAPTURE_RED='1'; uv run pytest tests/acceptance/test_todo_3.py -q --junitxml=.omo/evidence/g2b-similar-product-search/todo-3/task-3-red.xml",
+    "exit_code": 1,
+    "limitation": "The source JUnit was produced by an environment-gated synthetic harness; it records registry contracts but does not prove production scenario-boundary failures."
+  },
+  "nodes_sha256": "653f126a0c10325f9ccdd7ffc9f2c0d5f65b596df804dda62c618b6b152c5564",
+  "nodes": {
+    "todo-3/happy": {
+      "test_name": "test_happy",
+      "assertion_class": "Todo3NotImplementedError",
+      "message": "Todo 3 database lifecycle is unavailable",
+      "contract_sha256": "74bc99af6c733a2a4e8480ae68f196b0c1647cea3cdeb4cf5b6ac80fc9d49e3f"
+    },
+    "todo-3/kill-before-rename": {
+      "test_name": "test_failure_scenario_matches_registry_contract[kill-before-rename]",
+      "assertion_class": "AtomicRawWriteError",
+      "message": "raw blob atomic rename is unavailable",
+      "contract_sha256": "fc443fd6fd50be707e71f2a1efbe28d72398b0ea70378471728c9715d9c6d902"
+    },
+    "todo-3/kill-before-pointer": {
+      "test_name": "test_failure_scenario_matches_registry_contract[kill-before-pointer]",
+      "assertion_class": "AtomicPublishError",
+      "message": "active source pointer must remain unchanged",
+      "contract_sha256": "009b2b8894825c25141c469f54677e4ed53dd28bdfe07690550c3477b6154a7f"
+    },
+    "todo-3/fk": {
+      "test_name": "test_failure_scenario_matches_registry_contract[fk]",
+      "assertion_class": "ForeignKeyIntegrityError",
+      "message": "foreign key constraints must be enforced",
+      "contract_sha256": "9af9058ad18de98a718c82a5dcb87690499911a3147aeb8c5f7032e5ec99778f"
+    },
+    "todo-3/duplicate-source-key": {
+      "test_name": "test_failure_scenario_matches_registry_contract[duplicate-source-key]",
+      "assertion_class": "DuplicateSourceKeyError",
+      "message": "duplicate source key rejected",
+      "contract_sha256": "5f4afd628f19de1ae8d678d7cc0c797ed4b12d6119b1cfd01513349950effec6"
+    },
+    "todo-3/canonical-json-xml-equivalence": {
+      "test_name": "test_failure_scenario_matches_registry_contract[canonical-json-xml-equivalence]",
+      "assertion_class": "CanonicalRecordHashError",
+      "message": "JSON and XML canonical records are equivalent",
+      "contract_sha256": "275370be81ea4641d99d1688cbbd7ffeae9af7ccd076af9f5811a81096da010b"
+    },
+    "todo-3/canonical-key-order-equivalence": {
+      "test_name": "test_failure_scenario_matches_registry_contract[canonical-key-order-equivalence]",
+      "assertion_class": "CanonicalRecordHashError",
+      "message": "key order canonical records are equivalent",
+      "contract_sha256": "cdec562375d50a8a57a73c82d4e13d74a93c1d05656bed99e1c0eabe80bd0005"
+    },
+    "todo-3/relevant-content-change": {
+      "test_name": "test_failure_scenario_matches_registry_contract[relevant-content-change]",
+      "assertion_class": "SourceFingerprintError",
+      "message": "relevant content fingerprint must change",
+      "contract_sha256": "6cfc9f2afd867dd4bf5e89c575bd3d9f0fb2fd728c4daccf12ec186b07f94507"
+    },
+    "todo-3/price-only-no-requeue": {
+      "test_name": "test_failure_scenario_matches_registry_contract[price-only-no-requeue]",
+      "assertion_class": "AttributeRequeueError",
+      "message": "price-only change must not requeue",
+      "contract_sha256": "f1dd6321ffde51981c2f49afcd2f2589704f61f6d727a8ee42ba3d7ba2c33483"
+    },
+    "todo-3/cross-operation-offer-key": {
+      "test_name": "test_failure_scenario_matches_registry_contract[cross-operation-offer-key]",
+      "assertion_class": "OfferIdentityError",
+      "message": "operation and offer key form identity",
+      "contract_sha256": "52f9ee8c98ae679d0ce65957345eebc48addcc328c5fb6b96da39f68f9629553"
+    },
+    "todo-3/attribute-origin-missing": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-origin-missing]",
+      "assertion_class": "AttributeOriginError",
+      "message": "attribute origin is missing",
+      "contract_sha256": "8684f1c0866e77a4705c866b7298b1c8027c24cddc7beeb2b6e9925f4c15704b"
+    },
+    "todo-3/attribute-state-missing": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-state-missing]",
+      "assertion_class": "AttributeStateError",
+      "message": "active product requires exactly one state",
+      "contract_sha256": "a5eb2bf6e5cbfd3f3e1dc1b9fbf4485aebc6d2791a738cf45252e72e73d38e30"
+    },
+    "todo-3/attribute-state-transition": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-state-transition]",
+      "assertion_class": "AttributeStateTransitionError",
+      "message": "invalid attribute state transition",
+      "contract_sha256": "4b603682a00cc9629cf1eaf9a63615d89e4d87945901addc0f7a41d729c77fbb"
+    },
+    "todo-3/attribute-deleted-upstream": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-deleted-upstream]",
+      "assertion_class": "AttributeReplacementError",
+      "message": "deleted upstream attribute is removed",
+      "contract_sha256": "2bae63e7971daee080fd5a895aed48b4594aafd754b0ea0a6ee41365d59fdd8e"
+    },
+    "todo-3/attribute-complete-empty": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-complete-empty]",
+      "assertion_class": "AttributeReplacementError",
+      "message": "complete-empty requires zero records",
+      "contract_sha256": "2d39592a4366e784cc7d5afbec21f0fd203bc86028ac58b2fcd2f0e32a91adc6"
+    },
+    "todo-3/attribute-partial-page-retains-old": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-partial-page-retains-old]",
+      "assertion_class": "AttributeReplacementError",
+      "message": "partial page must retain prior rows",
+      "contract_sha256": "748bd4dfd24dee24422afec904ce6032070fecdd89f9916aca540dc4dfa64e89"
+    },
+    "todo-3/attribute-coverage-count": {
+      "test_name": "test_failure_scenario_matches_registry_contract[attribute-coverage-count]",
+      "assertion_class": "AttributeCoverageError",
+      "message": "attribute coverage must equal active products",
+      "contract_sha256": "26137ce1cc3dbeee40112318d8ee03814a9899def02769e792dcf727e74bd82b"
+    },
+    "todo-3/request-fingerprint-collision": {
+      "test_name": "test_failure_scenario_matches_registry_contract[request-fingerprint-collision]",
+      "assertion_class": "RequestFingerprintError",
+      "message": "request fingerprint collision detected",
+      "contract_sha256": "9870800cbbf5f7002b34e250c941de4f5365d41b9221f83b63b07f17b761495a"
+    },
+    "todo-3/duplicate-window-page": {
+      "test_name": "test_failure_scenario_matches_registry_contract[duplicate-window-page]",
+      "assertion_class": "DuplicateSyncPageError",
+      "message": "duplicate window page rejected",
+      "contract_sha256": "d02f5007f32401056412f2f3e13ddf756a1770ca6f1937325080184c338cd43e"
+    },
+    "todo-3/cross-operation-request-sha": {
+      "test_name": "test_failure_scenario_matches_registry_contract[cross-operation-request-sha]",
+      "assertion_class": "RequestFingerprintError",
+      "message": "operation participates in request fingerprint",
+      "contract_sha256": "1b0e82273c0f2d14d733d9347d7e516596b7b1aa03db33230406843e9f2187ae"
+    },
+    "todo-3/quota-concurrent-ceiling": {
+      "test_name": "test_failure_scenario_matches_registry_contract[quota-concurrent-ceiling]",
+      "assertion_class": "QuotaReservationError",
+      "message": "concurrent quota ceiling enforced",
+      "contract_sha256": "e4eb55ef06515f473784c22ace629797a285b4beb480ad6ce62acdb4ebcea710"
+    },
+    "todo-3/quota-crash-after-reserve": {
+      "test_name": "test_failure_scenario_matches_registry_contract[quota-crash-after-reserve]",
+      "assertion_class": "QuotaReservationError",
+      "message": "crash leaves reserved call consumed",
+      "contract_sha256": "06cd8a94b5b9d611003715e3a1264eb26a6375c54550672ad006dfbcfae01c9e"
+    },
+    "todo-3/quota-retry-reservation": {
+      "test_name": "test_failure_scenario_matches_registry_contract[quota-retry-reservation]",
+      "assertion_class": "QuotaReservationError",
+      "message": "retry receives new reservation",
+      "contract_sha256": "38549f715bca13271445bc68f8648f3289e2d91af388a3768077cac597529388"
+    },
+    "todo-3/db-lock": {
+      "test_name": "test_failure_scenario_matches_registry_contract[db-lock]",
+      "assertion_class": "DatabaseLockError",
+      "message": "database locked within busy timeout",
+      "contract_sha256": "958fad852c49eeb231969e3c7b083fe64448daeedf15d832f25539fb5e6f31e0"
+    },
+    "todo-3/bad-migration": {
+      "test_name": "test_failure_scenario_matches_registry_contract[bad-migration]",
+      "assertion_class": "MigrationError",
+      "message": "migration failed on schema version drift",
+      "contract_sha256": "db33ee65feb7f108a9eaa408a355d720656fd98939b834d5e0100fd431c65bc2"
+    },
+    "todo-3/prune-active-raw": {
+      "test_name": "test_failure_scenario_matches_registry_contract[prune-active-raw]",
+      "assertion_class": "RawRetentionError",
+      "message": "active source raw is retained",
+      "contract_sha256": "babe04a7e2b3af2efeb8886466eac6f8ab62bfbcc856f026372ff94fc96a926e"
+    },
+    "todo-3/prune-active-attribute-origin": {
+      "test_name": "test_failure_scenario_matches_registry_contract[prune-active-attribute-origin]",
+      "assertion_class": "RawRetentionError",
+      "message": "active attribute origin raw is retained",
+      "contract_sha256": "04e66bbe31e316000f053e1a9616f34d3c6dddad2a1fc58c9c63aa7aad9eba25"
+    },
+    "todo-3/prune-materialization-origin": {
+      "test_name": "test_failure_scenario_matches_registry_contract[prune-materialization-origin]",
+      "assertion_class": "RawRetentionError",
+      "message": "materialization origin raw is retained",
+      "contract_sha256": "e9568500b14d567b61b528bf39c345d73effbedb6d0c46a5d5d9bee3ab0be812"
+    },
+    "todo-3/missing-origin-page": {
+      "test_name": "test_failure_scenario_matches_registry_contract[missing-origin-page]",
+      "assertion_class": "ProvenanceIntegrityError",
+      "message": "origin page is missing",
+      "contract_sha256": "5a54c1082828ccb8e861de16760e43bfdaa2457e13ce51a50f0ea86fac69b097"
+    },
+    "todo-3/materialization-digest-collision": {
+      "test_name": "test_failure_scenario_matches_registry_contract[materialization-digest-collision]",
+      "assertion_class": "MaterializationDigestError",
+      "message": "materialization digest collision detected",
+      "contract_sha256": "d1d7ea17d38a03b6cf4cc3770f9680b31785dbc91a91213c7c56d081e9803a2e"
+    },
+    "todo-3/raw-sha-mismatch": {
+      "test_name": "test_failure_scenario_matches_registry_contract[raw-sha-mismatch]",
+      "assertion_class": "RawBlobIntegrityError",
+      "message": "raw SHA mismatch detected",
+      "contract_sha256": "cdbd95391c7a7fdbf1274ab49643f7cad9aaf49381405b66aad3274744c4f183"
+    },
+    "todo-3/corrupt-gzip": {
+      "test_name": "test_failure_scenario_matches_registry_contract[corrupt-gzip]",
+      "assertion_class": "RawBlobIntegrityError",
+      "message": "gzip payload is corrupt",
+      "contract_sha256": "d29b925c8479bc9c476d73e99b2d440d604d3a84365c7ec759b49ac28745b05c"
+    },
+    "todo-3/text-plain-raw": {
+      "test_name": "test_failure_scenario_matches_registry_contract[text-plain-raw]",
+      "assertion_class": "RawMediaPreservationError",
+      "message": "text/plain raw payload is preserved",
+      "contract_sha256": "0924684541b062557147e9b8c424cd033e7893b811ff41c940d665831276bfb9"
+    },
+    "todo-3/request-manifest-key-leak": {
+      "test_name": "test_failure_scenario_matches_registry_contract[request-manifest-key-leak]",
+      "assertion_class": "SecretLeakError",
+      "message": "request manifest service key must be redacted",
+      "contract_sha256": "2d8d06d6904cfd9c3252f0e019218608c332683cdd8d03e2b7dcc7da5643e4fb"
+    }
+  }
+}
