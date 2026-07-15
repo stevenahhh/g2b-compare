@@ -146,9 +146,7 @@ def _audit_red_provenance(encoded: bytes) -> None:
     )
     provenance = RedProvenance.model_validate_json(encoded)
     assert provenance.capture.limitation == SYNTHETIC_LIMITATION
-    expected_keys = {"todo-3/happy"} | {
-        f"todo-3/{scenario}" for scenario in SCENARIOS
-    }
+    expected_keys = {"todo-3/happy"} | {f"todo-3/{scenario}" for scenario in SCENARIOS}
     assert set(provenance.nodes) == expected_keys
     canonical_nodes = {
         key: {
