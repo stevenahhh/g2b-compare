@@ -64,6 +64,10 @@ class AttributeRepository:
             raise RepositoryContractError(detail="nonempty state requires records")
         if state.fetch_status == "complete-empty" and records:
             raise RepositoryContractError(detail="empty state forbids records")
+        if any(record.product_id != state.product_id for record in records):
+            raise RepositoryContractError(
+                detail="attribute record product identity must match state"
+            )
         with connect(self.database) as connection:
             _ = query(connection, "BEGIN IMMEDIATE")
             _ = query(
