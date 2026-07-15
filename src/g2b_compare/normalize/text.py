@@ -7,7 +7,7 @@ import unicodedata
 from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
 
-from .tokens import PROTECTED_PATTERN, tokenize
+from .tokens import PROTECTED_PATTERN, UNSUPPORTED_COMPOUND_PATTERN, tokenize
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +67,15 @@ def normalize_text(raw: str) -> NormalizedText:
     protected: list[ProtectedSpan] = []
     cursor = 0
     raw_bytes = raw.encode("utf-8")
+    unsupported = tuple(
+        match.span() for match in UNSUPPORTED_COMPOUND_PATTERN.finditer(nfkc)
+    )
     for match in PROTECTED_PATTERN.finditer(nfkc):
+        overlaps_unsupported = any(
+            match.start() < end and match.end() > start for start, end in unsupported
+        )
+        if overlaps_unsupported:
+            continue
         pieces.append(nfkc[cursor : match.start()].casefold())
         pieces.append(match.group(0))
         start_byte, end_byte = _source_span(

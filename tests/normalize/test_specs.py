@@ -106,6 +106,9 @@ def test_invalid_quantity_contract(raw: str, error: type[ValueError]) -> None:
         "10m/s",
         "8MP/s",
         "550\u00d7600\u00d7550mm",
+        "600 x 1800 x 750mm",
+        "600 X 1800 X 750mm",
+        "600 \u00d7 1800 \u00d7 750mm",
         "30fps>=x",
         "30fps 이상급",
         "10-20Hz급",
@@ -117,6 +120,26 @@ def test_unsupported_compounds_never_emit_partial_semantics(raw: str) -> None:
     assert parsed.normalized.protected == ()
     assert parsed.spans == ()
     assert parsed.semantics == ()
+
+
+@pytest.mark.parametrize(
+    ("raw", "protected"),
+    [
+        ("3~12mm,", "3~12mm"),
+        ("10TB,", "10TB"),
+        ("6TB,", "6TB"),
+    ],
+)
+def test_trailing_comma_keeps_supported_quantity_protected(
+    raw: str,
+    protected: str,
+) -> None:
+    parsed = parse_specs(raw)
+    assert parsed.raw == raw
+    assert parsed.normalized.tokens == (protected,)
+    assert tuple(span.raw for span in parsed.normalized.protected) == (protected,)
+    assert tuple(span.raw for span in parsed.spans) == (protected,)
+    assert len(parsed.semantics) == 1
 
 
 _RANGE_UNITS = ("mm", "Hz", "V", "W", "GB", "FPS", "MP")

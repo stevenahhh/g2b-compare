@@ -27,8 +27,16 @@ RANGE_PATTERN: Final = (
 RELATION_PATTERN: Final = rf"{QUANTITY_PATTERN}\s*(?:이상|이하|초과|미만|>=|<=|>|<)"
 _RELATION_SUFFIX: Final = r"(?:이상|이하|초과|미만|>=|<=|>|<)"
 _LEFT_BOUNDARY: Final = r"(?<![\d.,A-Za-z/\u00d7~<>=-])"
-_COMPOUND_END: Final = r"(?![\d.,A-Za-z/\u00d7~<>=-])"
+_COMPOUND_END: Final = r"(?![\d.A-Za-z/\u00d7~<>=-]|,\d)"
 _STRUCTURED_END: Final = rf"{_COMPOUND_END}(?![가-힣])"
+_UNSUPPORTED_COMPOUND_TOKEN: Final = "".join(
+    (
+        _LEFT_BOUNDARY,
+        rf"{NUMBER_WITH_MAN}\s*[xX\u00d7]\s*{NUMBER_WITH_MAN}\s*",
+        rf"[xX\u00d7]\s*{NUMBER_WITH_MAN}(?:\s*{UNIT_PATTERN})?",
+        rf"{_STRUCTURED_END}(?!\s*[xX\u00d7]\s*{NUMBER_WITH_MAN})",
+    ),
+)
 _PROTECTED_TOKEN: Final = "".join(
     (
         _LEFT_BOUNDARY,
@@ -37,9 +45,15 @@ _PROTECTED_TOKEN: Final = "".join(
         rf"{_COMPOUND_END})",
     ),
 )
+UNSUPPORTED_COMPOUND_PATTERN: Final = re.compile(_UNSUPPORTED_COMPOUND_TOKEN)
 PROTECTED_PATTERN: Final = re.compile(_PROTECTED_TOKEN)
 TOKEN_PATTERN: Final = re.compile(
-    rf"{_PROTECTED_TOKEN}|[가-힣]+|[a-z0-9]+(?:[-_.][a-z0-9]+)*",
+    "".join(
+        (
+            rf"{_UNSUPPORTED_COMPOUND_TOKEN}|{_PROTECTED_TOKEN}|",
+            r"[가-힣]+|[a-z0-9]+(?:[-_.][a-z0-9]+)*",
+        ),
+    ),
 )
 
 
