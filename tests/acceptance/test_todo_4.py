@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import ClassVar
 
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 from g2b_compare.normalize import normalize_text, parse_specs
 from tests.acceptance.todo_4_scenarios import SCENARIOS, Scenario, observe_failure
-
-_RED_MODE: Final = os.environ.get("TODO4_FORCE_RED_SIGNATURES") == "1"
 
 
 class FailureContract(BaseModel):
@@ -27,12 +24,6 @@ def _registry() -> dict[str, FailureContract]:
     return TypeAdapter(dict[str, FailureContract]).validate_json(
         Path("tests/acceptance/expected-failures.json").read_bytes()
     )
-
-
-def _raise_registered_red(assertion_class: str, message: str) -> None:
-    if _RED_MODE:
-        error_type = type(assertion_class, (AssertionError,), {})
-        raise error_type(message)
 
 
 def test_happy() -> None:
@@ -50,10 +41,6 @@ def test_happy() -> None:
         "total-pixel",
     ]
     assert parse_specs("4배줌").semantics[0].attribute_key == "zoom"
-    _raise_registered_red(
-        contract.assertion_class,
-        "Todo 4 normalization module is not implemented",
-    )
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS, ids=SCENARIOS)
@@ -65,4 +52,3 @@ def test_failure_scenario_matches_registry_contract(
     observation = observe_failure(scenario, tmp_path)
     assert observation.assertion_class == contract.assertion_class
     assert re.search(contract.message_regex, observation.message) is not None
-    _raise_registered_red(observation.assertion_class, observation.message)

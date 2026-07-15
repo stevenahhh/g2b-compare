@@ -1,0 +1,2 @@
+tests/fixtures/**/*.json text eol=lf
+tests/acceptance/provenance/*.json text eol=lf
