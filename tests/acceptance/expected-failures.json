@@ -45,5 +45,22 @@
   "todo-3/raw-sha-mismatch": {"assertion_class": "RawBlobIntegrityError", "message_regex": "raw.*SHA.*mismatch"},
   "todo-3/corrupt-gzip": {"assertion_class": "RawBlobIntegrityError", "message_regex": "gzip.*corrupt"},
   "todo-3/text-plain-raw": {"assertion_class": "RawMediaPreservationError", "message_regex": "text/plain.*raw.*preserved"},
-  "todo-3/request-manifest-key-leak": {"assertion_class": "SecretLeakError", "message_regex": "request manifest.*service key.*redacted"}
+  "todo-3/request-manifest-key-leak": {"assertion_class": "SecretLeakError", "message_regex": "request manifest.*service key.*redacted"},
+  "todo-4/happy": {"assertion_class": "Todo4NotImplementedError", "message_regex": "Todo 4 normalization module.*not implemented"},
+  "todo-4/token-order": {"assertion_class": "TokenOrderError", "message_regex": "token.*source order"},
+  "todo-4/protect-before-casefold": {"assertion_class": "ProtectedTokenError", "message_regex": "protected.*before.*casefold"},
+  "todo-4/mp-domain-case": {"assertion_class": "UnitAliasError", "message_regex": "MP.*megapixel.*case-insensitive"},
+  "todo-4/protected-decimal": {"assertion_class": "ProtectedTokenError", "message_regex": "decimal quantity.*protected"},
+  "todo-4/relation-boundary": {"assertion_class": "RelationParseError", "message_regex": "relation.*boundary"},
+  "todo-4/range-boundary": {"assertion_class": "RangeParseError", "message_regex": "range.*boundary"},
+  "todo-4/sign-range-precedence": {"assertion_class": "SignRangePrecedenceError", "message_regex": "sign.*range.*precedence"},
+  "todo-4/pure-korean-unsupported": {"assertion_class": "UnsupportedNumberError", "message_regex": "pure Korean numeral.*unsupported"},
+  "todo-4/zero": {"assertion_class": "InvalidQuantityError", "message_regex": "quantity.*greater than zero"},
+  "todo-4/negative": {"assertion_class": "InvalidQuantityError", "message_regex": "negative quantity.*rejected"},
+  "todo-4/broken-range": {"assertion_class": "RangeParseError", "message_regex": "broken range.*rejected"},
+  "todo-4/si-case": {"assertion_class": "UnitAliasError", "message_regex": "SI unit.*case-sensitive"},
+  "todo-4/formula-error": {"assertion_class": "WorkbookFormulaError", "message_regex": "workbook.*formula.*error"},
+  "todo-4/external-link": {"assertion_class": "WorkbookExternalLinkError", "message_regex": "workbook.*external link"},
+  "todo-4/ambiguous-number": {"assertion_class": "AmbiguousNumberError", "message_regex": "ambiguous number.*rejected"},
+  "todo-4/source-hash-change": {"assertion_class": "WorkbookSourceHashError", "message_regex": "source workbook.*SHA.*changed"}
 }

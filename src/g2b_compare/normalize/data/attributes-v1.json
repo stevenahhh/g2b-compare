@@ -1,0 +1,5 @@
+{
+  "version": "v1",
+  "dimension_attributes": ["width", "height", "total-pixel"],
+  "scalar_attributes": ["resolution", "size", "zoom", "angle", "length", "frequency", "voltage", "power", "storage", "frame-rate"]
+}

@@ -1,0 +1,433 @@
+{
+  "relation_grammar": {
+    "child_cells": [
+      "N11",
+      "N12",
+      "N13",
+      "N14",
+      "N15",
+      "N16",
+      "N17",
+      "N18",
+      "N19",
+      "N20",
+      "N21",
+      "N22"
+    ],
+    "curated_relationship_count": 12,
+    "headers": [
+      {
+        "coordinate": "B8",
+        "value": "1-1. 본품"
+      },
+      {
+        "coordinate": "B10",
+        "value": "1-2. 우수제품 옵션품목"
+      },
+      {
+        "coordinate": "B26",
+        "value": "2-1. 옵션품목"
+      }
+    ],
+    "parent": {
+      "coordinate": "N9",
+      "value": "24684676"
+    },
+    "product_id_pattern": "\\A[0-9]{8}\\Z",
+    "schema_version": "workbook-relations-v1",
+    "sheet": "자재내역서",
+    "source_sha256": "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db",
+    "unbound_option_cells": [
+      "N27",
+      "N28",
+      "N29"
+    ],
+    "unbound_option_count": 3
+  },
+  "schema_version": "workbook-manifest-v1",
+  "workbooks": [
+    {
+      "filename": "250725-전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 내역서.xlsx",
+      "sha256": "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db",
+      "sheets": [
+        {
+          "columns": 5,
+          "dimension": "A1:E12",
+          "formula_cells": 0,
+          "merged_ranges": 6,
+          "name": "갑지",
+          "rows": 12
+        },
+        {
+          "columns": 14,
+          "dimension": "A1:N19",
+          "formula_cells": 5,
+          "merged_ranges": 29,
+          "name": "표지",
+          "rows": 19
+        },
+        {
+          "columns": 8,
+          "dimension": "B1:H57",
+          "formula_cells": 4,
+          "merged_ranges": 20,
+          "name": "원가계산서",
+          "rows": 57
+        },
+        {
+          "columns": 14,
+          "dimension": "A1:N25",
+          "formula_cells": 20,
+          "merged_ranges": 10,
+          "name": "집계표",
+          "rows": 25
+        },
+        {
+          "columns": 18,
+          "dimension": "B1:R31",
+          "formula_cells": 37,
+          "merged_ranges": 23,
+          "name": "자재내역서",
+          "rows": 31
+        },
+        {
+          "columns": 8,
+          "dimension": "B1:H60",
+          "formula_cells": 19,
+          "merged_ranges": 11,
+          "name": "현명견적서",
+          "rows": 60
+        }
+      ],
+      "totals": {
+        "curated_relationships": 12,
+        "external_links": 0,
+        "formula_cells": 85,
+        "merged_ranges": 99,
+        "unbound_options": 3
+      }
+    },
+    {
+      "filename": "순천 향교 CCTV 구매 설치 - 내역서(관급)(0706수정).xlsx",
+      "sha256": "2220cd9936ebdf908d64c0571a4c8de83973eaa89c6778a64afec07de7c5e701",
+      "sheets": [
+        {
+          "columns": 70,
+          "dimension": "A1:BR65",
+          "formula_cells": 75,
+          "merged_ranges": 14,
+          "name": "수량산출서 (2)",
+          "rows": 65
+        },
+        {
+          "columns": 16,
+          "dimension": "A4:P28",
+          "formula_cells": 0,
+          "merged_ranges": 7,
+          "name": "표지 ",
+          "rows": 28
+        },
+        {
+          "columns": 9,
+          "dimension": "A1:I16",
+          "formula_cells": 0,
+          "merged_ranges": 3,
+          "name": "설계설명서",
+          "rows": 16
+        },
+        {
+          "columns": 15,
+          "dimension": "A1:O35",
+          "formula_cells": 5,
+          "merged_ranges": 23,
+          "name": "설계표지",
+          "rows": 35
+        },
+        {
+          "columns": 15,
+          "dimension": "A1:O43",
+          "formula_cells": 41,
+          "merged_ranges": 1,
+          "name": "원가",
+          "rows": 43
+        },
+        {
+          "columns": 16,
+          "dimension": "A1:P36",
+          "formula_cells": 7,
+          "merged_ranges": 12,
+          "name": "도급집계표",
+          "rows": 36
+        },
+        {
+          "columns": 14,
+          "dimension": "A1:N27",
+          "formula_cells": 6,
+          "merged_ranges": 11,
+          "name": "도급내역서",
+          "rows": 27
+        },
+        {
+          "columns": 22,
+          "dimension": "A1:V15",
+          "formula_cells": 26,
+          "merged_ranges": 21,
+          "name": "도급일위대가표",
+          "rows": 15
+        },
+        {
+          "columns": 1,
+          "dimension": "A1:A1",
+          "formula_cells": 0,
+          "merged_ranges": 0,
+          "name": "표준품셈",
+          "rows": 1
+        },
+        {
+          "columns": 256,
+          "dimension": "A1:IV37",
+          "formula_cells": 0,
+          "merged_ranges": 14,
+          "name": "노임단가",
+          "rows": 37
+        },
+        {
+          "columns": 15,
+          "dimension": "A1:O23",
+          "formula_cells": 10,
+          "merged_ranges": 10,
+          "name": "관급집계표",
+          "rows": 23
+        },
+        {
+          "columns": 23,
+          "dimension": "A1:W25",
+          "formula_cells": 96,
+          "merged_ranges": 16,
+          "name": "관급내역서",
+          "rows": 25
+        },
+        {
+          "columns": 58,
+          "dimension": "A1:BF19",
+          "formula_cells": 26,
+          "merged_ranges": 12,
+          "name": "수량산출서",
+          "rows": 19
+        },
+        {
+          "columns": 18,
+          "dimension": "A1:R28",
+          "formula_cells": 87,
+          "merged_ranges": 10,
+          "name": "단가조사",
+          "rows": 28
+        },
+        {
+          "columns": 1,
+          "dimension": "A1:A1",
+          "formula_cells": 0,
+          "merged_ranges": 0,
+          "name": "물가정보",
+          "rows": 1
+        },
+        {
+          "columns": 17,
+          "dimension": "A1:Q20",
+          "formula_cells": 72,
+          "merged_ranges": 28,
+          "name": "조달물품",
+          "rows": 20
+        },
+        {
+          "columns": 11,
+          "dimension": "A1:K7",
+          "formula_cells": 0,
+          "merged_ranges": 1,
+          "name": "설치 구성도",
+          "rows": 7
+        },
+        {
+          "columns": 9,
+          "dimension": "A1:I10",
+          "formula_cells": 1,
+          "merged_ranges": 7,
+          "name": "공정표",
+          "rows": 10
+        },
+        {
+          "columns": 18,
+          "dimension": "B2:R47",
+          "formula_cells": 34,
+          "merged_ranges": 17,
+          "name": "견적서",
+          "rows": 47
+        },
+        {
+          "columns": 7,
+          "dimension": "A1:G36",
+          "formula_cells": 36,
+          "merged_ranges": 11,
+          "name": "견적서2",
+          "rows": 36
+        }
+      ],
+      "totals": {
+        "curated_relationships": 0,
+        "external_links": 319,
+        "formula_cells": 522,
+        "merged_ranges": 218,
+        "unbound_options": 0
+      }
+    },
+    {
+      "filename": "전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 - 내역서(관급)(최종).xlsx",
+      "sha256": "8a55700bdaf62a00c208c7286531fd56ca321571f73f7620505a823ef5d4d0f1",
+      "sheets": [
+        {
+          "columns": 70,
+          "dimension": "A1:BR65",
+          "formula_cells": 75,
+          "merged_ranges": 14,
+          "name": "수량산출서 (2)",
+          "rows": 65
+        },
+        {
+          "columns": 16,
+          "dimension": "A4:P28",
+          "formula_cells": 0,
+          "merged_ranges": 7,
+          "name": "표지 ",
+          "rows": 28
+        },
+        {
+          "columns": 15,
+          "dimension": "A1:O43",
+          "formula_cells": 41,
+          "merged_ranges": 1,
+          "name": "원가",
+          "rows": 43
+        },
+        {
+          "columns": 16,
+          "dimension": "A1:P36",
+          "formula_cells": 7,
+          "merged_ranges": 12,
+          "name": "도급집계표",
+          "rows": 36
+        },
+        {
+          "columns": 14,
+          "dimension": "A1:N27",
+          "formula_cells": 6,
+          "merged_ranges": 11,
+          "name": "도급내역서",
+          "rows": 27
+        },
+        {
+          "columns": 22,
+          "dimension": "A1:V15",
+          "formula_cells": 26,
+          "merged_ranges": 21,
+          "name": "도급일위대가표",
+          "rows": 15
+        },
+        {
+          "columns": 1,
+          "dimension": "A1:A1",
+          "formula_cells": 0,
+          "merged_ranges": 0,
+          "name": "표준품셈",
+          "rows": 1
+        },
+        {
+          "columns": 256,
+          "dimension": "A1:IV37",
+          "formula_cells": 0,
+          "merged_ranges": 14,
+          "name": "노임단가",
+          "rows": 37
+        },
+        {
+          "columns": 15,
+          "dimension": "A1:O23",
+          "formula_cells": 10,
+          "merged_ranges": 10,
+          "name": "관급집계표",
+          "rows": 23
+        },
+        {
+          "columns": 23,
+          "dimension": "A1:W41",
+          "formula_cells": 246,
+          "merged_ranges": 16,
+          "name": "관급내역서",
+          "rows": 41
+        },
+        {
+          "columns": 55,
+          "dimension": "A1:BC29",
+          "formula_cells": 50,
+          "merged_ranges": 8,
+          "name": "수량산출서",
+          "rows": 29
+        },
+        {
+          "columns": 18,
+          "dimension": "A1:R28",
+          "formula_cells": 207,
+          "merged_ranges": 10,
+          "name": "단가조사",
+          "rows": 28
+        },
+        {
+          "columns": 9,
+          "dimension": "A1:I43",
+          "formula_cells": 148,
+          "merged_ranges": 9,
+          "name": "코리아넷 견적서",
+          "rows": 43
+        },
+        {
+          "columns": 18,
+          "dimension": "D1:R44",
+          "formula_cells": 148,
+          "merged_ranges": 159,
+          "name": "비교견적서1",
+          "rows": 44
+        },
+        {
+          "columns": 11,
+          "dimension": "A1:K48",
+          "formula_cells": 150,
+          "merged_ranges": 75,
+          "name": "비교견적서2",
+          "rows": 48
+        },
+        {
+          "columns": 1,
+          "dimension": "A1:A1",
+          "formula_cells": 0,
+          "merged_ranges": 0,
+          "name": "물가정보",
+          "rows": 1
+        },
+        {
+          "columns": 11,
+          "dimension": "A1:K7",
+          "formula_cells": 0,
+          "merged_ranges": 1,
+          "name": "설치 구성도",
+          "rows": 7
+        }
+      ],
+      "totals": {
+        "curated_relationships": 0,
+        "external_links": 253,
+        "formula_cells": 1114,
+        "merged_ranges": 368,
+        "unbound_options": 0
+      }
+    }
+  ]
+}

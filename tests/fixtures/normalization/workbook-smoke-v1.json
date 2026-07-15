@@ -1,0 +1,12 @@
+{
+  "cases": [
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D9:HM-WLC-C20BA, 200만 화소, 3~12mm, 뷸렛카메라, 전원공급장치, TTA인증",
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D11:HY_WIP_HS26A_04D, 200만 화소, 3.6~11mm 광학3배, 돔카메라, TTA인증",
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D12:현명, HMI-SIN25B-E, 10TB, 25채널, TTA인증",
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D14:CN/ST6000VX0023, 6TB, Seagate",
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D21:에스지정보산업, SGMH-500-3, 550×600×550mm",
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D22:(CN)24MP400, 60.4cm",
+    "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db:자재내역서:D28:네트워크시스템장비용랙, 600 x 1800 x 750mm"
+  ],
+  "schema_version": "normalization-workbook-smoke-v1"
+}
