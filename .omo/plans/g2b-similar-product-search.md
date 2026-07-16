@@ -306,7 +306,7 @@ Your next move: 이 계획을 `$start-work`로 실행하면 됨. 아래는 구�
   Byte QA additions: Todo 10 failure IDs에 `csr-unsorted-index`, `csr-duplicate-feature`, `csr-negative-zero`, `empty-index-bytes`, `member-missing`, `member-extra`, `json-newline`, `hash-framing`, `manifest-circularity`를 포함하고 exact 8-member golden directory와 artifact/manifest SHA를 비교함.
   Commit: Y | `feat(search): build exact versioned local index`
 
-- [ ] 11. 결정론적 옵션·숫자·가격 랭커와 3슬롯 계약 구현
+- [x] 11. 결정론적 옵션·숫자·가격 랭커와 3슬롯 계약 구현
   What to do / Must NOT do: `src/g2b_compare/ranking/{features.py,formula.py,matching.py,explain.py,topk.py}`, `tests/ranking/`, `tests/acceptance/test_todo_11.py`를 만듦. 후보는 anchor와 exact category tuple·product name key가 같고 active이며 다른 product ID여야 함. token은 regex-v1임. 각 quantity local context는 quantity token을 제외한 앞 3개+뒤 3개 regex-v1 token을 space join하고 char_wb 3-5gram binary cosine으로 비교함. structured spec은 same attribute+dimension, 아니면 unknown attribute의 context cosine≥0.75+dimension, 양쪽 context empty이면 dimension이 각 side 1회일 때만 match함. maximum-weight one-to-one, tie는 anchor span→candidate span임. Ranking formula v1의 scalar/range/U/P/A/D/S/B/coverage·quantization·총정렬을 그대로 구현함. product dedupe 후 3 slots; D=0 non-null 후보는 `no_comparison_evidence`, 실제 부족만 null `insufficient_candidates`임.
   Parallelization: Wave 3 | Blocked by: 4, 9, 10 | Blocks: 12, 13, 15
   References: `.omo/teams/team-c4bb5e40/artifacts/similarity-retrieval.md:79-206`; `.omo/ulw-research/20260714-095047/verify-data-coverage.md:26-39`.
