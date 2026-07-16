@@ -28,6 +28,8 @@ ALLOWLISTED_PARAMETER_NAMES: Final = frozenset(
         "chgDtEndDt",
         "cntrctCorpNm",
         "inqryDiv",
+        "inqryBgnDate",
+        "inqryEndDate",
         "numOfRows",
         "pageNo",
         "prdctClsfcNoNm",
@@ -233,6 +235,19 @@ class IngestRepository:
                 """,
                 (status_code, state, reservation_id),
             )
+
+    def quota_usage(self, operation: str, cutoff_utc: str) -> int:
+        """Count consumed reservations in the conservative rolling window."""
+        with connect(self.database) as connection:
+            row = query(
+                connection,
+                """
+                SELECT COUNT(*) FROM api_call_ledger
+                WHERE operation = ? AND attempted_at_utc >= ?
+                """,
+                (operation, cutoff_utc),
+            ).fetchone()
+        return 0 if row is None else as_int(row[0])
 
 
 def _row_id(cursor: ResultCursor) -> int:

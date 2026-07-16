@@ -15,8 +15,13 @@ from pydantic import (
 from pydantic_core import PydanticCustomError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-G2B_API_BASE_URL: Final = "https://apis.data.go.kr/1230000/ShoppingMallPrdctInfoService"
-G2B_ITEM_LIST_URL: Final = f"{G2B_API_BASE_URL}/getShoppingMallPrdctInfoList01"
+G2B_API_BASE_URL: Final = (
+    "https://apis.data.go.kr/1230000/at/ShoppingMallPrdctInfoService"
+)
+G2B_ATTRIBUTE_API_BASE_URL: Final = (
+    "https://apis.data.go.kr/1230000/ao/ThngListInfoService02"
+)
+G2B_ITEM_LIST_URL: Final = f"{G2B_API_BASE_URL}/getShoppingMallPrdctInfoList"
 OFFICIAL_BASE_ERROR_CODE: Final = "official_https"
 OFFICIAL_BASE_ERROR_MESSAGE: Final = (
     "production base must use the official HTTPS endpoint"

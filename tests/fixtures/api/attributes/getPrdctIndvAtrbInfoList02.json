@@ -1,0 +1,1 @@
+{"operation":"getPrdctIndvAtrbInfoList02","payload_sha256":"83e42dad3575baa82679b53f820d6b1eae2234958009a0b0231fc2d7f8941e8d","required_fields":["attrNm","attrUnit","attrVal","dtilPrdctClsfcNo","prdctIdntNo","prdctIdntNoNm","source_ordinal"],"sample_stable_key":{"attrNm":"도어형태","prdctIdntNo":"22065235","source_ordinal":0},"total_count":9}
