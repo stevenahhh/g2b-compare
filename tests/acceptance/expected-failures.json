@@ -84,5 +84,13 @@
   "todo-2/limit-unproven": {"assertion_class": "CaptureBlockedError", "message_regex": "limit-unproven"},
   "todo-2/provisional-schema-not-strict": {"assertion_class": "CaptureBlockedError", "message_regex": "malformed-envelope"},
   "todo-2/unverified-share-field": {"assertion_class": "OperationCapture", "message_regex": "deep-link-supported=false; share-link-preflight=not-attempted"},
-  "todo-2/share-preflight-redirect": {"assertion_class": "OperationCapture", "message_regex": "deep-link-supported=false; share-link-preflight=redirect-rejected"}
+  "todo-2/share-preflight-redirect": {"assertion_class": "OperationCapture", "message_regex": "deep-link-supported=false; share-link-preflight=redirect-rejected"},
+  "todo-5/401-text": {"assertion_class": "AuthenticationTransportError", "message_regex": "^permanent authentication error: HTTP 401$"},
+  "todo-5/404-text": {"assertion_class": "ContractTransportError", "message_regex": "^provider contract error: HTTP 404$"},
+  "todo-5/wrong-content-type": {"assertion_class": "ContentTypeTransportError", "message_regex": "^unsupported provider content type: text/plain$"},
+  "todo-5/malformed": {"assertion_class": "MalformedEnvelopeError", "message_regex": "^malformed provider envelope$"},
+  "todo-5/timeout": {"assertion_class": "RetryableTransportError", "message_regex": "^retryable provider error after 3 attempt\\(s\\): timeout$"},
+  "todo-5/429-retry-after": {"assertion_class": "RetryableTransportError", "message_regex": "^retryable provider error after 3 attempt\\(s\\): HTTP 429$"},
+  "todo-5/5xx-exhausted": {"assertion_class": "RetryableTransportError", "message_regex": "^retryable provider error after 3 attempt\\(s\\): HTTP 503$"},
+  "todo-5/secret-url": {"assertion_class": "AuthenticationTransportError", "message_regex": "^permanent authentication error: HTTP 401$"}
 }
