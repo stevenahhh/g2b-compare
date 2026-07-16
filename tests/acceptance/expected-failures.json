@@ -145,5 +145,19 @@
   "todo-8/one-source-cancel": {"assertion_class": "Todo8Observation", "message_regex": "^product-active-from-other-offer=1$"},
   "todo-8/absence-delta": {"assertion_class": "Todo8Observation", "message_regex": "^delta-absence-tombstones=0$"},
   "todo-8/absence-full": {"assertion_class": "Todo8Observation", "message_regex": "^full-absence-tombstones=1$"},
-  "todo-8/registration-key-mismatch": {"assertion_class": "SyncInvariantError", "message_regex": "^registration-key-mismatch$"}
+  "todo-8/registration-key-mismatch": {"assertion_class": "SyncInvariantError", "message_regex": "^registration-key-mismatch$"},
+  "todo-9/conflict-name": {"assertion_class": "CanonicalProduct", "message_regex": "^latest-name=선택명$"},
+  "todo-9/missing-detail": {"assertion_class": "OptionText", "message_regex": "^spec:8MP \\| characteristic:방수$"},
+  "todo-9/zero-price": {"assertion_class": "ComparisonPrice", "message_regex": "^inactive:zero-price$"},
+  "todo-9/negative-price": {"assertion_class": "ComparisonPrice", "message_regex": "^inactive:negative-price$"},
+  "todo-9/mixed-unit": {"assertion_class": "ComparisonPrice", "message_regex": "^inactive:mixed-unit$"},
+  "todo-9/partial-attribute": {"assertion_class": "AttributeCoverage", "message_regex": "^coverage=1/2$"},
+  "todo-9/option-first-nonempty-fallback": {"assertion_class": "OptionText", "message_regex": "^detail:세부 \\| characteristic:특성$"},
+  "todo-9/attribute-order": {"assertion_class": "OptionText", "message_regex": "^attr:a=1 \\| attr:z=2$"},
+  "todo-9/segment-delimiter": {"assertion_class": "OptionText", "message_regex": "^spec:사양 \\| detail:상세$"},
+  "todo-9/segment-duplicate": {"assertion_class": "OptionText", "message_regex": "^attr:모델=x$"},
+  "todo-9/all-empty-option": {"assertion_class": "OptionText", "message_regex": "^empty-option$"},
+  "todo-9/option-byte-sha": {"assertion_class": "OptionText", "message_regex": "^sha=[0-9a-f]{64}$"},
+  "todo-9/one-offer-removed": {"assertion_class": "CanonicalProduct", "message_regex": "^active=1$"},
+  "todo-9/unmatched-registration-cancel": {"assertion_class": "CanonicalProduct", "message_regex": "^active=1$"}
 }
