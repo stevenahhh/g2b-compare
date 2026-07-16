@@ -92,5 +92,21 @@
   "todo-5/timeout": {"assertion_class": "RetryableTransportError", "message_regex": "^retryable provider error after 3 attempt\\(s\\): timeout$"},
   "todo-5/429-retry-after": {"assertion_class": "RetryableTransportError", "message_regex": "^retryable provider error after 3 attempt\\(s\\): HTTP 429$"},
   "todo-5/5xx-exhausted": {"assertion_class": "RetryableTransportError", "message_regex": "^retryable provider error after 3 attempt\\(s\\): HTTP 503$"},
-  "todo-5/secret-url": {"assertion_class": "AuthenticationTransportError", "message_regex": "^permanent authentication error: HTTP 401$"}
+  "todo-5/secret-url": {"assertion_class": "AuthenticationTransportError", "message_regex": "^permanent authentication error: HTTP 401$"},
+  "todo-7/missing-delivery-source-key": {"assertion_class": "DeliveryParseResult", "message_regex": "^events=1; quarantined-source-ordinals=1; relations=0$"},
+  "todo-7/cooccurrence": {"assertion_class": "DeliveryParseResult", "message_regex": "^events=1; quarantined-source-ordinals=1; relations=0$"},
+  "todo-7/wrong-workbook-relation": {"assertion_class": "WorkbookRelationImport", "message_regex": "^snapshot=None; relations=0; quarantined=0$"},
+  "todo-7/comparison-column-as-relation": {"assertion_class": "WorkbookRelationImport", "message_regex": "^snapshot=None; relations=0; quarantined=0$"},
+  "todo-7/header-drift": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation header_drift:B10$"},
+  "todo-7/formula-id": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation formula_id:N11$"},
+  "todo-7/merged-id": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation merged_id:N11$"},
+  "todo-7/zero-import": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation zero_import:$"},
+  "todo-7/unexpected-relation-count": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation manifest_drift:$"},
+  "todo-7/missing-parent": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation missing_parent:N9$"},
+  "todo-7/missing-child": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation missing_child:N11$"},
+  "todo-7/unbound-option": {"assertion_class": "WorkbookRelationImport", "message_regex": "^relations=12; quarantined=3; relation-quarantine-overlap=0$"},
+  "todo-7/self-link": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation self_link:N11$"},
+  "todo-7/bad-id": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation bad_id:N11$"},
+  "todo-7/duplicate-row": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation duplicate_row:N12$"},
+  "todo-7/source-hash-mismatch": {"assertion_class": "RelationImportError", "message_regex": "^workbook relation source_hash_mismatch:$"}
 }
