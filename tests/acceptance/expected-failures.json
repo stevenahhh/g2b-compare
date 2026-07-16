@@ -159,5 +159,21 @@
   "todo-9/all-empty-option": {"assertion_class": "OptionText", "message_regex": "^empty-option$"},
   "todo-9/option-byte-sha": {"assertion_class": "OptionText", "message_regex": "^sha=[0-9a-f]{64}$"},
   "todo-9/one-offer-removed": {"assertion_class": "CanonicalProduct", "message_regex": "^active=1$"},
-  "todo-9/unmatched-registration-cancel": {"assertion_class": "CanonicalProduct", "message_regex": "^active=1$"}
+  "todo-9/unmatched-registration-cancel": {"assertion_class": "CanonicalProduct", "message_regex": "^active=1$"},
+  "todo-10/wrong-category": {"assertion_class": "IndexMembershipError", "message_regex": "^wrong-category$"},
+  "todo-10/no-detail-expansion": {"assertion_class": "IndexMembershipError", "message_regex": "^no-detail-expansion$"},
+  "todo-10/fts5-disabled": {"assertion_class": "FTS5UnavailableError", "message_regex": "^fts5-disabled$"},
+  "todo-10/bad-index-version": {"assertion_class": "IndexFormatError", "message_regex": "^bad-index-version$"},
+  "todo-10/empty-db": {"assertion_class": "IndexMembershipError", "message_regex": "^empty-db$"},
+  "todo-10/network-at-search": {"assertion_class": "SearchPurityError", "message_regex": "^network-at-search$"},
+  "todo-10/db-write-at-search": {"assertion_class": "SearchPurityError", "message_regex": "^db-write-at-search$"},
+  "todo-10/csr-unsorted-index": {"assertion_class": "IndexFormatError", "message_regex": "^csr-unsorted-index$"},
+  "todo-10/csr-duplicate-feature": {"assertion_class": "IndexFormatError", "message_regex": "^csr-duplicate-feature$"},
+  "todo-10/csr-negative-zero": {"assertion_class": "IndexFormatError", "message_regex": "^csr-negative-zero$"},
+  "todo-10/empty-index-bytes": {"assertion_class": "IndexFormatError", "message_regex": "^empty-index-bytes$"},
+  "todo-10/member-missing": {"assertion_class": "IndexFormatError", "message_regex": "^member-missing$"},
+  "todo-10/member-extra": {"assertion_class": "IndexFormatError", "message_regex": "^member-extra$"},
+  "todo-10/json-newline": {"assertion_class": "IndexFormatError", "message_regex": "^json-newline$"},
+  "todo-10/hash-framing": {"assertion_class": "IndexFormatError", "message_regex": "^hash-framing$"},
+  "todo-10/manifest-circularity": {"assertion_class": "IndexFormatError", "message_regex": "^manifest-circularity$"}
 }

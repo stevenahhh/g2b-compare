@@ -1,0 +1,45 @@
+{
+  "artifact_sha256": "df7c61ab5c26e4fd4cae1ad29feed94f41316cd399d705e656443dbee35ba098",
+  "manifest_sha256": "3265979a60846828f9ba2f6dcd2b8590916479a5c1590a7ac16193669ad59c7a",
+  "word_features": [
+    "800",
+    "800 \ub9cc",
+    "800\ub9cc\ud654\uc18c",
+    "800\ub9cc\ud654\uc18c \uc2e4\uc678\ud615",
+    "8MP",
+    "8MP \uc2e4\ub0b4\ud615",
+    "model-x",
+    "model-x \ubc29\uc218",
+    "\ub9cc",
+    "\ub9cc \ud654\uc18c",
+    "\ubc29\uc218",
+    "\uc2e4\ub0b4\ud615",
+    "\uc2e4\uc678\ud615",
+    "\ud654\uc18c"
+  ],
+  "char_features": [
+    " 80", " 800", " 800 ", " 800\ub9cc", " 8M", " 8MP", " 8MP ",
+    " mo", " mod", " mode", " \ub9cc ", " \ubc29\uc218", " \ubc29\uc218 ",
+    " \uc2e4\ub0b4", " \uc2e4\ub0b4\ud615", " \uc2e4\ub0b4\ud615 ",
+    " \uc2e4\uc678", " \uc2e4\uc678\ud615", " \uc2e4\uc678\ud615 ",
+    " \ud654\uc18c", " \ud654\uc18c ", "-x ", "00 ", "00\ub9cc",
+    "00\ub9cc\ud654", "00\ub9cc\ud654\uc18c", "0\ub9cc\ud654",
+    "0\ub9cc\ud654\uc18c", "0\ub9cc\ud654\uc18c ", "800", "800 ",
+    "800\ub9cc", "800\ub9cc\ud654", "8MP", "8MP ", "MP ", "del", "del-",
+    "del-x", "el-", "el-x", "el-x ", "l-x", "l-x ", "mod", "mode",
+    "model", "ode", "odel", "odel-", "\ub0b4\ud615 ", "\ub9cc\ud654\uc18c",
+    "\ub9cc\ud654\uc18c ", "\ubc29\uc218 ", "\uc2e4\ub0b4\ud615",
+    "\uc2e4\ub0b4\ud615 ", "\uc2e4\uc678\ud615", "\uc2e4\uc678\ud615 ",
+    "\uc678\ud615 ", "\ud654\uc18c "
+  ],
+  "members_sha256": {
+    "char-idf.f64le": "5ff59d4730d857db051696b533aed28b80d370f3d8dba411048a7f12f329ce81",
+    "char-matrix.csr1": "b1772939aaed0180197c9818252e6860f0d9c4b481ff86998cc8292f9e3274d4",
+    "char-vocabulary.json": "291d5bc64e23fdbded59bdc1b41c19268dd0c61adc69dc5f84a16366ae8a5af1",
+    "product-rows.json": "3fff0986645d14bf65ed14ba405d2d3688e4dd69fe3c4ab14e9d62f916d3692f",
+    "settings.json": "88dc21276dfd1cf695c4308da1eeb9219223faf0802ffb6b829720678096d2ed",
+    "word-idf.f64le": "664cc1a6e0aebded7f0f013df3bfb6a8c984a4962c34bd970c321855a6396cf3",
+    "word-matrix.csr1": "de4bba2ff48f03ddf745f7397ee48199d48d72073be33e547b2871ea061a7240",
+    "word-vocabulary.json": "f482a1a6c4511352d8cd867c31be82bd60819d4b69a04567010af7c3113ebc85"
+  }
+}
