@@ -73,3 +73,35 @@ def connect(database: Path) -> Generator[sqlite3.Connection]:
         yield connection
     finally:
         connection.close()
+
+
+@contextmanager
+def connect_read_only(database: Path) -> Generator[sqlite3.Connection]:
+    """Open a URI mode=ro connection before applying connection-only pragmas."""
+    uri = f"{database.resolve().as_uri()}?mode=ro"
+    connection = sqlite3.connect(
+        uri,
+        uri=True,
+        timeout=BUSY_TIMEOUT_MS / 1_000,
+        isolation_level=None,
+    )
+    try:
+        _ = connection.execute("PRAGMA query_only = ON")
+        _ = connection.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
+        query_only = query(connection, "PRAGMA query_only").fetchone()
+        busy_timeout = query(connection, "PRAGMA busy_timeout").fetchone()
+        if query_only != (1,):
+            raise SQLiteConfigurationError(
+                setting="query_only",
+                expected="1",
+                actual=str(query_only),
+            )
+        if busy_timeout != (BUSY_TIMEOUT_MS,):
+            raise SQLiteConfigurationError(
+                setting="busy_timeout",
+                expected=str(BUSY_TIMEOUT_MS),
+                actual=str(busy_timeout),
+            )
+        yield connection
+    finally:
+        connection.close()

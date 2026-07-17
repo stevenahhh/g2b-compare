@@ -25,6 +25,11 @@ from g2b_compare.errors import (
     E0StratumError,
 )
 
+from .e0_export_models import ExportManifest
+from .e0_export_validation import validate_export_package
+from .e0_strict_models import StrictManifest
+from .e0_strict_validation import validate_strict_package
+
 Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 SAFE_PATH_ERROR_CODE: Final = "safe_relative_path"
 SAFE_PATH_ERROR_MESSAGE: Final = "declared file path must be a safe relative path"
@@ -80,12 +85,74 @@ class E0ValidationReport:
     total_count: int
     file_count: int
     strata: dict[str, int]
+    schema_version: str = "e0-v1"
 
 
-def validate_e0_package(manifest_path: Path) -> E0ValidationReport:
+def validate_e0_package(
+    manifest_path: Path,
+    *,
+    strict: bool = False,
+    source_export: Path | None = None,
+) -> E0ValidationReport:
     """Validate schema, file presence, hashes, counts, and strata."""
     if not manifest_path.is_file():
         raise E0MissingFileError(path=manifest_path)
+
+    schema_version = _schema_version(manifest_path)
+    if schema_version == "e0-export-v1":
+        return _validate_export(manifest_path, strict=strict)
+    if schema_version == "e0-strict-v1":
+        return _validate_strict(manifest_path, source_export)
+    if strict:
+        raise E0SchemaError(
+            path=manifest_path,
+            detail="strict validation requires e0-strict-v1",
+        )
+    return _validate_legacy(manifest_path)
+
+
+def _validate_export(manifest_path: Path, *, strict: bool) -> E0ValidationReport:
+    if strict:
+        raise E0SchemaError(
+            path=manifest_path,
+            detail="strict validation requires external gold labels",
+        )
+    try:
+        manifest = ExportManifest.model_validate_json(manifest_path.read_bytes())
+    except ValidationError as error:
+        raise E0SchemaError(path=manifest_path, detail=str(error)) from None
+    facts = validate_export_package(manifest_path, manifest)
+    return E0ValidationReport(
+        facts.total_count,
+        facts.file_count,
+        facts.strata,
+        "e0-export-v1",
+    )
+
+
+def _validate_strict(
+    manifest_path: Path,
+    source_export: Path | None,
+) -> E0ValidationReport:
+    if source_export is None:
+        raise E0SchemaError(
+            path=manifest_path,
+            detail="strict validation requires explicit source export",
+        )
+    try:
+        manifest = StrictManifest.model_validate_json(manifest_path.read_bytes())
+    except ValidationError as error:
+        raise E0SchemaError(path=manifest_path, detail=str(error)) from None
+    facts = validate_strict_package(manifest_path, manifest, source_export)
+    return E0ValidationReport(
+        facts.total_count,
+        facts.file_count,
+        facts.strata,
+        "e0-strict-v1",
+    )
+
+
+def _validate_legacy(manifest_path: Path) -> E0ValidationReport:
 
     try:
         manifest = E0Manifest.model_validate_json(manifest_path.read_bytes())
@@ -149,6 +216,18 @@ def validate_e0_package(manifest_path: Path) -> E0ValidationReport:
         file_count=len(manifest.files),
         strata=actual_total_strata,
     )
+
+
+def _schema_version(path: Path) -> str:
+    class ManifestVersion(BaseModel):
+        model_config: ClassVar[ConfigDict] = ConfigDict(extra="ignore")
+
+        schema_version: str
+
+    try:
+        return ManifestVersion.model_validate_json(path.read_bytes()).schema_version
+    except ValidationError as error:
+        raise E0SchemaError(path=path, detail=str(error)) from None
 
 
 def _parse_records(path: Path, payload: bytes) -> tuple[E0Record, ...]:

@@ -3,11 +3,29 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from g2b_compare.errors import G2BCompareError
 from g2b_compare.evaluation.e0_schema import validate_e0_package
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+
+class ValidationNamespace(argparse.Namespace):
+    """Typed mutable argparse target for strict validation."""
+
+    manifest: Path
+    source_export: Path | None
+    strict: bool
+
+    def __init__(self) -> None:
+        """Initialize defaults before argparse overwrites required fields."""
+        super().__init__()
+        self.manifest = Path()
+        self.source_export = None
+        self.strict = False
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,20 +33,34 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Validate an immutable external E0 assessment package.",
     )
-    parser.add_argument(
+    _ = parser.add_argument(
         "manifest",
         type=Path,
         help="Path to the E0 manifest JSON file.",
     )
+    _ = parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Require a complete e0-strict-v1 external gold package.",
+    )
+    _ = parser.add_argument(
+        "--source-export",
+        type=Path,
+        help="Path to the exact e0-export-v1 manifest required by --strict.",
+    )
     return parser
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Validate one manifest and return a process exit code."""
-    build_parser().parse_args()
-    manifest_path = Path(sys.argv[-1])
+    namespace = ValidationNamespace()
+    _ = build_parser().parse_args(argv, namespace=namespace)
     try:
-        report = validate_e0_package(manifest_path)
+        report = validate_e0_package(
+            namespace.manifest,
+            strict=namespace.strict,
+            source_export=namespace.source_export,
+        )
     except G2BCompareError as error:
         print(f"E0 검증 실패: {error}")
         return 2

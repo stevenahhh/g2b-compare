@@ -41,6 +41,11 @@ class ResultCursor(Protocol):
         """Return the most recently inserted integer key."""
         ...
 
+    @property
+    def rowcount(self) -> int:
+        """Return affected rows for compare-and-swap statements."""
+        ...
+
     def fetchone(self) -> SqlRow | None:
         """Return one typed SQLite row."""
         ...
