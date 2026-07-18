@@ -4,13 +4,19 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Protocol
+from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
 from g2b_compare.db.connection import connect
 from g2b_compare.db.models import SyncRunInput, SyncWindowInput
 from g2b_compare.db.sql import as_text, query
+from g2b_compare.sync.attempts import (
+    AttemptGate,
+    AttemptPage,
+    PageSource,
+    PageSourceError,
+)
 from g2b_compare.sync.paginator import (
     PageMeta,
     PageScope,
@@ -18,6 +24,7 @@ from g2b_compare.sync.paginator import (
     SyncInvariantError,
     ValidatedPageSet,
 )
+from g2b_compare.sync.resume_validation import validated_pages
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -30,40 +37,9 @@ ATTEMPTS_EXHAUSTED = "attempts-exhausted"
 CHECKPOINT_MALFORMED = "checkpoint-malformed"
 CHECKPOINT_MISSING = "checkpoint-missing"
 ONE_DAY_OVER_BUDGET = "one-day-over-budget"
+PERMANENT_PAGE_SOURCE_FAILURE = "permanent-page-source-failure"
 
-
-class AttemptGate(Protocol):
-    """Persist and finish one quota reservation around every outbound attempt."""
-
-    def reserve(self, operation: Operation) -> int:
-        """Reserve one non-refundable call immediately before dispatch."""
-        ...
-
-    def finish(self, reservation_id: int, status_code: int) -> None:
-        """Persist the returned status without refunding the attempt."""
-        ...
-
-
-class PageSource(Protocol):
-    """Fetch one already-authorized operation page through an existing adapter."""
-
-    def fetch(
-        self,
-        operation: Operation,
-        window: DateWindow,
-        page_no: int,
-    ) -> AttemptPage:
-        """Return parsed metadata without duplicating HTTP or envelope logic."""
-        ...
-
-
-@dataclass(frozen=True, slots=True)
-class AttemptPage:
-    """One adapter outcome used by retry and pagination policy."""
-
-    status_code: int
-    metadata: PageMeta | None
-    retryable: bool
+__all__ = ["AttemptPage", "PageSourceError"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +170,13 @@ class OperationRunner:
     ) -> RunResult:
         """Resume at the next unverified page and finish only continuous windows."""
         current = checkpoint or self.checkpoints.start(schedule, observed_at)
+        if current.complete:
+            return RunResult(
+                current.run_id,
+                0,
+                0,
+                validated_pages(self.checkpoints.database, current.run_id, schedule),
+            )
         attempts = 0
         page_count = 0
         validated: list[ValidatedPageSet] = []
@@ -260,8 +243,26 @@ class OperationRunner:
     ) -> tuple[PageMeta, int]:
         for attempt in range(1, self.max_attempts + 1):
             reservation_id = self.gate.reserve(operation)
-            response = self.source.fetch(operation, window, page_no)
-            self.gate.finish(reservation_id, response.status_code)
+            try:
+                response = self.source.fetch(operation, window, page_no)
+            except PageSourceError as caught:
+                self.gate.finish(
+                    reservation_id,
+                    caught.status_code,
+                    operation,
+                    window.ordinal,
+                    page_no,
+                )
+                if not caught.retryable:
+                    raise SyncInvariantError(PERMANENT_PAGE_SOURCE_FAILURE) from None
+                continue
+            self.gate.finish(
+                reservation_id,
+                response.status_code,
+                operation,
+                window.ordinal,
+                page_no,
+            )
             if response.metadata is not None:
                 return response.metadata, attempt
             if not response.retryable:

@@ -43,8 +43,15 @@ class _Gate:
         _ = operation
         return 1
 
-    def finish(self, reservation_id: int, status_code: int) -> None:
-        _ = (reservation_id, status_code)
+    def finish(
+        self,
+        reservation_id: int,
+        status_code: int,
+        operation: Operation,
+        window: int,
+        page: int,
+    ) -> None:
+        _ = (reservation_id, status_code, operation, window, page)
 
 
 @dataclass(frozen=True, slots=True)
