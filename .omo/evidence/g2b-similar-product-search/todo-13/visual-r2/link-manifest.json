@@ -1,0 +1,21 @@
+{
+  "product_links": {
+    "P000": {
+      "stable_contract_item_management_number": "SAFE_001",
+      "share_link_preflight": {
+        "final_host": "shop.g2b.go.kr",
+        "no_redirect": true,
+        "status": 200
+      }
+    },
+    "P001": {
+      "key": "TRANSIENT",
+      "stable_contract_item_management_number": "SAFE_002",
+      "share_link_preflight": {
+        "final_host": "shop.g2b.go.kr",
+        "no_redirect": true,
+        "status": 200
+      }
+    }
+  }
+}

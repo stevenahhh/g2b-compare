@@ -1,0 +1,129 @@
+{
+  "browser": "Google Chrome stable via Python Playwright",
+  "browserExecutable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "inAppBrowserFallbackReason": "Browser runtime discovery returned an empty browser list after bootstrap troubleshooting.",
+  "states": [
+    "initial",
+    "category-choice",
+    "current-results",
+    "stale",
+    "sync-failed-last-good",
+    "no-active-snapshot",
+    "no-matches",
+    "validation-error",
+    "fatal-error"
+  ],
+  "sourceMaxMtimeNs": 1784351032975446600,
+  "screenshots": [
+    {
+      "path": "category-choice-1440x900.png",
+      "sha256": "30a5949c7a7bf34802bc44d7fa145d698aeed4945ec0c96b0041de09d4a6b77c",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351244442575200,
+      "freshAfterSources": true
+    },
+    {
+      "path": "current-results-1024x768.png",
+      "sha256": "685116ab67a7db6f49a0e7dfb103ec888eb4280795235bc7ad2f097deea8e2d6",
+      "signature": "png",
+      "width": 1024,
+      "height": 768,
+      "mtimeNs": 1784351254827115500,
+      "freshAfterSources": true
+    },
+    {
+      "path": "current-results-1440x900.png",
+      "sha256": "5b21500e3309938a4dbdf896391edabe3799645c7799f34c8fb75446fa52ea75",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351245559755400,
+      "freshAfterSources": true
+    },
+    {
+      "path": "current-results-375x812-nojs.png",
+      "sha256": "f61a56e9766eefd18c7ba9e90c40a775bafba4a1df1085bb75b8b8ae2c06cf07",
+      "signature": "png",
+      "width": 375,
+      "height": 812,
+      "mtimeNs": 1784351256046846100,
+      "freshAfterSources": true
+    },
+    {
+      "path": "fatal-error-1440x900.png",
+      "sha256": "5b75c13ed100f955ab89c234e5f2542d017a84fcb011cccae586d2fa8179bc56",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351249595722600,
+      "freshAfterSources": true
+    },
+    {
+      "path": "initial-1440x900.png",
+      "sha256": "2f3eb2c735f0e33e29218f3fedb5db4afdcf0be123f0da8e900236e360748935",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351243800265400,
+      "freshAfterSources": true
+    },
+    {
+      "path": "no-active-snapshot-1440x900.png",
+      "sha256": "4e26d7e3df1001d57be23426addc8442192e4d882290feba9dac09a77847f0e0",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351247579969700,
+      "freshAfterSources": true
+    },
+    {
+      "path": "no-matches-1440x900.png",
+      "sha256": "3b851b07fb5130ade6c25fcdb7af023227b559a87fafe849e63836766bc739f0",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351248256552500,
+      "freshAfterSources": true
+    },
+    {
+      "path": "stale-1440x900.png",
+      "sha256": "38cddd6be26176860813bf2a9f1a6eb597818c6ca4b73cb03ba6b319c3ccf2da",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351246253736500,
+      "freshAfterSources": true
+    },
+    {
+      "path": "sync-failed-last-good-1440x900.png",
+      "sha256": "3429472f1fbbad9cc6af1af766fe8f0375e3160ee4a7d91fa1f79dcd7b6423ae",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351246916923600,
+      "freshAfterSources": true
+    },
+    {
+      "path": "validation-error-1440x900.png",
+      "sha256": "bda9655e1dd1e3735a34df6a5fcb7de72ca61d90058c585946883e7704c2835a",
+      "signature": "png",
+      "width": 1440,
+      "height": 900,
+      "mtimeNs": 1784351248904544800,
+      "freshAfterSources": true
+    }
+  ],
+  "lighthouse": {
+    "available": false,
+    "reason": "No global lighthouse command or local node_modules binary; dependency installation prohibited."
+  },
+  "interactionLog": {
+    "path": "interaction-log.json",
+    "sha256": "680a15f8d71d8e014571e9e9a1268f756ec1e5eac5da1134a86488f0add84611",
+    "mtimeNs": 1784351931104211100,
+    "entryCount": 13,
+    "writeMode": "atomic-temp-replace"
+  }
+}

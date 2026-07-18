@@ -1,0 +1,60 @@
+<div class="state-line" data-primary-state="{{ primary_state }}" data-statuses="{{ statuses|join(' ') }}">
+  <span class="state-dot" aria-hidden="true"></span>
+  <p>{{ message }}</p>
+  {% if total is defined %}<span>{{ total }}건 · {{ page }}페이지</span>{% endif %}
+</div>
+{% if statuses %}
+<div class="status-predicates" aria-label="데이터 상태">
+  {% for status in statuses %}
+  <span class="badge" data-status-predicate="{{ status }}">
+    {% if status == "stale" %}데이터가 오래되었습니다
+    {% elif status == "sync-failed-last-good" %}최근 동기화에 실패하여 이전 데이터를 표시합니다
+    {% elif status == "partial-attribute" %}개별 속성 일부 미수집
+    {% elif status == "insufficient-comparator" %}insufficient-comparator
+    {% elif status == "no-evidence" %}비교 근거 부족
+    {% elif status == "incompatible-price" %}가격 단위 비교 불가
+    {% endif %}
+  </span>
+  {% endfor %}
+</div>
+{% endif %}
+<p class="loading-status" role="status">검색 중</p>
+{% if request_id is defined %}
+<p class="request-id" data-request-id="{{ request_id }}">요청 ID: <span class="mono">{{ request_id }}</span></p>
+{% endif %}
+{% if choices %}
+  {% include "category_choice.html" %}
+{% endif %}
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>물품</th><th>규격</th><th>가격</th><th>점수</th><th>기준일</th><th>비교 3개</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr data-statuses="{{ row.statuses|join(' ') }}">
+        <td data-label="물품">
+          <a class="product-link" href="{{ row.link_href }}">{{ row.name }}</a>
+          <span class="mono">{{ row.id }}</span>
+          {% if row.copy_id %}<button class="copy-id" type="button" data-copy-id="{{ row.copy_id }}">물품 ID 복사</button>{% endif %}
+          <small>{{ row.provenance }}</small>
+        </td>
+        <td data-label="규격">
+          {{ row.spec }}
+          {% if "partial-attribute" in row.statuses %}<span class="badge partial-attribute">개별 속성 일부 미수집</span>{% endif %}
+        </td>
+        <td data-label="가격">{% if row.price %}{{ row.price }}원 / {{ row.unit }}{% else %}<span class="badge">가격 단위 비교 불가</span>{% endif %}</td>
+        <td data-label="점수">{{ row.score|default('—', true) }}</td>
+        <td data-label="기준일">{{ row.data_as_of }}</td>
+        <td data-label="비교">{% include "comparators.html" %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% if previous_url or next_url %}
+<nav class="pagination" aria-label="검색 결과 페이지">
+  {% if previous_url %}<a class="previous-page" href="{{ previous_url }}">이전</a>{% endif %}
+  {% if next_url %}<a class="next-page" href="{{ next_url }}">다음</a>{% endif %}
+</nav>
+{% endif %}

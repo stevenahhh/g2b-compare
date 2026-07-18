@@ -1,0 +1,321 @@
+[
+  {
+    "action": "capture",
+    "state": "initial",
+    "httpStatus": 200,
+    "domState": "initial",
+    "layout": {
+      "weightedCount": 21,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": null
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "category-choice",
+    "httpStatus": 200,
+    "domState": "validation-error",
+    "layout": {
+      "weightedCount": 25,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": null
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "current-results",
+    "httpStatus": 200,
+    "domState": "current-results",
+    "layout": {
+      "weightedCount": 878,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": {
+        "scrollWidth": 932,
+        "clientWidth": 932,
+        "overflowX": "auto"
+      }
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "stale",
+    "httpStatus": 200,
+    "domState": "stale",
+    "layout": {
+      "weightedCount": 96,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": {
+        "scrollWidth": 932,
+        "clientWidth": 932,
+        "overflowX": "auto"
+      }
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "sync-failed-last-good",
+    "httpStatus": 200,
+    "domState": "sync-failed-last-good",
+    "layout": {
+      "weightedCount": 96,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": {
+        "scrollWidth": 932,
+        "clientWidth": 932,
+        "overflowX": "auto"
+      }
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "no-active-snapshot",
+    "httpStatus": 503,
+    "domState": "no-active-snapshot",
+    "layout": {
+      "weightedCount": 21,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": null
+    },
+    "console": [
+      "error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    ]
+  },
+  {
+    "action": "capture",
+    "state": "no-matches",
+    "httpStatus": 200,
+    "domState": "no-matches",
+    "layout": {
+      "weightedCount": 22,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": null
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "validation-error",
+    "httpStatus": 200,
+    "domState": "validation-error",
+    "layout": {
+      "weightedCount": 22,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": null
+    },
+    "console": []
+  },
+  {
+    "action": "capture",
+    "state": "fatal-error",
+    "httpStatus": 500,
+    "domState": "fatal-error",
+    "layout": {
+      "weightedCount": 23,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1440,
+        1440
+      ],
+      "tableWrap": null
+    },
+    "console": [
+      "error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    ]
+  },
+  {
+    "action": "enhanced-current-results",
+    "focusSequence": [
+      {
+        "tag": "A",
+        "name": null,
+        "outline": "3px"
+      },
+      {
+        "tag": "INPUT",
+        "name": "product_name",
+        "outline": "3px"
+      },
+      {
+        "tag": "TEXTAREA",
+        "name": "spec_text",
+        "outline": "3px"
+      },
+      {
+        "tag": "INPUT",
+        "name": "target_price_won",
+        "outline": "3px"
+      },
+      {
+        "tag": "INPUT",
+        "name": "price_unit",
+        "outline": "3px"
+      },
+      {
+        "tag": "INPUT",
+        "name": "price_tolerance_pct",
+        "outline": "3px"
+      },
+      {
+        "tag": "INPUT",
+        "name": "category_code",
+        "outline": "3px"
+      },
+      {
+        "tag": "INPUT",
+        "name": "detail_category_code",
+        "outline": "3px"
+      }
+    ],
+    "deepLink": "https://shop.g2b.go.kr/link/GMSF001_01/?ctrtItemMngNo=SAFE_001",
+    "fallbackCopyVisible": true,
+    "clipboardValue": "P001",
+    "nextRowCount": 1,
+    "previousRowCount": 50,
+    "loading": {
+      "busy": "true",
+      "shown": "block",
+      "text": "검색 중"
+    },
+    "settledState": "current-results"
+  },
+  {
+    "action": "enhanced-category-choice",
+    "choices": [
+      "10/1001",
+      "20/2001"
+    ],
+    "choiceState": "validation-error",
+    "settledState": "current-results",
+    "settledRows": 50
+  },
+  {
+    "action": "responsive",
+    "viewport": "1024x768",
+    "rows": 50,
+    "layout": {
+      "weightedCount": 878,
+      "non400": 0,
+      "pseudoCount": 0,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        1024,
+        1024
+      ],
+      "tableWrap": {
+        "scrollWidth": 900,
+        "clientWidth": 676,
+        "overflowX": "auto"
+      }
+    },
+    "mobileCard": null
+  },
+  {
+    "action": "responsive-no-js",
+    "viewport": "375x812",
+    "rows": 50,
+    "layout": {
+      "weightedCount": 872,
+      "non400": 0,
+      "pseudoCount": 300,
+      "pseudoNon400": 0,
+      "clipped": 0,
+      "horizontalOverflow": false,
+      "documentWidth": [
+        375,
+        375
+      ],
+      "tableWrap": {
+        "scrollWidth": 343,
+        "clientWidth": 343,
+        "overflowX": "auto"
+      }
+    },
+    "mobileCard": {
+      "rowHeight": 359,
+      "cellHeights": [
+        79,
+        42,
+        42,
+        42,
+        42,
+        88
+      ],
+      "firstCellText": "CCTV\nP000\n연결 근거 없음 — 본품 관계를 추정하지 않음"
+    }
+  }
+]

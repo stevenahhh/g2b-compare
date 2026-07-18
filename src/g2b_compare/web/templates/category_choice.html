@@ -1,0 +1,9 @@
+<section class="choice" aria-labelledby="category-choice-title">
+  <h2 id="category-choice-title">분류를 선택하세요</h2>
+  <p>동일한 물품명이 여러 분류에 있음.</p>
+  <ul>
+    {% for choice in choices %}
+    <li><a class="category-choice" data-category-choice="{{ choice.label }}" href="{{ choice.href }}">{{ choice.label }}</a></li>
+    {% endfor %}
+  </ul>
+</section>

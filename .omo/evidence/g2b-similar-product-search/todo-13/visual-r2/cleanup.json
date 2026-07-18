@@ -1,0 +1,10 @@
+{
+  "serverThreadAlive": false,
+  "serverSocketClosed": true,
+  "browserClosed": true,
+  "loopbackUrl": "http://127.0.0.1:61581",
+  "verifiedAfterProcessExit": true,
+  "listenerCountAfterExit": 0,
+  "interactionLogRegenerated": true,
+  "interactionLogWriteMode": "atomic-temp-replace"
+}

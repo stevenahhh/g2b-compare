@@ -1,0 +1,13 @@
+<ol class="comparators">
+{% for comparator in row.comparators %}
+  <li>
+    <span class="mono">{{ comparator.rank }}</span>
+    {% if comparator.name %}
+      <span>{{ comparator.name }}</span><span>{{ comparator.score|default('—', true) }}</span>
+      {% if comparator.status == "no_comparison_evidence" %}<span class="badge">비교 근거 부족</span>{% endif %}
+    {% else %}
+      <span class="badge">비교 후보 부족</span>
+    {% endif %}
+  </li>
+{% endfor %}
+</ol>
