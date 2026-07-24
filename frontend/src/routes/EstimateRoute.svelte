@@ -282,6 +282,10 @@
     searchOpen = true;
     void searchProducts("", productGroup);
   }
+  function openProductSearch() {
+    searchOpen = true;
+    globalThis.requestAnimationFrame(() => globalThis.document.getElementById("document-product-search")?.focus());
+  }
   function handleSearchKeydown(event) {
     if (event.key !== "Escape") return;
     searchOpen = false;
@@ -435,6 +439,7 @@
 {#if document}
   <section class="page-actions">
     <button class="button--secondary" type="button" onclick={() => onNavigate("/estimates")}>닫기</button>
+    <button class="button" type="button" onclick={openProductSearch}>내역 추가</button>
     <button class="button--secondary" type="button" onclick={copyTable}>{copyStatus || "표 복사"}</button>
     <button class="button--secondary" type="button" onclick={copyTsv}>TSV 내려받기</button>
     {#if remote?.export_ready}<a class="button" href={`/estimates/${id}/export.xlsx`}>XLSX 내려받기</a>{/if}
