@@ -7,12 +7,19 @@
 
   let { id, onNavigate = () => {}, onFailure = () => {}, onSynced = () => {} } = $props();
   const KOREANET = "주식회사 코리아넷";
+  const PRODUCT_GROUP_LABELS = {
+    main: "본품",
+    selection: "선택품목",
+    additional: "추가선택품목",
+    construction: "공사",
+  };
   let document = $state(null);
   let remote = $state(null);
   let error = $state("");
   let loading = $state(true);
   let notFound = $state(false);
   let productSearch = $state("");
+  let productGroup = $state("main");
   let productResults = $state([]);
   let productSort = $state("price_asc");
   let productTotal = $state(0);
@@ -49,10 +56,10 @@
       purpose,
     ].filter(Boolean))].join(", ");
   }
-  function productKindLabel(item) {
-    const kind = item.relation_kind === "component"
-      ? "선택품목"
-      : item.relation_kind === "additional" ? "추가선택품목" : "본품";
+  function productKindLabel(item, group = productGroup) {
+    const kind = item.parent_product_id
+      ? PRODUCT_GROUP_LABELS[group] ?? "하위 품목"
+      : "본품";
     if (!item.parent_product_id) return kind;
     return `${kind} - 본품(${item.parent_name})(${item.parent_product_id})`;
   }
@@ -224,18 +231,22 @@
     if (event.key === "Enter") event.currentTarget.blur();
     if (event.key === "Escape") { cancelEditTitle(); event.currentTarget.blur(); }
   }
-  async function searchProducts(query) {
+  async function searchProducts(query, group = productGroup) {
     const version = ++searchVersion;
     searching = true;
     searchError = "";
-    const cacheKey = `document-products:${query}:${productSort}`;
+    const cacheKey = `document-products:v2:${group}:${query}:${productSort}`;
     const cached = await getCatalogCache(cacheKey).catch(() => null);
     if (cached && version === searchVersion) {
       productResults = cached.items;
       productTotal = cached.total_count;
     }
     try {
-      const result = await requestJson(`/api/catalog/document-products?company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(query)}&sort=${productSort}&page=1&page_size=500`);
+      const queryParams = `company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(query)}&sort=${productSort}&page=1&page_size=${group === "main" ? 100 : 500}`;
+      const endpoint = group === "main"
+        ? `/api/catalog/products?${queryParams}`
+        : `/api/catalog/relations?${queryParams}&category=${group}`;
+      const result = await requestJson(endpoint);
       if (version === searchVersion) {
         productResults = result.items;
         productTotal = result.total_count;
@@ -262,7 +273,14 @@
     searchTimer = setTimeout(() => void searchProducts(productSearch.trim()), 30);
   }
   function changeProductSort() {
-    void searchProducts(productSearch.trim());
+    void searchProducts(productSearch.trim(), productGroup);
+  }
+  function changeProductGroup(event) {
+    productGroup = event.currentTarget.value;
+    productSearch = "";
+    searchError = "";
+    searchOpen = true;
+    void searchProducts("", productGroup);
   }
   function handleSearchKeydown(event) {
     if (event.key !== "Escape") return;
@@ -382,7 +400,7 @@
   onMount(() => {
     globalThis.document.addEventListener("pointerdown", closeSearchOnOutsideClick);
     void load();
-    void searchProducts("");
+    void searchProducts("", productGroup);
     return () => globalThis.document.removeEventListener("pointerdown", closeSearchOnOutsideClick);
   });
   onDestroy(() => {
@@ -449,12 +467,20 @@
             <option value="product_id_asc">식별번호순</option>
           </select>
         </label>
+        <label for="document-product-group">
+          <span>검색 대상</span>
+          <select id="document-product-group" value={productGroup} onchange={changeProductGroup}>
+            {#each Object.entries(PRODUCT_GROUP_LABELS) as [value, label]}
+              <option {value}>{label}</option>
+            {/each}
+          </select>
+        </label>
       </div>
       <div id="document-search-results" class="document-search-overlay" class:is-open={searchOpen} role="region" aria-label="물품 검색 결과">
           <div class="document-search-overlay__header">
             <p class="catalog-summary" aria-live="polite">
               {#if searching}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>검색 중</span>
-              {:else}검색 결과 {productTotal.toLocaleString()}건{/if}
+              {:else}{PRODUCT_GROUP_LABELS[productGroup]} 검색 결과 {productTotal.toLocaleString()}건{/if}
             </p>
             <button class="button--secondary" type="button" onclick={() => searchOpen = false}>닫기</button>
           </div>
@@ -481,7 +507,7 @@
                       <strong>{productTitle(item)}</strong>
                       <span class="catalog-card__price">{money(item.price_won)}원 / {item.unit}</span>
                       <span>
-                        {productKindLabel(item)}
+                        {productKindLabel(item, productGroup)}
                         {#if !item.parent_product_id} · {item.contract_method} · {item.delivery_condition} · 납기 {item.delivery_days}일 · {item.contract_end_date}{/if}
                       </span>
                       {#if item.attributes?.length}
@@ -670,11 +696,31 @@
   .document-workspace {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
 
   .document-catalog {
-    padding: var(--space-5);
+    padding: var(--space-3);
+  }
+
+  .document-catalog .catalog-controls {
+    grid-template-columns: minmax(0, 1fr) 112px 112px;
+    gap: var(--space-2);
+  }
+
+  .document-catalog .catalog-controls label {
+    gap: var(--space-1);
+  }
+
+  .document-catalog .catalog-controls label > span {
+    font-size: 11px;
+  }
+
+  .document-catalog .catalog-controls input,
+  .document-catalog .catalog-controls select {
+    min-block-size: 38px;
+    padding-inline: var(--space-3);
+    font-size: 12px;
   }
 
   .document-search-anchor {
@@ -688,8 +734,8 @@
     z-index: 10;
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
-    max-block-size: min(560px, calc(100dvh - 220px));
-    padding: var(--space-3);
+    max-block-size: min(620px, calc(100dvh - 220px));
+    padding: var(--space-2);
     border: 1px solid var(--line);
     border-radius: var(--radius-surface);
     background: var(--surface);
@@ -709,8 +755,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
-    min-block-size: 44px;
+    gap: var(--space-2);
+    min-block-size: 36px;
   }
 
   .document-search-overlay__header .catalog-summary {
@@ -718,8 +764,9 @@
   }
 
   .document-search-overlay__header button {
-    min-block-size: 36px;
-    padding: var(--space-2) var(--space-3);
+    min-block-size: 32px;
+    padding: var(--space-1) var(--space-3);
+    font-size: 12px;
   }
 
   .document-result-scroll {
@@ -736,18 +783,18 @@
 
   .document-search-overlay .catalog-card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 112px;
     min-block-size: 0;
     block-size: auto;
-    gap: var(--space-3);
-    padding: var(--space-4);
+    gap: var(--space-2);
+    padding: var(--space-2);
     border: 1px solid var(--line);
     border-radius: var(--radius-control);
     background: var(--surface);
   }
 
   .document-search-overlay .catalog-card + .catalog-card {
-    margin-block-start: var(--space-3);
+    margin-block-start: var(--space-2);
   }
 
   .document-search-overlay .catalog-card:hover {
@@ -757,44 +804,59 @@
 
   .document-search-overlay .catalog-card__actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: var(--space-2);
   }
 
   .document-search-overlay .catalog-card__actions > * {
     inline-size: 100%;
+    min-block-size: 32px;
+    padding: var(--space-1) var(--space-2);
+    font-size: 11px;
+  }
+
+  .document-search-overlay .document-result-card__body {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .document-search-overlay .catalog-card img {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+
+  .document-search-overlay .catalog-card__details > strong {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .document-search-overlay .catalog-card__details > span {
+    margin-block-start: 2px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .document-search-overlay .catalog-card__details > .catalog-card__price {
+    margin-block-start: 3px;
+    font-size: 14px;
+  }
+
+  .document-search-overlay .attribute-list {
+    display: none;
   }
 
   @media (min-width: 900px) {
-    .document-workspace {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-      align-items: start;
-      gap: var(--space-4);
-    }
-
     .document-catalog,
     .document-sheet {
       margin-block-start: 0;
     }
 
     .document-search-overlay {
-      position: static;
-      inset: auto;
-      z-index: auto;
-      visibility: visible;
-      opacity: 1;
-      pointer-events: auto;
-      max-block-size: min(720px, calc(100dvh - 320px));
-      box-shadow: none;
-    }
-
-    .document-search-overlay__header button {
-      display: none;
+      max-block-size: min(620px, calc(100dvh - 240px));
     }
 
     .document-table-wrap {
-      max-block-size: min(720px, calc(100dvh - 320px));
+      max-block-size: min(720px, calc(100dvh - 300px));
     }
   }
 

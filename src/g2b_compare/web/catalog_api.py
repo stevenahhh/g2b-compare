@@ -113,7 +113,7 @@ def build_catalog_api_router(database: Path) -> APIRouter:
         q: Annotated[str, Query(max_length=500)] = "",
         sort: PriorityLineSort = PriorityLineSort.PRICE_ASC,
         page: Annotated[int, Query(ge=1)] = 1,
-        page_size: Annotated[int, Query(ge=1, le=100)] = 30,
+        page_size: Annotated[int, Query(ge=1, le=500)] = 30,
     ) -> CatalogPageResponse:
         items = [
             item
