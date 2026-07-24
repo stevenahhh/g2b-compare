@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from g2b_compare.db.connection import BUSY_TIMEOUT_MS, connect
-from g2b_compare.db.migrate import migrate
+from g2b_compare.db.migrate import MIGRATION_DIRECTORY, migrate
 from g2b_compare.db.sql import as_int, as_text, query
 
 if TYPE_CHECKING:
@@ -24,6 +24,20 @@ def test_migration_is_idempotent_when_database_is_empty(tmp_path: Path) -> None:
         ).fetchone()
     assert row is not None
     assert (as_int(row[0]), as_text(row[1])) == (5, "0001_initial")
+
+
+def test_migration_accepts_crlf_checkout(tmp_path: Path) -> None:
+    migrations = tmp_path / "migrations"
+    migrations.mkdir()
+    for source in MIGRATION_DIRECTORY.glob("*.sql"):
+        target = migrations / source.name
+        target.write_bytes(
+            source.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+        )
+
+    database = tmp_path / "database.sqlite3"
+    migrate(database, MIGRATION_DIRECTORY)
+    migrate(database, migrations)
 
 
 def test_connection_applies_required_pragmas(tmp_path: Path) -> None:

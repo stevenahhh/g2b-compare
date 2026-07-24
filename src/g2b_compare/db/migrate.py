@@ -55,7 +55,7 @@ def migrate(database: Path, migration_directory: Path = MIGRATION_DIRECTORY) -> 
 
 
 def _apply_migration(connection: sqlite3.Connection, path: Path) -> None:
-    source = path.read_bytes()
+    source = path.read_bytes().replace(b"\r\n", b"\n")
     source_sha = hashlib.sha256(source).hexdigest()
     version = path.stem
     applied = query(
