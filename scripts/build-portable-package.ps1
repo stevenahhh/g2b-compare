@@ -30,7 +30,7 @@ New-Item -ItemType Directory -Path (Join-Path $Stage "docs") -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $Stage ".g2b\docs") -Force | Out-Null
 
 Copy-Item -LiteralPath "pyproject.toml","uv.lock",".python-version","README.md","DESIGN.md" -Destination $Stage
-Copy-Item -LiteralPath "scripts\run-package.ps1","scripts\build-portable-package.ps1" -Destination (Join-Path $Stage "scripts")
+Copy-Item -LiteralPath "scripts\run-package.ps1","scripts\build-portable-package.ps1","scripts\logout-local.bat" -Destination (Join-Path $Stage "scripts")
 Copy-Item -LiteralPath "docs\portable-package.md" -Destination (Join-Path $Stage "docs")
 Copy-Item -LiteralPath "src\g2b_compare" -Destination (Join-Path $Stage "src") -Recurse
 Copy-Item -LiteralPath ".g2b\g2b.sqlite3" -Destination (Join-Path $Stage ".g2b")
