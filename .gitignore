@@ -25,6 +25,8 @@ evidence-temp/
 .g2b/
 g2b.sqlite3*
 data/
+!src/g2b_compare/normalize/data/
+!src/g2b_compare/normalize/data/*.json
 dataset/
 outputs/
 tmp/

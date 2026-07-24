@@ -1,0 +1,10 @@
+{
+  "version": "v2",
+  "dimension_attributes": ["width", "height", "total-pixel"],
+  "scalar_attributes": [
+    "resolution", "size", "zoom", "angle", "length", "frequency",
+    "voltage", "power", "storage", "frame-rate", "channels", "mass",
+    "volume", "current", "charge", "temperature", "area",
+    "network-rate", "decibel", "rotation-rate", "illuminance"
+  ]
+}
