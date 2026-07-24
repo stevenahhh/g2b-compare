@@ -7,23 +7,25 @@
 
   let { id, onNavigate = () => {}, onFailure = () => {}, onSynced = () => {} } = $props();
   const KOREANET = "주식회사 코리아넷";
-  const PRODUCT_GROUP_LABELS = {
-    main: "본품",
+  const OPTION_GROUP_LABELS = {
     selection: "선택품목",
     additional: "추가선택품목",
     construction: "공사",
   };
+  const OPTION_GROUPS = Object.keys(OPTION_GROUP_LABELS);
   let document = $state(null);
   let remote = $state(null);
   let error = $state("");
   let loading = $state(true);
   let notFound = $state(false);
   let productSearch = $state("");
-  let productGroup = $state("main");
   let productResults = $state([]);
   let productSort = $state("price_asc");
   let productTotal = $state(0);
+  let selectedProduct = $state(null);
+  let selectedOptions = $state([]);
   let searching = $state(false);
+  let optionsLoading = $state(false);
   let searchError = $state("");
   let searchOpen = $state(false);
   let comparisonLoading = $state(false);
@@ -35,6 +37,7 @@
   let searchTimer;
   let copyTimer;
   let searchVersion = 0;
+  let optionsVersion = 0;
   const money = (value) => Number(value ?? 0).toLocaleString();
 
   function newId() {
@@ -56,12 +59,12 @@
       purpose,
     ].filter(Boolean))].join(", ");
   }
-  function productKindLabel(item, group = productGroup) {
-    const kind = item.parent_product_id
-      ? PRODUCT_GROUP_LABELS[group] ?? "하위 품목"
-      : "본품";
-    if (!item.parent_product_id) return kind;
-    return `${kind} - 본품(${item.parent_name})(${item.parent_product_id})`;
+  function optionGroup(item) {
+    if (/공사/u.test(`${item.name} ${item.spec}`)) return "construction";
+    return item.relation_kind === "component" ? "selection" : "additional";
+  }
+  function optionsFor(group) {
+    return selectedOptions.filter((item) => optionGroup(item) === group);
   }
   function rowAttributes(line, details) {
     if (line.line_kind !== "option") return details?.attributes ?? [];
@@ -231,22 +234,19 @@
     if (event.key === "Enter") event.currentTarget.blur();
     if (event.key === "Escape") { cancelEditTitle(); event.currentTarget.blur(); }
   }
-  async function searchProducts(query, group = productGroup) {
+  async function searchProducts(query) {
     const version = ++searchVersion;
     searching = true;
     searchError = "";
-    const cacheKey = `document-products:v2:${group}:${query}:${productSort}`;
+    const cacheKey = `document-products:v3:${query}:${productSort}`;
     const cached = await getCatalogCache(cacheKey).catch(() => null);
     if (cached && version === searchVersion) {
       productResults = cached.items;
       productTotal = cached.total_count;
     }
     try {
-      const queryParams = `company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(query)}&sort=${productSort}&page=1&page_size=${group === "main" ? 100 : 500}`;
-      const endpoint = group === "main"
-        ? `/api/catalog/products?${queryParams}`
-        : `/api/catalog/relations?${queryParams}&category=${group}`;
-      const result = await requestJson(endpoint);
+      const queryParams = `company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(query)}&sort=${productSort}&page=1&page_size=100`;
+      const result = await requestJson(`/api/catalog/products?${queryParams}`);
       if (version === searchVersion) {
         productResults = result.items;
         productTotal = result.total_count;
@@ -273,14 +273,43 @@
     searchTimer = setTimeout(() => void searchProducts(productSearch.trim()), 30);
   }
   function changeProductSort() {
-    void searchProducts(productSearch.trim(), productGroup);
+    closeSelectedProduct();
+    void searchProducts(productSearch.trim());
   }
-  function changeProductGroup(event) {
-    productGroup = event.currentTarget.value;
-    productSearch = "";
+  async function selectProduct(item) {
+    const version = ++optionsVersion;
+    selectedProduct = item;
+    selectedOptions = [];
+    optionsLoading = true;
     searchError = "";
-    searchOpen = true;
-    void searchProducts("", productGroup);
+    const cacheKey = `document-product-options:v2:${item.product_id}`;
+    const cached = await getCatalogCache(cacheKey).catch(() => null);
+    if (cached && version === optionsVersion) selectedOptions = cached.items;
+    try {
+      const firstPage = await requestJson(`/api/catalog/products/${item.product_id}/options?page=1&page_size=100`);
+      const remainingPages = await Promise.all(
+        Array.from(
+          { length: firstPage.page_count - 1 },
+          (_, index) => requestJson(`/api/catalog/products/${item.product_id}/options?page=${index + 2}&page_size=100`),
+        ),
+      );
+      const result = { ...firstPage, items: [...firstPage.items, ...remainingPages.flatMap((page) => page.items)] };
+      if (version === optionsVersion) selectedOptions = result.items;
+      try { await putCatalogCache(cacheKey, result); } catch {}
+    } catch (caught) {
+      if (version === optionsVersion) {
+        onFailure(caught);
+        if (!cached) searchError = "연결된 품목을 불러오지 못했음.";
+      }
+    } finally {
+      if (version === optionsVersion) optionsLoading = false;
+    }
+  }
+  function closeSelectedProduct() {
+    optionsVersion += 1;
+    selectedProduct = null;
+    selectedOptions = [];
+    optionsLoading = false;
   }
   function openProductSearch() {
     searchOpen = true;
@@ -404,7 +433,7 @@
   onMount(() => {
     globalThis.document.addEventListener("pointerdown", closeSearchOnOutsideClick);
     void load();
-    void searchProducts("", productGroup);
+    void searchProducts("");
     return () => globalThis.document.removeEventListener("pointerdown", closeSearchOnOutsideClick);
   });
   onDestroy(() => {
@@ -460,7 +489,7 @@
             aria-controls="document-search-results"
             onfocus={() => searchOpen = true}
             onkeydown={handleSearchKeydown}
-            oninput={queueSearch}
+            oninput={(event) => { closeSelectedProduct(); queueSearch(event); }}
           />
         </label>
         <label for="document-product-sort">
@@ -472,26 +501,19 @@
             <option value="product_id_asc">식별번호순</option>
           </select>
         </label>
-        <label for="document-product-group">
-          <span>검색 대상</span>
-          <select id="document-product-group" value={productGroup} onchange={changeProductGroup}>
-            {#each Object.entries(PRODUCT_GROUP_LABELS) as [value, label]}
-              <option {value}>{label}</option>
-            {/each}
-          </select>
-        </label>
       </div>
       <div id="document-search-results" class="document-search-overlay" class:is-open={searchOpen} role="region" aria-label="물품 검색 결과">
           <div class="document-search-overlay__header">
             <p class="catalog-summary" aria-live="polite">
               {#if searching}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>검색 중</span>
-              {:else}{PRODUCT_GROUP_LABELS[productGroup]} 검색 결과 {productTotal.toLocaleString()}건{/if}
+              {:else}본품 검색 결과 {productTotal.toLocaleString()}건{/if}
             </p>
             <button class="button--secondary" type="button" onclick={() => searchOpen = false}>닫기</button>
           </div>
           {#if searchError}<p class="state-message state-message--error" role="status">{searchError}</p>{/if}
-          <div class="document-result-scroll" aria-busy={searching}>
-            <div class="catalog-grid">
+          <div class:selected-column={selectedProduct} class="document-search-columns">
+            <div class="document-result-scroll" aria-busy={searching}>
+              <div class="catalog-grid">
               {#if searching && productResults.length === 0}
                 {#each [1, 2] as placeholder}
                   <article class="loading-card" aria-hidden="true">
@@ -504,29 +526,55 @@
                   </article>
                 {/each}
               {/if}
-              {#each productResults as item (item.relation_id ?? `main-${item.product_id}`)}
+              {#each productResults as item (item.product_id)}
                 <article class="catalog-card">
-                  <div class="catalog-card__select document-result-card__body">
+                  <button class="catalog-card__select document-result-card__body" type="button" aria-pressed={selectedProduct?.product_id === item.product_id} onclick={() => selectProduct(item)}>
                     <img loading="lazy" src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
                     <div class="catalog-card__details">
                       <strong>{productTitle(item)}</strong>
                       <span class="catalog-card__price">{money(item.price_won)}원 / {item.unit}</span>
-                      <span>
-                        {productKindLabel(item, productGroup)}
-                        {#if !item.parent_product_id} · {item.contract_method} · {item.delivery_condition} · 납기 {item.delivery_days}일 · {item.contract_end_date}{/if}
-                      </span>
+                      <span>{item.contract_method} · {item.delivery_condition} · 납기 {item.delivery_days}일 · {item.contract_end_date}</span>
                       {#if item.attributes?.length}
                         <dl class="attribute-list">{#each item.attributes as attribute}<div><dt>{attribute.name}</dt><dd>{attribute.value}{attribute.unit}</dd></div>{/each}</dl>
                       {/if}
                     </div>
-                  </div>
+                  </button>
                   <div class="catalog-card__actions">
                     <a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a>
                     <button class="button button--secondary" type="button" onclick={() => addProduct(item)}>리스트에 추가</button>
                   </div>
                 </article>
               {/each}
+              </div>
             </div>
+            {#if selectedProduct}
+              <aside class="document-option-panel" aria-label="연결된 하위 품목">
+                <header class="document-option-panel__header">
+                  <div><span>선택한 본품</span><h2>{selectedProduct.name} · {selectedProduct.product_id}</h2></div>
+                  <button class="button--secondary" type="button" onclick={closeSelectedProduct}>닫기</button>
+                </header>
+                <div class="document-option-groups">
+                  {#each OPTION_GROUPS as group}
+                    <section class="document-option-group">
+                      <h3>{OPTION_GROUP_LABELS[group]} <span>{optionsFor(group).length.toLocaleString()}건</span></h3>
+                      <div class="document-option-scroll" aria-busy={optionsLoading}>
+                        {#if optionsLoading}<p class="option-loading"><span class="loading-spinner" aria-hidden="true"></span>불러오는 중</p>
+                        {:else if optionsFor(group).length === 0}<p class="option-empty">연결된 품목 없음.</p>
+                        {:else}
+                          {#each optionsFor(group) as item (item.relation_id)}
+                            <article class="document-option-row">
+                              <img loading="lazy" src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
+                              <div><strong>{item.name}</strong><span>{item.spec}</span><span class="option-row__price">{money(item.price_won)}원 / {item.unit}</span></div>
+                              <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => addProduct(item)}>리스트에 추가</button></div>
+                            </article>
+                          {/each}
+                        {/if}
+                      </div>
+                    </section>
+                  {/each}
+                </div>
+              </aside>
+            {/if}
           </div>
       </div>
     </div>
@@ -709,7 +757,7 @@
   }
 
   .document-catalog .catalog-controls {
-    grid-template-columns: minmax(0, 1fr) 112px 112px;
+    grid-template-columns: minmax(0, 1fr) 112px;
     gap: var(--space-2);
   }
 
@@ -739,7 +787,7 @@
     z-index: 10;
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
-    max-block-size: min(620px, calc(100dvh - 220px));
+    block-size: min(620px, calc(100dvh - 220px));
     padding: var(--space-2);
     border: 1px solid var(--line);
     border-radius: var(--radius-surface);
@@ -778,6 +826,16 @@
     min-block-size: 0;
     overflow: auto;
     scrollbar-gutter: stable;
+  }
+
+  .document-search-columns {
+    display: grid;
+    min-block-size: 0;
+  }
+
+  .document-search-columns.selected-column {
+    grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+    gap: var(--space-2);
   }
 
   .document-result-card__body {
@@ -850,6 +908,54 @@
     display: none;
   }
 
+  .document-option-panel {
+    display: grid;
+    min-block-size: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+  }
+
+  .document-option-panel__header {
+    display: flex;
+    min-inline-size: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-block-end: 1px solid var(--line);
+    background: var(--surface-subtle);
+  }
+
+  .document-option-panel__header span,
+  .document-option-panel__header h2 {
+    display: block;
+    margin: 0;
+  }
+
+  .document-option-panel__header span { color: var(--muted); font-size: 11px; }
+  .document-option-panel__header h2 { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .document-option-panel__header button { min-block-size: 32px; padding-inline: var(--space-2); font-size: 11px; }
+
+  .document-option-groups { display: grid; min-block-size: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); }
+  .document-option-group { display: grid; min-block-size: 0; grid-template-rows: auto minmax(0, 1fr); }
+  .document-option-group + .document-option-group { border-block-start: 1px solid var(--line); }
+  .document-option-group h3 { margin: 0; padding: var(--space-2) var(--space-3); font-size: 12px; }
+  .document-option-group h3 span { color: var(--muted); font-weight: 400; }
+  .document-option-scroll { min-block-size: 0; overflow: auto; }
+  .document-option-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 94px; align-items: center; gap: var(--space-2); min-block-size: 76px; padding: var(--space-2) var(--space-3); }
+  .document-option-row + .document-option-row { border-block-start: 1px solid var(--line); }
+  .document-option-row img { inline-size: 36px; block-size: 36px; object-fit: contain; background: var(--canvas); }
+  .document-option-row > div:nth-child(2) { min-inline-size: 0; }
+  .document-option-row strong, .document-option-row span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .document-option-row strong { font-size: 12px; }
+  .document-option-row span { margin-block-start: 2px; color: var(--muted); font-size: 10px; }
+  .document-option-row .option-row__price { color: var(--ink); font-size: 11px; font-weight: 700; }
+  .document-option-row .catalog-card__actions { gap: var(--space-1); }
+  .document-option-row .catalog-card__actions > * { min-block-size: 28px; padding: var(--space-1); font-size: 10px; }
+
   @media (min-width: 900px) {
     .document-catalog,
     .document-sheet {
@@ -863,6 +969,10 @@
     .document-table-wrap {
       max-block-size: min(720px, calc(100dvh - 300px));
     }
+  }
+
+  @media (max-width: 899px) {
+    .document-search-columns.selected-column { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(220px, 1fr) minmax(300px, 1fr); }
   }
 
   .document-sheet {
