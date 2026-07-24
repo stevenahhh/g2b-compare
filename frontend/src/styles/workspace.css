@@ -18,11 +18,11 @@
 .catalog-scroll, .option-scroll { block-size: clamp(560px, calc(100dvh - 264px), 760px); overflow: auto; padding-inline-end: var(--space-2); scrollbar-gutter: stable; }
 .catalog-grid { gap: 0; margin-block-start: 0; }
 .virtual-spacer { min-block-size: 0; pointer-events: none; }
-.catalog-card { display: grid; grid-template-columns: minmax(0, 1fr) 128px; align-items: center; block-size: 216px; overflow: hidden; border-inline: 0; border-block-start: 0; border-radius: 0; }
+.catalog-card { display: grid; grid-template-columns: minmax(0, 1fr) 128px; align-items: center; block-size: 156px; overflow: hidden; border-inline: 0; border-block-start: 0; border-radius: 0; }
 .catalog-card:hover { background: var(--surface-subtle); }
 .catalog-card:has(.catalog-card__select[aria-pressed="true"]) { background: var(--surface-selected); }
-.catalog-card img { inline-size: 92px; block-size: 92px; object-fit: contain; background: var(--canvas); }
-.catalog-card__select { grid-template-columns: 92px minmax(0, 1fr); gap: var(--space-3); cursor: pointer; }
+.catalog-card img { inline-size: 72px; block-size: 72px; object-fit: contain; background: var(--canvas); }
+.catalog-card__select { grid-template-columns: 72px minmax(0, 1fr); gap: var(--space-3); cursor: pointer; }
 .catalog-card__details { min-inline-size: 0; }
 .catalog-card__details > span { display: block; margin-block-start: var(--space-1); color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
 .catalog-card__details > strong { display: block; font-size: 15px; font-weight: 600; line-height: 1.45; text-wrap: pretty; }
@@ -40,7 +40,7 @@
 
 .option-panel { min-block-size: 0; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-surface); background: var(--surface); overflow: hidden; }
 .option-panel > h2 { margin: 0; padding: var(--space-4); border-block-end: 1px solid var(--line); background: var(--surface-subtle); font-size: 15px; }
-.option-row { block-size: 224px; overflow: hidden; align-items: start; }
+.option-row { block-size: 112px; overflow: hidden; align-items: start; }
 .option-row > div { flex: 1; min-inline-size: 0; }
 .option-row .attribute-list { margin-block-start: var(--space-2); }
 

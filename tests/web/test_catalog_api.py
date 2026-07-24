@@ -197,6 +197,69 @@ async def test_document_catalog_includes_company_main_products_and_both_option_k
 
 
 @pytest.mark.asyncio
+async def test_koreanet_catalog_filters_mains_and_splits_relation_search(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "g2b.sqlite3"
+    _seed_document_catalog_fixture(database)
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """
+            INSERT INTO verified_product_options VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "relation-d",
+                "GET_MAS_CONTRACT_PRODUCT_INFO",
+                "offer-d",
+                "25000001",
+                "26000002",
+                "additional",
+                3,
+                "코리아넷",
+                "[26000002] 정보통신공사, 종합시험 : 100",
+                100,
+                "https://example.test/construction",
+                "2026-07-21T00:00:00+00:00",
+                1,
+            ),
+        )
+    app = _api_app(database)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        mains = await client.get(
+            "/api/catalog/products",
+            params={"company_name": "코리아넷", "page_size": 100},
+        )
+        selection = await client.get(
+            "/api/catalog/relations",
+            params={
+                "company_name": "코리아넷",
+                "category": "selection",
+                "page_size": 100,
+            },
+        )
+        construction = await client.get(
+            "/api/catalog/relations",
+            params={
+                "company_name": "코리아넷",
+                "category": "construction",
+                "q": "정보통신공사",
+                "page_size": 100,
+            },
+        )
+
+    assert mains.status_code == 200
+    assert mains.json()["total_count"] == 1
+    assert selection.json()["total_count"] == 1
+    assert construction.json()["total_count"] == 1
+    assert construction.json()["items"][0]["parent_product_id"] == "25000001"
+    assert construction.json()["items"][0]["parent_name"] == "코리아넷 영상감시장치"
+
+
+@pytest.mark.asyncio
 async def test_document_catalog_search_matches_option_without_returning_parent(
     tmp_path: Path,
 ) -> None:

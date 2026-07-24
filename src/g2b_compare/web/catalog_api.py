@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from functools import lru_cache
-from pathlib import Path
-from typing import Annotated, Literal, assert_never
+from typing import TYPE_CHECKING, Annotated, Literal, assert_never
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -25,6 +24,9 @@ from .api_models import (
     CatalogProductResponse,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 def build_catalog_api_router(database: Path) -> APIRouter:
     """Build catalog JSON routes backed by the existing priority catalog."""
@@ -32,20 +34,29 @@ def build_catalog_api_router(database: Path) -> APIRouter:
 
     @router.get("/api/catalog/products", response_model=CatalogPageResponse)
     def products(
-        q: str = Query(default="", max_length=500),
+        q: Annotated[str, Query(max_length=500)] = "",
+        company_name: Annotated[str, Query(max_length=200)] = "",
         sort: PriorityLineSort = PriorityLineSort.PRICE_ASC,
-        page: int = Query(default=1, ge=1),
-        page_size: int = Query(default=30, ge=1, le=100),
+        page: Annotated[int, Query(ge=1)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=100)] = 30,
     ) -> CatalogPageResponse:
         result = list_catalog_products(
-            database, q, page=page, page_size=page_size, sort=sort
+            database,
+            q,
+            page=page,
+            page_size=page_size,
+            sort=sort,
+            company_name=company_name,
         )
         items = [
             _product_response(item)
             for item in result.items
         ]
         return CatalogPageResponse(
-            items=items, page=result.page, page_count=result.page_count, total_count=result.total_count
+            items=items,
+            page=result.page,
+            page_count=result.page_count,
+            total_count=result.total_count,
         )
 
     @router.get(
@@ -54,11 +65,11 @@ def build_catalog_api_router(database: Path) -> APIRouter:
     )
     def options(
         product_id: str,
-        page: int = Query(default=1, ge=1),
-        page_size: int = Query(default=30, ge=1, le=100),
-        relation_kind: Literal["additional", "component"] | None = Query(
-            default=None
-        ),
+        page: Annotated[int, Query(ge=1)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=100)] = 30,
+        relation_kind: Annotated[
+            Literal["additional", "component"] | None, Query()
+        ] = None,
     ) -> CatalogPageResponse:
         if not _product_exists(database, product_id):
             raise HTTPException(status_code=404, detail="catalog product not found")
@@ -90,6 +101,37 @@ def build_catalog_api_router(database: Path) -> APIRouter:
         ]
         return CatalogPageResponse(
             items=items,
+            page=page,
+            page_count=max(1, (total + page_size - 1) // page_size),
+            total_count=total,
+        )
+
+    @router.get("/api/catalog/relations", response_model=CatalogPageResponse)
+    def relations(  # noqa: PLR0913
+        company_name: Annotated[str, Query(max_length=200)],
+        category: Literal["selection", "additional", "construction"],
+        q: Annotated[str, Query(max_length=500)] = "",
+        sort: PriorityLineSort = PriorityLineSort.PRICE_ASC,
+        page: Annotated[int, Query(ge=1)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=100)] = 30,
+    ) -> CatalogPageResponse:
+        items = [
+            item
+            for item in _catalog_relations(database, company_name)
+            if _relation_category(item) == category
+        ]
+        terms = tuple(normalize_search_text(q).split())
+        if terms:
+            items = [
+                item
+                for item in items
+                if all(term in _document_text(item) for term in terms)
+            ]
+        items.sort(key=lambda item: _document_sort_key(item, sort))
+        total = len(items)
+        start = (page - 1) * page_size
+        return CatalogPageResponse(
+            items=items[start : start + page_size],
             page=page,
             page_count=max(1, (total + page_size - 1) // page_size),
             total_count=total,
@@ -147,6 +189,7 @@ def _cached_document_catalog(
             page=1,
             page_size=100_000,
             sort=PriorityLineSort.PRICE_ASC,
+            company_name=company_name,
         ).items
         if item.company_name == company_name
     )
@@ -163,6 +206,34 @@ def _cached_document_catalog(
             )
             for item in options
         ),
+    )
+
+
+@lru_cache(maxsize=8)
+def _catalog_relations(
+    database: Path,
+    company_name: str,
+) -> tuple[CatalogOptionResponse, ...]:
+    options = list_catalog_options_for_company(database, company_name)
+    parent_ids = tuple({item.parent_product_id for item in options})
+    parent_names: dict[str, str] = {}
+    if parent_ids:
+        placeholders = ",".join("?" for _ in parent_ids)
+        with sqlite3.connect(database) as connection:
+            rows = connection.execute(
+                f"SELECT product_id, category_name FROM priority_products "  # noqa: S608
+                f"WHERE product_id IN ({placeholders})",
+                parent_ids,
+            ).fetchall()
+        parent_names = {str(row[0]): str(row[1] or "") for row in rows}
+    option_attributes = _option_attributes_for_company(database, company_name)
+    return tuple(
+        _option_response(
+            item,
+            option_attributes.get(item.product_id, []),
+            parent_names.get(item.parent_product_id, ""),
+        )
+        for item in options
     )
 
 
@@ -241,6 +312,12 @@ def _document_sort_key(
             assert_never(unreachable)
 
 
+def _relation_category(item: CatalogOptionResponse) -> str:
+    if "공사" in f"{item.name} {item.spec}":
+        return "construction"
+    return "selection" if item.relation_kind == "component" else "additional"
+
+
 def _product_exists(database: Path, product_id: str) -> bool:
     with sqlite3.connect(database) as connection:
         row = connection.execute(
@@ -250,7 +327,9 @@ def _product_exists(database: Path, product_id: str) -> bool:
     return row is not None
 
 
-def _option_attributes(database: Path, product_id: str) -> list[CatalogAttributeResponse]:
+def _option_attributes(
+    database: Path, product_id: str
+) -> list[CatalogAttributeResponse]:
     with sqlite3.connect(database) as connection:
         row = connection.execute(
             "SELECT raw_json FROM priority_products WHERE product_id = ? LIMIT 1",

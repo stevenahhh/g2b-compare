@@ -6,35 +6,40 @@
 
   let { search = "", onSearch = () => {}, onFailure = () => {}, onSynced = () => {} } = $props();
   const PAGE_SIZE = 30;
-  const CATALOG_ROW_HEIGHT = 216;
-  const OPTION_ROW_HEIGHT = 224;
+  const KOREANET = "주식회사 코리아넷";
+  const CATALOG_ROW_HEIGHT = 156;
+  const OPTION_ROW_HEIGHT = 112;
   const OVERSCAN = 4;
-  const OPTION_KINDS = ["component", "additional"];
+  const RELATION_KINDS = ["selection", "additional", "construction"];
   const emptyPage = () => ({ items: [], page: 1, page_count: 1, total_count: 0 });
   let sort = $state("price_asc");
   let page = $state(1);
   let result = $state(emptyPage());
   let selected = $state(null);
-  let options = $state({ component: emptyPage(), additional: emptyPage() });
-  let optionPages = $state({ component: 1, additional: 1 });
-  let optionLoading = $state({ component: false, additional: false });
+  let options = $state({ selection: emptyPage(), additional: emptyPage(), construction: emptyPage() });
+  let optionPages = $state({ selection: 1, additional: 1, construction: 1 });
+  let optionLoading = $state({ selection: false, additional: false, construction: false });
+  let relationSearch = $state({ selection: "", additional: "", construction: "" });
+  const relationTimers = { selection: null, additional: null, construction: null };
   let loading = $state(false);
   let error = $state("");
   let listElement;
-  let componentElement = $state();
+  let selectionElement = $state();
   let additionalElement = $state();
+  let constructionElement = $state();
   let restored = $state(false);
   let requestVersion = 0;
-  const optionRequestVersions = { component: 0, additional: 0 };
+  const optionRequestVersions = { selection: 0, additional: 0, construction: 0 };
   let catalogScrollTop = $state(0);
-  let optionScrollTop = $state({ component: 0, additional: 0 });
+  let optionScrollTop = $state({ selection: 0, additional: 0, construction: 0 });
   let loadedSearch = null;
   let loadedSort = null;
-  const catalogKey = (requestedPage) => `catalog:${search}:${sort}:${requestedPage}`;
-  const optionKey = (productId, kind, requestedPage) => `options:v2:${productId}:${kind}:${requestedPage}`;
+  const catalogKey = (requestedPage) => `catalog:v3:${KOREANET}:${search}:${sort}:${requestedPage}`;
+  const optionKey = (kind, query, requestedPage) => `relations:v3:${KOREANET}:${kind}:${query}:${sort}:${requestedPage}`;
   const catalogWindow = $derived(windowFor(result.items, catalogScrollTop, CATALOG_ROW_HEIGHT, 560));
-  const componentWindow = $derived(windowFor(options.component.items, optionScrollTop.component, OPTION_ROW_HEIGHT, 280));
+  const selectionWindow = $derived(windowFor(options.selection.items, optionScrollTop.selection, OPTION_ROW_HEIGHT, 180));
   const additionalWindow = $derived(windowFor(options.additional.items, optionScrollTop.additional, OPTION_ROW_HEIGHT, 280));
+  const constructionWindow = $derived(windowFor(options.construction.items, optionScrollTop.construction, OPTION_ROW_HEIGHT, 180));
 
   function id() { return [...crypto.getRandomValues(new Uint8Array(16))].map((value) => value.toString(16).padStart(2, "0")).join(""); }
   function titleFor(sequence) {
@@ -61,6 +66,7 @@
       sort,
       page,
       optionPages: { ...optionPages },
+      relationSearch: { ...relationSearch },
       selectedProductId: selected?.product_id ?? null,
       scrollTop: catalogScrollTop,
       optionScrollTop: { ...optionScrollTop },
@@ -84,7 +90,7 @@
     const cached = await getCatalogCache(key).catch(() => null);
     if (cached && version === requestVersion) result = mergeCatalogPage(result, cached, requestedPage);
     try {
-      const online = await requestJson(`/api/catalog/products?q=${encodeURIComponent(search)}&sort=${sort}&page=${requestedPage}&page_size=${PAGE_SIZE}`);
+      const online = await requestJson(`/api/catalog/products?company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(search)}&sort=${sort}&page=${requestedPage}&page_size=${PAGE_SIZE}`);
       if (version === requestVersion) result = mergeCatalogPage(result, online, requestedPage);
       try { await putCatalogCache(key, online); } catch {}
     } catch (caught) {
@@ -98,15 +104,15 @@
     if (!selected) return;
     const version = ++optionRequestVersions[kind];
     optionLoading = { ...optionLoading, [kind]: true };
-    const productId = selected.product_id;
-    const key = optionKey(productId, kind, requestedPage);
+    const query = relationSearch[kind].trim();
+    const key = optionKey(kind, query, requestedPage);
     const cached = await getCatalogCache(key).catch(() => null);
-    if (cached && version === optionRequestVersions[kind] && selected?.product_id === productId) {
+    if (cached && version === optionRequestVersions[kind] && selected) {
       options = { ...options, [kind]: mergeOptionPage(options[kind], cached, requestedPage) };
     }
     try {
-      const online = await requestJson(`/api/catalog/products/${encodeURIComponent(productId)}/options?relation_kind=${kind}&page=${requestedPage}&page_size=${PAGE_SIZE}`);
-      if (version === optionRequestVersions[kind] && selected?.product_id === productId) {
+      const online = await requestJson(`/api/catalog/relations?company_name=${encodeURIComponent(KOREANET)}&category=${kind}&q=${encodeURIComponent(query)}&sort=${sort}&page=${requestedPage}&page_size=${PAGE_SIZE}`);
+      if (version === optionRequestVersions[kind] && selected) {
         options = { ...options, [kind]: mergeOptionPage(options[kind], online, requestedPage) };
       }
       try { await putCatalogCache(key, online); } catch {}
@@ -119,13 +125,14 @@
       if (version === optionRequestVersions[kind]) optionLoading = { ...optionLoading, [kind]: false };
     }
   }
-  async function select(product, restoredPages = { component: 1, additional: 1 }) {
+  async function select(product, restoredPages = { selection: 1, additional: 1, construction: 1 }) {
     selected = product;
-    options = { component: emptyPage(), additional: emptyPage() };
-    optionPages = { component: 1, additional: 1 };
-    optionScrollTop = { component: 0, additional: 0 };
+    options = { selection: emptyPage(), additional: emptyPage(), construction: emptyPage() };
+    optionPages = { selection: 1, additional: 1, construction: 1 };
+    relationSearch = { selection: "", additional: "", construction: "" };
+    optionScrollTop = { selection: 0, additional: 0, construction: 0 };
     await saveView();
-    await Promise.all(OPTION_KINDS.map(async (kind) => {
+    await Promise.all(RELATION_KINDS.map(async (kind) => {
       const lastPage = Math.max(1, restoredPages[kind] ?? 1);
       for (let requestedPage = 1; requestedPage <= lastPage; requestedPage += 1) {
         optionPages = { ...optionPages, [kind]: requestedPage };
@@ -134,12 +141,12 @@
     }));
   }
   function closeOptions() {
-    optionRequestVersions.component += 1;
-    optionRequestVersions.additional += 1;
+    for (const kind of RELATION_KINDS) optionRequestVersions[kind] += 1;
     selected = null;
-    options = { component: emptyPage(), additional: emptyPage() };
-    optionPages = { component: 1, additional: 1 };
-    optionScrollTop = { component: 0, additional: 0 };
+    options = { selection: emptyPage(), additional: emptyPage(), construction: emptyPage() };
+    optionPages = { selection: 1, additional: 1, construction: 1 };
+    relationSearch = { selection: "", additional: "", construction: "" };
+    optionScrollTop = { selection: 0, additional: 0, construction: 0 };
     void saveView();
   }
   async function add(item, kind, parent = null) {
@@ -157,6 +164,14 @@
   async function getAllVisibleCount() { return (await getAllEstimates()).filter((record) => !record.deleted && record.document.lines.length).length; }
   function changeSearch(event) { onSearch(event.currentTarget.value); page = 1; result = emptyPage(); closeOptions(); }
   function changeSort() { page = 1; result = emptyPage(); closeOptions(); }
+  function changeRelationSearch(kind, event) {
+    relationSearch = { ...relationSearch, [kind]: event.currentTarget.value };
+    options = { ...options, [kind]: emptyPage() };
+    optionPages = { ...optionPages, [kind]: 1 };
+    optionScrollTop = { ...optionScrollTop, [kind]: 0 };
+    clearTimeout(relationTimers[kind]);
+    relationTimers[kind] = setTimeout(() => void loadOptions(kind, 1), 80);
+  }
   function scrollCatalog() {
     catalogScrollTop = listElement.scrollTop;
     void saveView();
@@ -166,7 +181,7 @@
     }
   }
   function scrollOptions(kind) {
-    const element = kind === "component" ? componentElement : additionalElement;
+    const element = kind === "selection" ? selectionElement : kind === "additional" ? additionalElement : constructionElement;
     if (!element) return;
     optionScrollTop = { ...optionScrollTop, [kind]: element.scrollTop };
     void saveView();
@@ -176,6 +191,12 @@
       void loadOptions(kind, nextPage);
     }
   }
+  function relationStatus(item) {
+    if (!selected) return "";
+    if (item.parent_product_id === selected.product_id) return `연결됨 · 본품 ${selected.name} (${selected.product_id})`;
+    return `다른 본품 · ${item.parent_name || "본품 정보 없음"} (${item.parent_product_id})`;
+  }
+  function isRelated(item) { return selected && item.parent_product_id === selected.product_id; }
 
   onMount(() => {
     void getAppState("catalogView").then(async (state) => {
@@ -192,14 +213,16 @@
         }
         if (state.selectedProductId) {
           const item = result.items.find((candidate) => candidate.product_id === state.selectedProductId);
-          if (item) await select(item, state.optionPages ?? { component: state.optionPage ?? 1, additional: state.optionPage ?? 1 });
+          if (item) await select(item, state.optionPages ?? { selection: 1, additional: 1, construction: 1 });
         }
+        relationSearch = { ...relationSearch, ...(state.relationSearch ?? {}) };
         catalogScrollTop = state.scrollTop ?? 0;
-        optionScrollTop = typeof state.optionScrollTop === "object" ? state.optionScrollTop : { component: state.optionScrollTop ?? 0, additional: state.optionScrollTop ?? 0 };
+        optionScrollTop = typeof state.optionScrollTop === "object" ? { selection: 0, additional: 0, construction: 0, ...state.optionScrollTop } : { selection: state.optionScrollTop ?? 0, additional: state.optionScrollTop ?? 0, construction: state.optionScrollTop ?? 0 };
         requestAnimationFrame(() => {
           if (listElement) listElement.scrollTop = catalogScrollTop;
-          if (componentElement) componentElement.scrollTop = optionScrollTop.component;
+          if (selectionElement) selectionElement.scrollTop = optionScrollTop.selection;
           if (additionalElement) additionalElement.scrollTop = optionScrollTop.additional;
+          if (constructionElement) constructionElement.scrollTop = optionScrollTop.construction;
         });
       } else {
         await loadCatalog(1);
@@ -236,7 +259,7 @@
   {#if error}<p class="state-message state-message--error">{error}</p>{/if}
   <p class="catalog-summary" aria-live="polite">
     {#if loading}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>검색 중</span>
-    {:else}검색 결과 {result.total_count.toLocaleString()}건{/if}
+    {:else}코리아넷 본품 {result.total_count.toLocaleString()}건{/if}
   </p>
   <div class:selected-column={selected} class="catalog-columns">
     <div class="catalog-scroll" bind:this={listElement} onscroll={scrollCatalog} aria-busy={loading}>
@@ -265,7 +288,7 @@
                 <dl class="attribute-list">{#each item.attributes ?? [] as attribute}<div><dt>{attribute.name}</dt><dd>{attribute.value}{attribute.unit}</dd></div>{/each}</dl>
               </div>
             </button>
-            <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터</a><button class="button button--secondary" type="button" onclick={() => add(item, "main")}>내역 추가</button></div>
+            <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "main")}>리스트에 추가</button></div>
           </article>
         {/each}
         <div class="virtual-spacer" style:height={`${catalogWindow.bottom}px`}></div>
@@ -274,35 +297,35 @@
     </div>
     {#if selected}
       <aside class="option-panel" aria-labelledby="option-title">
-        <header class="option-panel__header"><h2 id="option-title">{selected.name}</h2><button class="button--secondary" type="button" onclick={closeOptions}>닫기</button></header>
+        <header class="option-panel__header"><div><span class="option-panel__eyebrow">선택한 본품</span><h2 id="option-title">{selected.name} · {selected.product_id}</h2></div><button class="button--secondary" type="button" onclick={closeOptions}>닫기</button></header>
         <div class="option-groups">
-          <section class="option-group" aria-labelledby="component-title">
-            <h3 id="component-title">선택품목 <span>{options.component.total_count.toLocaleString()}건</span></h3>
-            <div class="option-scroll" bind:this={componentElement} onscroll={() => scrollOptions("component")} aria-busy={optionLoading.component}>
-              <div class="virtual-spacer" style:height={`${componentWindow.top}px`}></div>
-              {#each componentWindow.items as item (`${item.relation_id}:${item.product_id}`)}
-                <article class="option-row">
+          <section class="option-group" aria-labelledby="selection-title">
+            <div class="option-group__header"><h3 id="selection-title">선택품목 <span>{options.selection.total_count.toLocaleString()}건</span></h3><label><span class="visually-hidden">선택품목 검색</span><input type="search" value={relationSearch.selection} placeholder="선택품목 검색" oninput={(event) => changeRelationSearch("selection", event)} /></label></div>
+            <div class="option-scroll" bind:this={selectionElement} onscroll={() => scrollOptions("selection")} aria-busy={optionLoading.selection}>
+              <div class="virtual-spacer" style:height={`${selectionWindow.top}px`}></div>
+              {#each selectionWindow.items as item (`${item.relation_id}:${item.product_id}`)}
+                <article class:option-row--connected={isRelated(item)} class="option-row">
                   <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
-                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.company_name}</span><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span><dl class="attribute-list">{#each item.attributes ?? [] as attribute}<div><dt>{attribute.name}</dt><dd>{attribute.value}{attribute.unit}</dd></div>{/each}</dl></div>
-                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>내역 추가</button></div>
+                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
+                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
                 </article>
               {/each}
-              <div class="virtual-spacer" style:height={`${componentWindow.bottom}px`}></div>
-              {#if optionLoading.component && options.component.items.length === 0}
+              <div class="virtual-spacer" style:height={`${selectionWindow.bottom}px`}></div>
+              {#if optionLoading.selection && options.selection.items.length === 0}
                 <div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>선택품목 불러오는 중</span></div>
               {/if}
-              {#if !optionLoading.component && options.component.items.length === 0}<p class="state-message option-empty">선택품목 없음.</p>{/if}
+              {#if !optionLoading.selection && options.selection.items.length === 0}<p class="state-message option-empty">선택품목 없음.</p>{/if}
             </div>
           </section>
           <section class="option-group" aria-labelledby="additional-title">
-            <h3 id="additional-title">추가선택품목 <span>{options.additional.total_count.toLocaleString()}건</span></h3>
+            <div class="option-group__header"><h3 id="additional-title">추가선택품목 <span>{options.additional.total_count.toLocaleString()}건</span></h3><label><span class="visually-hidden">추가선택품목 검색</span><input type="search" value={relationSearch.additional} placeholder="추가선택품목 검색" oninput={(event) => changeRelationSearch("additional", event)} /></label></div>
             <div class="option-scroll" bind:this={additionalElement} onscroll={() => scrollOptions("additional")} aria-busy={optionLoading.additional}>
               <div class="virtual-spacer" style:height={`${additionalWindow.top}px`}></div>
               {#each additionalWindow.items as item (`${item.relation_id}:${item.product_id}`)}
-                <article class="option-row">
+                <article class:option-row--connected={isRelated(item)} class="option-row">
                   <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
-                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.company_name}</span><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span><dl class="attribute-list">{#each item.attributes ?? [] as attribute}<div><dt>{attribute.name}</dt><dd>{attribute.value}{attribute.unit}</dd></div>{/each}</dl></div>
-                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>내역 추가</button></div>
+                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
+                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
                 </article>
               {/each}
               <div class="virtual-spacer" style:height={`${additionalWindow.bottom}px`}></div>
@@ -310,6 +333,22 @@
                 <div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>추가선택품목 불러오는 중</span></div>
               {/if}
               {#if !optionLoading.additional && options.additional.items.length === 0}<p class="state-message option-empty">추가선택품목 없음.</p>{/if}
+            </div>
+          </section>
+          <section class="option-group" aria-labelledby="construction-title">
+            <div class="option-group__header"><h3 id="construction-title">공사 <span>{options.construction.total_count.toLocaleString()}건</span></h3><label><span class="visually-hidden">공사 검색</span><input type="search" value={relationSearch.construction} placeholder="공사 검색" oninput={(event) => changeRelationSearch("construction", event)} /></label></div>
+            <div class="option-scroll" bind:this={constructionElement} onscroll={() => scrollOptions("construction")} aria-busy={optionLoading.construction}>
+              <div class="virtual-spacer" style:height={`${constructionWindow.top}px`}></div>
+              {#each constructionWindow.items as item (`${item.relation_id}:${item.product_id}`)}
+                <article class:option-row--connected={isRelated(item)} class="option-row">
+                  <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
+                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
+                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
+                </article>
+              {/each}
+              <div class="virtual-spacer" style:height={`${constructionWindow.bottom}px`}></div>
+              {#if optionLoading.construction && options.construction.items.length === 0}<div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>공사 불러오는 중</span></div>{/if}
+              {#if !optionLoading.construction && options.construction.items.length === 0}<p class="state-message option-empty">공사 없음.</p>{/if}
             </div>
           </section>
         </div>
@@ -325,16 +364,27 @@
   .option-panel__header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: 1px solid var(--line); background: var(--surface-subtle); }
   .option-panel__header h2 { min-width: 0; margin: 0; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .option-panel__header button { min-height: 36px; padding-inline: var(--space-3); }
-  .option-groups { display: grid; min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .option-groups { display: grid; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); }
   .option-group { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
   .option-group + .option-group { border-block-start: 1px solid var(--line); }
-  .option-group h3 { margin: 0; padding: var(--space-2) var(--space-4); border-block-end: 1px solid var(--line); font-size: 13px; }
+  .option-panel__eyebrow { display: block; color: var(--muted); font-size: 11px; }
+  .option-group__header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 220px); gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-4); border-block-end: 1px solid var(--line); }
+  .option-group h3 { margin: 0; font-size: 13px; }
   .option-group h3 span { margin-inline-start: var(--space-1); color: var(--muted); font-weight: 400; }
+  .option-group__header label { margin: 0; }
+  .option-group__header input { min-height: 32px; padding-inline: var(--space-2); font-size: 12px; }
   .option-panel .option-scroll { block-size: auto; min-height: 0; padding-inline-end: 0; }
-  .option-row { display: grid; grid-template-columns: 72px minmax(0, 1fr) 96px; align-content: start; align-items: start; }
+  .option-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 112px; block-size: 112px; align-content: center; align-items: center; padding: var(--space-2) var(--space-3); }
   .option-row > img { width: 64px; height: 64px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius-compact); background: var(--surface); }
   .option-row__details { min-width: 0; }
+  .option-row__details > strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .option-row__details > span { display: block; margin-block-start: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .relation-status { color: var(--muted) !important; font-size: 11px !important; }
+  .relation-status--connected { color: var(--accent) !important; font-weight: 600; }
+  .option-row--connected { background: var(--surface-selected); }
   .option-row__price { color: var(--ink) !important; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .option-row .catalog-card__actions { gap: var(--space-1); }
+  .option-row .catalog-card__actions .button, .option-row .g2b-link { min-height: 32px; padding-inline: var(--space-2); font-size: 11px; }
   .option-empty { padding: var(--space-4); }
   .option-loading { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-4); color: var(--muted); font-size: 12px; }
 </style>

@@ -60,6 +60,7 @@ class _CatalogIndex:
         page: int,
         page_size: int,
         sort: PriorityLineSort,
+        company_name: str = "",
     ) -> CatalogProductPage:
         """Search the warmed local index and return one sorted page."""
         terms = tuple(normalize_search_text(query).split())
@@ -68,11 +69,19 @@ class _CatalogIndex:
                 product_id
                 for product_id, document in self.documents
                 if _contains_all(document, terms)
+                and (
+                    not company_name
+                    or self.products[product_id].company_name == company_name
+                )
             }
             matches.update(
                 product_id
                 for product_id, document in self.legacy_documents
                 if _contains_all(document, terms) and product_id in self.products
+                and (
+                    not company_name
+                    or self.products[product_id].company_name == company_name
+                )
             )
             for group, document in self.group_documents:
                 if _contains_all(document, terms):
@@ -80,9 +89,17 @@ class _CatalogIndex:
                         product_id
                         for product_id in self.group_products.get(group, ())
                         if product_id in self.products
+                        and (
+                            not company_name
+                            or self.products[product_id].company_name == company_name
+                        )
                     )
         else:
-            matches = set(self.products)
+            matches = {
+                product_id
+                for product_id, product in self.products.items()
+                if not company_name or product.company_name == company_name
+            }
         ordered = self.ordered_ids[sort]
         offset = (page - 1) * page_size
         page_ids: list[str] = []
@@ -182,13 +199,14 @@ ORDER BY position, option_product_id
 """
 
 
-def list_catalog_products(
+def list_catalog_products(  # noqa: PLR0913
     database: Path,
     query: str,
     *,
     page: int,
     page_size: int,
     sort: PriorityLineSort,
+    company_name: str = "",
 ) -> CatalogProductPage:
     """Return main products, including parents matched through child options."""
     return _current_index(database).page(
@@ -196,6 +214,7 @@ def list_catalog_products(
         page=page,
         page_size=page_size,
         sort=sort,
+        company_name=company_name,
     )
 
 
