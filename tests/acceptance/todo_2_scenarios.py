@@ -219,16 +219,15 @@ def observe_failure(scenario: str) -> FailureObservation:
         return _observe_probe_call_limit()
     requester = FakeRequester(scenario)
     low_budget = scenario == "low-quota-zero-call"
-    quota = quota_manifest(daily_quota=100 if low_budget else 1000)
+    quota = quota_manifest(daily_quota=2 if low_budget else 1000)
     key = "" if scenario == "missing-key" else "synthetic-test-key"
     with pytest.raises(CaptureBlockedError) as observed:
         _ = _capture(requester, quota, key)
-    expected_reason = (
-        {
-            "limit-size-missing": "limit-unproven",
-            "provisional-schema-not-strict": "malformed-envelope",
-        }.get(scenario, scenario)
-    )
+    expected_reason = {
+        "limit-size-missing": "limit-unproven",
+        "low-quota-zero-call": "probe-budget-below-three",
+        "provisional-schema-not-strict": "malformed-envelope",
+    }.get(scenario, scenario)
     assert observed.value.reason == expected_reason
     if scenario in {"low-quota-zero-call", "missing-key"}:
         assert requester.calls == 0
@@ -300,17 +299,16 @@ def _observe_persisted_probe_budget() -> FailureObservation:
         database = Path(directory) / "capture.sqlite3"
         migrate(database)
         repository = IngestRepository(database)
-        for ordinal in range(898):
+        for ordinal in range(998):
             _ = repository.reserve_quota(
                 QuotaReservationInput(
                     operation=Operation.GET_MAS_CONTRACT_PRODUCT_INFO,
                     attempted_at_utc=(
-                        f"2026-07-15T00:{ordinal // 60:02d}:"
-                        f"{ordinal % 60:02d}+00:00"
+                        f"2026-07-15T00:{ordinal // 60:02d}:{ordinal % 60:02d}+00:00"
                     ),
                     cutoff_utc="2026-07-14T00:00:00+00:00",
                     kst_date="2026-07-15",
-                    ceiling=900,
+                    ceiling=1000,
                 )
             )
         requester = FakeRequester()
@@ -337,7 +335,7 @@ def _observe_probe_call_limit() -> FailureObservation:
                     attempted_at_utc=f"2026-07-15T00:00:0{ordinal}+00:00",
                     cutoff_utc="2026-07-14T00:00:00+00:00",
                     kst_date="2026-07-15",
-                    ceiling=900,
+                    ceiling=1000,
                 )
             )
             for ordinal in range(4)
@@ -351,7 +349,7 @@ def _observe_probe_call_limit() -> FailureObservation:
                 context,
                 Operation.GET_MAS_CONTRACT_PRODUCT_INFO,
                 params,
-                900,
+                1000,
                 current_attempts,
             )
         with pytest.raises(CaptureBlockedError, match="probe-call-6") as observed:
@@ -359,7 +357,7 @@ def _observe_probe_call_limit() -> FailureObservation:
                 context,
                 Operation.GET_MAS_CONTRACT_PRODUCT_INFO,
                 params,
-                900,
+                1000,
                 current_attempts,
             )
         persisted_attempts = repository.quota_usage(

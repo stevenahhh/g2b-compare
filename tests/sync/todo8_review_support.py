@@ -134,7 +134,12 @@ def seed_ready_release_on(
         bundle_id = _insert_id(
             query(
                 connection,
-                """INSERT INTO release_bundles VALUES(
+                """INSERT INTO release_bundles(
+                    id,materialization_id,index_version_id,relation_snapshot_id,
+                    ranking_version,expected_cache_rows,written_cache_rows,
+                    cache_content_sha,release_bundle_sha,status,attempt_no,
+                    ready_attempt_no,heartbeat_at,created_at
+                ) VALUES(
                     NULL, ?, ?, ?, 'rank-v1', 1, 1, 'cache-content', 'bundle-sha',
                     'ready', 1, 1, ?, ?)""",
                 (materialization_id, index_id, relation_id, NOW, NOW),

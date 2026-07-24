@@ -33,11 +33,9 @@ SCORES_VALUE: Final[TypeAdapter[dict[str, str | None]]] = TypeAdapter(
     dict[str, str | None],
     config=ConfigDict(strict=True),
 )
-OPTION_ROLES_VALUE: Final[TypeAdapter[list[dict[str, CacheJsonValue]]]] = (
-    TypeAdapter(
-        list[dict[str, CacheJsonValue]],
-        config=ConfigDict(strict=True),
-    )
+OPTION_ROLES_VALUE: Final[TypeAdapter[list[dict[str, CacheJsonValue]]]] = TypeAdapter(
+    list[dict[str, CacheJsonValue]],
+    config=ConfigDict(strict=True),
 )
 INTEGER_VALUE: Final[TypeAdapter[int]] = TypeAdapter(
     int,
@@ -124,12 +122,8 @@ def test_real_builder_emits_the_exact_typed_cache_document(tmp_path: Path) -> No
         decimals = tuple(
             DECIMAL_VALUE.validate_python(value) for value in scores.values()
         )
-        assert all(
-            value is None or SIX_DECIMALS.fullmatch(value) for value in decimals
-        )
-        roles = OPTION_ROLES_VALUE.validate_python(
-            document["option_role_observations"]
-        )
+        assert all(value is None or SIX_DECIMALS.fullmatch(value) for value in decimals)
+        roles = OPTION_ROLES_VALUE.validate_python(document["option_role_observations"])
         for role in roles:
             assert INTEGER_VALUE.validate_python(role["item_sequence"]) >= 0
             assert INTEGER_VALUE.validate_python(role["change_sequence"]) >= 0

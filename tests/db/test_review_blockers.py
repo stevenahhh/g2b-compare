@@ -135,7 +135,12 @@ def test_building_partial_release_cannot_become_active(tmp_path: Path) -> None:
         bundle_id = query(
             connection,
             """
-            INSERT INTO release_bundles VALUES (
+            INSERT INTO release_bundles (
+                id, materialization_id, index_version_id, relation_snapshot_id,
+                ranking_version, expected_cache_rows, written_cache_rows,
+                cache_content_sha, release_bundle_sha, status, attempt_no,
+                ready_attempt_no, heartbeat_at, created_at
+            ) VALUES (
                 NULL, ?, ?, ?, 'r1', 3, 1, NULL, NULL,
                 'building', 1, NULL, ?, ?
             )

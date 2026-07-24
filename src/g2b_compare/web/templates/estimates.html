@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>관급내역</title>
+    <link rel="stylesheet" href="/static/mvp.css?v=20260722-3">
+    <script src="/static/estimates.js?v=20260722" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="mvp-nav" aria-label="주 메뉴">
+        <a href="/">물품 검색</a>
+        <a aria-current="page" href="/estimates">관급내역</a>
+        <a href="/data">데이터 관리</a>
+      </nav>
+      <header class="page-header page-header-row">
+        <div>
+          <p class="eyebrow">ESTIMATE</p>
+          <h1>관급내역</h1>
+        </div>
+        <form action="/estimates" method="post">
+          <button type="submit">새로 시작</button>
+        </form>
+      </header>
+      {% if drafts %}
+        <ol class="estimate-history" aria-label="저장된 관급내역">
+          {% for draft in drafts %}
+            <li>
+              <a href="/estimates/{{ draft.id }}">
+                <strong>{{ draft.title }}</strong>
+                <span>내역 {{ draft.line_count }}건</span>
+                <time datetime="{{ draft.updated_at }}">{{ draft.updated_at[:16].replace("T", " ") }}</time>
+              </a>
+              <button class="secondary-button estimate-delete" type="button" data-delete-estimate="{{ draft.id }}" data-delete-title="{{ draft.title }}" aria-label="{{ draft.title }} 삭제">삭제</button>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <section class="empty-state">
+          <h2>저장된 관급내역이 없음</h2>
+          <p>새로 시작한 뒤 물품을 추가하면 이 목록에 자동으로 저장됨.</p>
+        </section>
+      {% endif %}
+    </main>
+    <dialog class="confirm-dialog" data-delete-dialog aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-description">
+      <form method="post" data-delete-form>
+        <h2 id="delete-dialog-title">관급내역 삭제</h2>
+        <p id="delete-dialog-description"><strong data-delete-name></strong> 내역을 삭제함. 삭제 후 복구할 수 없음.</p>
+        <div class="confirm-dialog-actions">
+          <button class="secondary-button" type="button" data-delete-cancel>취소</button>
+          <button type="submit">삭제</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

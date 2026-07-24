@@ -14,10 +14,16 @@ ROOT = Path(__file__).resolve().parents[2]
 DATASET = ROOT / "dataset"
 FIXTURES = ROOT / "tests" / "fixtures"
 EXTRACTOR = ROOT / "tools" / "extract_workbook_fixtures.py"
+EXTRACTED_FIXTURES = (
+    Path("workbooks/manifest-v1.json"),
+    Path("normalization/workbook-smoke-v1.json"),
+    Path("ranking/workbook-smoke-v1.json"),
+)
 RELATION_SHA256 = "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db"
 SOURCE_HASHES = {
     path.name: hashlib.sha256(path.read_bytes()).hexdigest()
     for path in DATASET.glob("*.xlsx")
+    if not path.name.startswith("~$")
 }
 
 
@@ -75,13 +81,12 @@ def test_extract_real_workbooks_is_deterministic_and_read_only(tmp_path: Path) -
     }
     assert first_files == second_files
     assert first_files == {
-        path.relative_to(FIXTURES): path.read_bytes()
-        for path in FIXTURES.rglob("*.json")
-        if path.name != "test_workbook_extract.py"
+        relative: (FIXTURES / relative).read_bytes() for relative in EXTRACTED_FIXTURES
     }
     assert {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
         for path in DATASET.glob("*.xlsx")
+        if not path.name.startswith("~$")
     } == SOURCE_HASHES
 
 

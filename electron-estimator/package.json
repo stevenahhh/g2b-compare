@@ -1,0 +1,38 @@
+{
+  "name": "electron-estimator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "node scripts/build-main.mjs && vite build",
+    "test:unit": "vitest --config vitest.config.ts",
+    "test:integration": "vitest --config vitest.integration.config.ts",
+    "test:security": "vitest --config vitest.security.config.ts",
+    "test:e2e": "playwright test",
+    "package:dir": "npm run build && electron-builder --dir && npm run assert:package",
+    "package:win": "npm run build && electron-builder --win nsis portable",
+    "verify:all": "node scripts/verify-all.mjs",
+    "assert:build": "node scripts/assert-build.mjs",
+    "assert:package": "node scripts/assert-package.mjs && node scripts/smoke-package.mjs",
+    "evidence": "node scripts/evidence.mjs"
+  },
+  "dependencies": {
+    "decimal.js": "10.6.0",
+    "exceljs": "4.4.0",
+    "jszip": "3.10.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@electron/asar": "3.4.1",
+    "@playwright/test": "1.61.1",
+    "@types/node": "24.10.1",
+    "electron": "43.2.0",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.28.1",
+    "typescript": "7.0.2",
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
+  }
+}

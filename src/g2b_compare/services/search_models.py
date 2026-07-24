@@ -13,6 +13,7 @@ from typing import (
     Protocol,
     Self,
     override,
+    runtime_checkable,
 )
 
 from pydantic import (
@@ -26,6 +27,8 @@ from pydantic import (
 from pydantic_core import PydanticCustomError
 
 if TYPE_CHECKING:
+    from g2b_compare.normalize.spec_types import SpecSemantic
+
     from .comparators import ComparatorView, ProductRecord, ScoredRecord
     from .release_models import ReleasePin
 
@@ -96,7 +99,9 @@ class SearchRequest(BaseModel):
     page: int = 1
     page_size: Literal[50] = 50
 
-    @field_validator("product_name", "spec_text")
+    spec_filter: str = ""
+
+    @field_validator("product_name", "spec_text", "spec_filter")
     @classmethod
     def _query_lengths(cls, value: str, info: ValidationInfo) -> str:
         maximum = 100 if info.field_name == "product_name" else 500
@@ -144,6 +149,25 @@ class SearchResult:
     scores: ScoredRecord
     within_price_tolerance: bool | None
     comparators: tuple[ComparatorView, ComparatorView, ComparatorView]
+    spec_sources: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class SpecMatch:
+    """One product satisfying every structured filter semantic."""
+
+    product_id: str
+    source_kinds: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SpecFacet:
+    """One deterministic structured-value distribution entry."""
+
+    dimension: str
+    display_value: str
+    count: int
+    filter_value: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +183,7 @@ class SearchResponse:
     page: int
     page_size: Literal[50]
     results: tuple[SearchResult, ...]
+    facets: tuple[SpecFacet, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,4 +223,25 @@ class SearchReader(Protocol):
         self, pin: ReleasePin, anchor_id: str
     ) -> tuple[ComparatorView, ...] | None:
         """Read only the pinned ready-attempt comparator rows."""
+        ...
+
+
+@runtime_checkable
+class SpecSearchReader(Protocol):
+    """Expose optional release-pinned structured specification reads."""
+
+    def matching_specs(
+        self,
+        pin: ReleasePin,
+        semantics: tuple[SpecSemantic, ...],
+    ) -> tuple[SpecMatch, ...]:
+        """Return products satisfying every semantic and their source kinds."""
+        ...
+
+    def spec_facets(
+        self,
+        pin: ReleasePin,
+        product_ids: tuple[str, ...],
+    ) -> tuple[SpecFacet, ...]:
+        """Return deterministic distributions for the selected pool."""
         ...

@@ -6,7 +6,19 @@ from decimal import ROUND_HALF_EVEN, Decimal
 from typing import TYPE_CHECKING, Final
 
 from g2b_compare.materialize.prices import ComparisonPrice
+from g2b_compare.normalize.numbers import (
+    InvalidQuantityError,
+    UnsupportedNumberError,
+)
+from g2b_compare.normalize.spec_types import (
+    RangeParseError,
+    RelationParseError,
+    SpecSemantic,
+    UnitDimensionError,
+)
+from g2b_compare.normalize.specs import parse_specs
 from g2b_compare.normalize.text import normalize_text
+from g2b_compare.normalize.units import UnitAliasError
 from g2b_compare.ranking.topk import RankableProduct
 
 from .comparators import (
@@ -14,6 +26,7 @@ from .comparators import (
     ProductRecord,
     ScoredRecord,
     compare_product,
+    prepare_comparator_context,
     score_pool,
     validate_cached,
 )
@@ -24,9 +37,12 @@ from .search_models import (
     SearchResponse,
     SearchResult,
     SearchServiceError,
+    SpecSearchReader,
 )
 
 if TYPE_CHECKING:
+    from g2b_compare.ranking.features import PreparedFeatureContext
+
     from .release_models import ReleasePin
 
 PRICE_STEP: Final = Decimal("0.01")
@@ -40,6 +56,15 @@ UNKNOWN_DETAIL: Final = "unknown_detail_category"
 DETAIL_PARENT_MISMATCH: Final = "detail_category_parent_mismatch"
 PRICE_UNIT_REQUIRED: Final = "price_unit_required"
 UNKNOWN_PRICE_UNIT: Final = "unknown_price_unit"
+INVALID_SPEC_FILTER: Final = "invalid_spec_filter"
+SPEC_PARSE_ERRORS: Final = (
+    InvalidQuantityError,
+    UnsupportedNumberError,
+    RangeParseError,
+    RelationParseError,
+    UnitDimensionError,
+    UnitAliasError,
+)
 
 
 def execute_search(request: SearchRequest, reader: SearchReader) -> SearchResponse:
@@ -50,8 +75,26 @@ def execute_search(request: SearchRequest, reader: SearchReader) -> SearchRespon
     categories = reader.categories(pin)
     products = reader.exact_products(pin, request.product_name)
     selected, pool = _select_category(request, categories, products)
+    semantics = _parse_spec_filter(request.spec_filter)
+    source_by_product: dict[str, tuple[str, ...]] = {}
+    if semantics:
+        if not isinstance(reader, SpecSearchReader):
+            raise SearchServiceError(code=INVALID_SPEC_FILTER)
+        matches = reader.matching_specs(pin, semantics)
+        source_by_product = {item.product_id: item.source_kinds for item in matches}
+        pool = tuple(
+            item for item in pool if item.rankable.product_id in source_by_product
+        )
     if not pool:
         return _empty_response(request, pin, selected)
+    facets = (
+        reader.spec_facets(
+            pin,
+            tuple(item.rankable.product_id for item in pool),
+        )
+        if isinstance(reader, SpecSearchReader)
+        else ()
+    )
     price_unit, tolerance = _resolve_price(request, pool)
     query_anchor = _query_anchor(request, selected, price_unit)
     scored = score_pool(query_anchor, pool)
@@ -62,14 +105,28 @@ def execute_search(request: SearchRequest, reader: SearchReader) -> SearchRespon
     if request.page > (len(ordered) + 49) // 50:
         raise SearchServiceError(code=PAGE_OVERFLOW)
     page_rows = ordered[(request.page - 1) * 50 : request.page * 50]
+    cached_rows = (
+        tuple(None for _item in page_rows)
+        if semantics
+        else tuple(
+            reader.cached_comparators(pin, item.record.rankable.product_id)
+            for item in page_rows
+        )
+    )
+    context = (
+        None
+        if all(cached is not None for cached in cached_rows)
+        else prepare_comparator_context(pool)
+    )
     results = tuple(
         SearchResult(
             item.record,
             item,
             _within_tolerance(item.record, request, price_unit, tolerance),
-            _comparators(reader, pin, item.record, pool),
+            _comparators(item.record, pool, cached, context),
+            source_by_product.get(item.record.rankable.product_id, ()),
         )
-        for item in page_rows
+        for item, cached in zip(page_rows, cached_rows, strict=True)
     )
     return SearchResponse(
         "ok",
@@ -81,7 +138,20 @@ def execute_search(request: SearchRequest, reader: SearchReader) -> SearchRespon
         request.page,
         50,
         results,
+        facets,
     )
+
+
+def _parse_spec_filter(raw: str) -> tuple[SpecSemantic, ...]:
+    if not raw:
+        return ()
+    try:
+        semantics = parse_specs(raw).semantics
+    except SPEC_PARSE_ERRORS as error:
+        raise SearchServiceError(code=INVALID_SPEC_FILTER) from error
+    if not semantics:
+        raise SearchServiceError(code=INVALID_SPEC_FILTER)
+    return semantics
 
 
 def _select_category(
@@ -228,15 +298,14 @@ def _within_tolerance(
 
 
 def _comparators(
-    reader: SearchReader,
-    pin: ReleasePin,
     anchor: ProductRecord,
     pool: tuple[ProductRecord, ...],
+    cached: tuple[ComparatorView, ...] | None,
+    context: PreparedFeatureContext | None,
 ) -> tuple[ComparatorView, ComparatorView, ComparatorView]:
-    cached = reader.cached_comparators(pin, anchor.rankable.product_id)
     if cached is not None:
         return validate_cached(anchor.rankable.product_id, cached)
-    return compare_product(anchor, pool)
+    return compare_product(anchor, pool, context)
 
 
 def _empty_response(

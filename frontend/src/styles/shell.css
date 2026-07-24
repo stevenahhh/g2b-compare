@@ -1,0 +1,24 @@
+.shell { display: grid; min-inline-size: 0; height: 100dvh; grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; }
+.skip-link { position: fixed; z-index: 20; inset-block-start: -80px; inset-inline-start: var(--space-3); padding: var(--space-3); color: var(--surface); background: var(--ink); }
+.skip-link:focus { inset-block-start: var(--space-3); }
+
+.app-header { display: flex; min-inline-size: 0; min-block-size: 64px; align-items: center; padding-inline: max(var(--space-6), calc((100% - 1480px) / 2)); border-block-end: 1px solid var(--line); background: var(--surface); }
+.app-nav { display: flex; min-inline-size: 0; align-self: stretch; align-items: center; gap: var(--space-1); }
+.app-nav button { display: inline-flex; min-height: 44px; align-items: center; padding-inline: var(--space-4); border-radius: var(--radius-control); color: var(--muted); background: transparent; border: 0; text-decoration: none; font-weight: 500; white-space: nowrap; }
+.app-nav button:hover { color: var(--ink); background: var(--surface-subtle); }
+.app-nav button[aria-current="page"] { color: var(--accent-dark); background: var(--surface-selected); }
+.app-nav .home-link { inline-size: 44px; justify-content: center; padding-inline: 0; color: var(--ink); }
+.app-nav svg { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.shell__body { grid-row: 3; min-inline-size: 0; min-block-size: 0; overflow: auto; outline: 0; scrollbar-gutter: stable; }
+.content { width: min(1480px, calc(100% - 48px)); margin-inline: auto; padding-block: var(--space-5) var(--space-8); }
+
+.offline-banner { grid-row: 2; display: flex; min-height: 48px; align-items: center; justify-content: center; gap: var(--space-4); padding-inline: var(--space-6); border-bottom: 1px solid var(--warning); color: var(--warning-ink); background: var(--warning-surface); font-size: 13px; }
+.offline-banner button { min-height: 36px; padding-inline: var(--space-3); }
+
+.modal { width: min(480px, calc(100% - 64px)); padding: 0; border: 1px solid var(--line); border-radius: var(--radius-surface); color: var(--ink); background: var(--surface); }
+.modal::backdrop { background: var(--backdrop); }
+.modal__panel { padding: var(--space-6); }
+.modal__panel h2 { margin-block-end: var(--space-3); }
+.modal__panel p { margin-block-end: var(--space-6); color: var(--muted); line-height: 1.6; }
+.modal__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }

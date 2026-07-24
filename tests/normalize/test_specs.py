@@ -179,7 +179,7 @@ def test_version_and_unit_data_seams_are_machine_readable() -> None:
         / "g2b_compare"
         / "normalize"
         / "data"
-        / "units-v1.json"
+        / "units-v2.json"
     )
     data = _UnitData.model_validate_json(data_path.read_bytes())
     expected_aliases = tuple(
@@ -188,6 +188,6 @@ def test_version_and_unit_data_seams_are_machine_readable() -> None:
             key=lambda item: (-len(item), item),
         ),
     )
-    assert NORMALIZATION_VERSION == data.version == "v1"
+    assert NORMALIZATION_VERSION == data.version == "v2"
     assert TOKENIZER_VERSION == "v1"
     assert expected_aliases == ALIASES

@@ -102,21 +102,16 @@ def test_start_script_provisions_fresh_home_in_dependency_order(tmp_path: Path) 
     home = tmp_path / "home"
     log = tmp_path / "commands.log"
     ready = tmp_path / "ready.marker"
-    secret = tmp_path / "secret.txt"
-    relations = tmp_path / "relations.xlsx"
-    _ = secret.write_text("fixture-key", encoding="utf-8")
-    _ = relations.write_bytes(b"fixture")
     fake_uv = fake_bin / "uv.cmd"
     _ = fake_uv.write_text(
         """@echo off
 echo %*>>"%G2B_FAKE_LOG%"
-echo %*| findstr /C:" capture-contract" >nul && (
-  mkdir "%G2B_FAKE_HOME%\\docs" 2>nul
-  copy /Y "%G2B_FAKE_CONTRACT%" "%G2B_FAKE_HOME%\\docs\\api-contract-observed.json" >nul
-)
 echo %*| findstr /C:" precompute" >nul && echo ready>"%G2B_FAKE_READY%"
 echo %*| findstr /C:" verify-secrets" >nul && exit /b 0
-echo %*| findstr /C:" verify" >nul && if not exist "%G2B_FAKE_READY%" exit /b 1
+echo %*| findstr /C:" verify" >nul && if not exist "%G2B_FAKE_READY%" (
+  echo {"status":"corrupt-index"} 1>&2
+  exit /b 1
+)
 exit /b 0
 """,
         encoding="utf-8",
@@ -125,13 +120,10 @@ exit /b 0
         **os.environ,
         "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
         "G2B_SERVICE_KEY": "fixture-runtime-key",
-        "G2B_SECRET_SOURCE": str(secret),
-        "G2B_RELATIONS_WORKBOOK": str(relations),
         "G2B_FAKE_LOG": str(log),
-        "G2B_FAKE_HOME": str(home),
         "G2B_FAKE_READY": str(ready),
-        "G2B_FAKE_CONTRACT": str(Path("docs/api-contract-observed.json").resolve()),
     }
+    _ = environment.pop("G2B_RELATIONS_WORKBOOK", None)
 
     # When: the real PowerShell fresh workflow runs in bounded provisioning mode.
     completed = subprocess.run(  # noqa: S603
@@ -153,8 +145,11 @@ exit /b 0
     # Then: every required stage ran in dependency order with all-storage verification.
     assert completed.returncode == 0, completed.stderr
     commands = log.read_text(encoding="utf-8")
+    assert "capture-contract" not in commands
+    assert (home / "docs" / "api-contract-observed.json").read_bytes() == Path(
+        "docs/api-contract-observed.json"
+    ).read_bytes()
     expected = (
-        "capture-contract",
         "sync full",
         "sync attributes --max-batches 100",
         "import-relations",

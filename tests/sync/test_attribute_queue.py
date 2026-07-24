@@ -86,7 +86,7 @@ def test_failure_quota_unverified() -> None:
         _ = dispatch_budget(QuotaWindow(unverified, 0, 0))
 
 
-@pytest.mark.parametrize("consumed", [898, 899])
+@pytest.mark.parametrize("consumed", [9998, 9999])
 def test_failure_low_quota_zero_call(consumed: int) -> None:
     assert (
         dispatch_budget(
@@ -98,24 +98,25 @@ def test_failure_low_quota_zero_call(consumed: int) -> None:
 
 def test_failure_probe_budget_below_three() -> None:
     assert (
-        dispatch_budget(QuotaWindow(attribute_manifest(), 897, 899)).allowed_calls == 0
+        dispatch_budget(QuotaWindow(attribute_manifest(), 9997, 9999)).allowed_calls
+        == 0
     )
 
 
 def test_failure_rolling_ceiling() -> None:
-    budget = dispatch_budget(QuotaWindow(attribute_manifest(), 900, 0))
-    assert (budget.ceiling, budget.allowed_calls) == (900, 0)
+    budget = dispatch_budget(QuotaWindow(attribute_manifest(), 10_000, 0))
+    assert (budget.ceiling, budget.allowed_calls) == (10_000, 0)
 
 
 def test_failure_provider_window_ceiling() -> None:
-    budget = dispatch_budget(QuotaWindow(attribute_manifest(), 0, 900))
+    budget = dispatch_budget(QuotaWindow(attribute_manifest(), 0, 10_000))
     assert budget.allowed_calls == 0
 
 
-def test_exact_900_of_1001_are_dispatchable() -> None:
-    plan = _plan(tuple(_product(f"P-{index:04d}") for index in range(1001)))
+def test_exact_10000_of_10001_are_dispatchable() -> None:
+    plan = _plan(tuple(_product(f"P-{index:05d}") for index in range(10_001)))
     budget = dispatch_budget(QuotaWindow(attribute_manifest(), 0, 0))
-    assert len(plan.dispatchable(budget)) == 900
+    assert len(plan.dispatchable(budget)) == 10_000
 
 
 def test_failure_unchanged_product_not_requeued() -> None:

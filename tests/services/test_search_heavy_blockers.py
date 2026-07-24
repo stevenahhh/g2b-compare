@@ -38,6 +38,8 @@ from tests.services.sqlite_search_support import search_database
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from g2b_compare.ranking.features import PreparedFeatureContext
+
 
 class _ReleaseProbe(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(extra="ignore", strict=True)
@@ -141,9 +143,10 @@ def test_cache_hit_decodes_persisted_views_without_ranking_recomputation(
     def counted_top_three(
         anchor: RankableProduct,
         candidates: tuple[RankableProduct, ...],
+        context: PreparedFeatureContext | None = None,
     ) -> tuple[ComparisonSlot, ComparisonSlot, ComparisonSlot]:
         calls.append(anchor.product_id)
-        return original(anchor, candidates)
+        return original(anchor, candidates, context)
 
     monkeypatch.setattr(
         "g2b_compare.services.comparators.top_three",

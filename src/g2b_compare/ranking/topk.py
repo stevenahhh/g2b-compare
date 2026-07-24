@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 from .features import PreparedFeatureContext, pair_features, prepare_feature_context
 from .formula import FormulaInput, score_formula
 
+TOP_K = 3
+
 if TYPE_CHECKING:
     from g2b_compare.materialize.prices import ComparisonPrice
 
@@ -25,6 +27,7 @@ class RankableProduct:
     option_text: str
     active: bool
     price: ComparisonPrice
+    contract_corp_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,36 +46,58 @@ class ComparisonSlot:
     comparator: RankableProduct | None
     status: str
     explanation: ScoreBreakdown | None
+    same_corp_as_higher_slot: bool = False
 
 
 def top_three(
-    anchor: RankableProduct, candidates: tuple[RankableProduct, ...]
+    anchor: RankableProduct,
+    candidates: tuple[RankableProduct, ...],
+    context: PreparedFeatureContext | None = None,
 ) -> tuple[ComparisonSlot, ComparisonSlot, ComparisonSlot]:
     """Return the exact-pool top three, filling only genuine shortages."""
     eligible = _eligible_unique(anchor, candidates)
-    corpus = (anchor.option_text, *(item.option_text for item in eligible))
+    corpus = tuple(
+        item.option_text for item in sorted((anchor, *eligible), key=_dedupe_key)
+    )
     if not eligible:
         return (
             ComparisonSlot(1, None, "insufficient_candidates", None),
             ComparisonSlot(2, None, "insufficient_candidates", None),
             ComparisonSlot(3, None, "insufficient_candidates", None),
         )
-    context = prepare_feature_context(corpus)
-    ranked = tuple(_score(anchor, candidate, context) for candidate in eligible)
+    selected_context = (
+        context
+        if context is not None and context.documents == corpus
+        else prepare_feature_context(corpus)
+    )
+    ranked = tuple(
+        _score(anchor, candidate, selected_context) for candidate in eligible
+    )
     ordered = sorted(ranked, key=_sort_key)
+    selected = _diverse_order(ordered)
     slots: list[ComparisonSlot] = []
     for rank in range(1, 4):
-        if rank > len(ordered):
+        if rank > len(selected):
             slots.append(ComparisonSlot(rank, None, "insufficient_candidates", None))
             continue
-        selected = ordered[rank - 1]
-        status = (
-            "no_comparison_evidence" if selected.explanation.score is None else "ok"
-        )
+        item, same_corp = selected[rank - 1]
+        status = "no_comparison_evidence" if item.explanation.score is None else "ok"
         slots.append(
-            ComparisonSlot(rank, selected.product, status, selected.explanation)
+            ComparisonSlot(rank, item.product, status, item.explanation, same_corp)
         )
     return slots[0], slots[1], slots[2]
+
+
+def prepare_top_three_context(
+    candidates: tuple[RankableProduct, ...],
+) -> PreparedFeatureContext:
+    """Fit one comparator pool for reuse across every product anchor."""
+    anchor = candidates[0]
+    eligible = _eligible_unique(anchor, candidates)
+    corpus = tuple(
+        item.option_text for item in sorted((anchor, *eligible), key=_dedupe_key)
+    )
+    return prepare_feature_context(corpus)
 
 
 def _eligible_unique(
@@ -133,6 +158,28 @@ def _score(
         )
     )
     return RankedComparator(candidate, explanation)
+
+
+def _diverse_order(
+    ordered: list[RankedComparator],
+) -> tuple[tuple[RankedComparator, bool], ...]:
+    selected: list[tuple[RankedComparator, bool]] = []
+    deferred: list[RankedComparator] = []
+    corp_ids: set[str] = set()
+    for item in ordered:
+        candidate_ids = set(item.product.contract_corp_ids)
+        if candidate_ids and candidate_ids.intersection(corp_ids):
+            deferred.append(item)
+            continue
+        selected.append((item, False))
+        corp_ids.update(candidate_ids)
+        if len(selected) == TOP_K:
+            return tuple(selected)
+    for item in deferred:
+        selected.append((item, True))
+        if len(selected) == TOP_K:
+            break
+    return tuple(selected)
 
 
 def _anchor_price_active(price: ComparisonPrice) -> bool:

@@ -1,0 +1,11 @@
+{
+  "schema_version": "sourced-product-observation-manifest-v1",
+  "ledger_kind": "authentic_production",
+  "canonical_format": "canonical_json_array_lf",
+  "observation_file": "observations.json",
+  "schema_file": "sourced-product-observation.schema.json",
+  "record_count": 0,
+  "canonical_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "fabricated_rows": 0,
+  "source_data_risk": "No locally captured procurement payload includes every required product, URL, API, timestamp, payload-hash, supplier-location, and service-area field; production ledger intentionally remains empty."
+}

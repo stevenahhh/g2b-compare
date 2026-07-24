@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "legacy-workbook-profile-v1",
+  "profileId": "C",
+  "slug": "gwangyang-procurement-final-2025",
+  "family": "three-quote-procurement",
+  "source": {
+    "filename": "전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 - 내역서(관급)(최종).xlsx",
+    "sha256": "8a55700bdaf62a00c208c7286531fd56ca321571f73f7620505a823ef5d4d0f1",
+    "packageParts": {
+      "count": 601,
+      "fingerprint": "a6b912e3431db939d24b081e73823167cb80d07bf38468309eac69df0af5398a"
+    }
+  },
+  "sheetMap": [
+    {"name": "수량산출서 (2)", "part": "xl/worksheets/sheet1.xml", "dimension": "A1:BR65", "formulaCells": 75, "mergedRanges": 14, "externalFormulaReferences": 2},
+    {"name": "표지 ", "part": "xl/worksheets/sheet2.xml", "dimension": "A4:P28", "formulaCells": 0, "mergedRanges": 7, "externalFormulaReferences": 0},
+    {"name": "원가", "part": "xl/worksheets/sheet3.xml", "dimension": "A1:O43", "formulaCells": 41, "mergedRanges": 1, "externalFormulaReferences": 0},
+    {"name": "도급집계표", "part": "xl/worksheets/sheet4.xml", "dimension": "A1:P36", "formulaCells": 7, "mergedRanges": 12, "externalFormulaReferences": 0},
+    {"name": "도급내역서", "part": "xl/worksheets/sheet5.xml", "dimension": "A1:N27", "formulaCells": 6, "mergedRanges": 11, "externalFormulaReferences": 0},
+    {"name": "도급일위대가표", "part": "xl/worksheets/sheet6.xml", "dimension": "A1:V15", "formulaCells": 26, "mergedRanges": 21, "externalFormulaReferences": 0},
+    {"name": "표준품셈", "part": "xl/worksheets/sheet7.xml", "dimension": "A1", "formulaCells": 0, "mergedRanges": 0, "externalFormulaReferences": 0},
+    {"name": "노임단가", "part": "xl/worksheets/sheet8.xml", "dimension": "A1:IV37", "formulaCells": 0, "mergedRanges": 14, "externalFormulaReferences": 0},
+    {"name": "관급집계표", "part": "xl/worksheets/sheet9.xml", "dimension": "A1:O23", "formulaCells": 10, "mergedRanges": 10, "externalFormulaReferences": 0},
+    {"name": "관급내역서", "part": "xl/worksheets/sheet10.xml", "dimension": "A1:W41", "formulaCells": 246, "mergedRanges": 16, "externalFormulaReferences": 0},
+    {"name": "수량산출서", "part": "xl/worksheets/sheet11.xml", "dimension": "A1:BC29", "formulaCells": 50, "mergedRanges": 8, "externalFormulaReferences": 1},
+    {"name": "단가조사", "part": "xl/worksheets/sheet12.xml", "dimension": "A1:R28", "formulaCells": 207, "mergedRanges": 10, "externalFormulaReferences": 1},
+    {"name": "코리아넷 견적서", "part": "xl/worksheets/sheet13.xml", "dimension": "A1:I43", "formulaCells": 148, "mergedRanges": 9, "externalFormulaReferences": 0},
+    {"name": "비교견적서1", "part": "xl/worksheets/sheet14.xml", "dimension": "D1:R44", "formulaCells": 148, "mergedRanges": 159, "externalFormulaReferences": 0},
+    {"name": "비교견적서2", "part": "xl/worksheets/sheet15.xml", "dimension": "A1:K48", "formulaCells": 150, "mergedRanges": 75, "externalFormulaReferences": 0},
+    {"name": "물가정보", "part": "xl/worksheets/sheet16.xml", "dimension": "A1", "formulaCells": 0, "mergedRanges": 0, "externalFormulaReferences": 0},
+    {"name": "설치 구성도", "part": "xl/worksheets/sheet17.xml", "dimension": "A1:K7", "formulaCells": 0, "mergedRanges": 1, "externalFormulaReferences": 0}
+  ],
+  "capacity": {
+    "rows": 24,
+    "locations": [
+      "수량산출서!F6:F29"
+    ],
+    "quoteBlocks": [
+      "단가조사!F5:I28",
+      "단가조사!J5:M28",
+      "단가조사!N5:Q28"
+    ]
+  },
+  "rowMap": {
+    "quantityRows": "수량산출서!6:29",
+    "priceRows": "단가조사!5:28",
+    "outputRows": "관급내역서!5:28"
+  },
+  "ownershipBoundary": "Cells not covered by an explicit ownership entry are TEMPLATE_STATIC and must not be changed.",
+  "ownership": {
+    "MODEL_INPUT": [
+      "수량산출서!B6:D29",
+      "수량산출서!F6:F29",
+      "수량산출서!H6:H29",
+      "단가조사!F5:F28",
+      "단가조사!H5:I28",
+      "단가조사!J5:J28",
+      "단가조사!L5:N28",
+      "단가조사!P5:R28"
+    ],
+    "VALID_TEMPLATE_FORMULA": [
+      "수량산출서!E6:E29",
+      "수량산출서!G6:G29",
+      "단가조사!A5:E28",
+      "단가조사!G5:G28",
+      "단가조사!K5:Q28",
+      "관급내역서!A5:T28",
+      "관급내역서!U5:U12",
+      "관급내역서!U18:U28",
+      "관급내역서!L35:L37",
+      "관급집계표!G4:K23",
+      "원가!D25:D26"
+    ],
+    "CANONICAL_OVERRIDE_FORMULA": [],
+    "GENERATED_DISPLAY": [
+      "수량산출서!A6:A29"
+    ],
+    "LEGACY_DORMANT": [
+      "도급집계표!A1:P36",
+      "도급내역서!A1:N27",
+      "도급일위대가표!A1:V15",
+      "관급내역서!U13:U17"
+    ],
+    "UNUSED_SLOT": [],
+    "TEMPLATE_STATIC": [
+      "<implicit-complement>"
+    ]
+  },
+  "appOwnedCells": [
+    "수량산출서!A6:D29",
+    "수량산출서!F6:F29",
+    "수량산출서!H6:H29",
+    "단가조사!F5:F28",
+    "단가조사!H5:I28",
+    "단가조사!J5:J28",
+    "단가조사!L5:N28",
+    "단가조사!P5:R28"
+  ],
+  "activeFormula": {
+    "algorithm": "research-active-formula-v1",
+    "recordFormat": "sheet!cell=formula joined with LF in workbook order",
+    "cellCount": 980,
+    "ranges": [
+      {"range": "원가!A1:G26", "formulaCells": 21, "fingerprint": "65d055a943181fcc838a4fd3c88635655d0a1c98a7ab710f8594cf4af22f8452"},
+      {"range": "관급집계표!A1:L23", "formulaCells": 10, "fingerprint": "8fc98e41f3e13204095d4c3c851eb62d906c70d733a051150a0616e667a9de48"},
+      {"range": "관급내역서!A1:V37", "formulaCells": 246, "fingerprint": "85ab6befe8e933a40904619e4abc1f361a60c4a074a3fbc53508caa9f3424d87"},
+      {"range": "수량산출서!A1:H29", "formulaCells": 50, "fingerprint": "912300e0912b2bb29efd1f881230c217e019d00f1bce5a4c957a08291cf129de"},
+      {"range": "단가조사!A1:R28", "formulaCells": 207, "fingerprint": "8c6a2c0bb70b42df33a8c97c6c4e7edc6fa8b7a4c89971b0fd34c26718204d3c"},
+      {"range": "코리아넷 견적서!A1:I43", "formulaCells": 148, "fingerprint": "bce7feb1ce1495d729d23735417cb6d0d2005a27c152c8c783eff5d6e48e1a1d"},
+      {"range": "비교견적서1!D1:R39", "formulaCells": 148, "fingerprint": "32fd173eac73fdf5b2549e794558be1b3054f189ecce3a0819644cb54aaa0feb"},
+      {"range": "비교견적서2!A1:K43", "formulaCells": 150, "fingerprint": "0aacd4a269c863896affb56df550e8bf4d98254a99c86efdcbd420974fe591e9"}
+    ],
+    "combinedFingerprint": "1dd24082c48e03ac8b624df0be4fd26f65ec10afa83da0c2ee389667bd511990"
+  },
+  "formulaCacheCells": [
+    "수량산출서!E6:E29",
+    "수량산출서!G6:G29",
+    "단가조사!A5:E28",
+    "단가조사!G5:G28",
+    "단가조사!K5:Q28",
+    "관급내역서!A5:U28",
+    "관급내역서!L35:L37",
+    "관급집계표!G4:K23",
+    "원가!D25:D26"
+  ],
+  "packageDriftAllowlist": [
+    "[Content_Types].xml#calcChain-override",
+    "xl/_rels/workbook.xml.rels#calcChain-relationship",
+    "xl/calcChain.xml",
+    "xl/workbook.xml#calcPr"
+  ],
+  "totalOracle": {
+    "subtotalWon": 65499660,
+    "rawFeeWon": 353698.164,
+    "totalWon": 65854000,
+    "cells": {
+      "subtotal": ["관급내역서!L35", "관급집계표!G4", "관급집계표!K4"],
+      "rawFee": ["관급내역서!L36", "관급집계표!G5", "관급집계표!K5"],
+      "total": ["관급내역서!L37", "관급집계표!G6", "관급집계표!K6", "관급집계표!G23", "관급집계표!K23", "원가!D25", "원가!D26"]
+    }
+  },
+  "baselineInventory": {
+    "externalLinks": {"count": 253, "fingerprint": "7282fd6277fa12727a6519c20bc9c36b214020153953387199ac3ab4bcadd174"},
+    "definedNames": {
+      "count": 21536,
+      "fingerprint": "596b2ece1cf7f0194864b44cce1805c067c9ce4f1c4e4482a38921140d00e7cc",
+      "problemCount": 18570,
+      "problemFingerprint": "384d8dda5855e670cf0a6287caa2f3b6bb4ea001cf99e15a17745943f6b844fc",
+      "externalCount": 5474,
+      "externalFingerprint": "ddaf894ea2c707de9f4a346d575e44e8744bffa942a7edc13ffdd90d399558c4"
+    },
+    "formulaErrors": {
+      "formulaTextCount": 21,
+      "formulaTextFingerprint": "2ab844cdc298e193551352e24abe5f2159d70cdc8a8643e58b5b3de74a90c623",
+      "cachedErrorCount": 23,
+      "cachedErrorFingerprint": "90e69d6e3ac0419a910db69270176743abc886c334e866238e87d24ee5366239"
+    },
+    "calcChain": {
+      "present": true,
+      "entryCount": 1114,
+      "fingerprint": "7f55c501b21ab8544699e8472bcb3ee1c4eaee57f54a7af47298cc6978db4a03"
+    }
+  },
+  "inheritedWarnings": {
+    "disposition": "Preserve original formulas and report them as inherited warnings; no canonical override is allowed in this app.",
+    "originalFormulaCells": [
+      "관급내역서!U13=단가조사!F18",
+      "관급내역서!U14=단가조사!F19",
+      "관급내역서!U15=단가조사!F20",
+      "관급내역서!U16=단가조사!F21",
+      "관급내역서!U17=단가조사!F22"
+    ]
+  }
+}

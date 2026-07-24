@@ -161,7 +161,14 @@ def _extract_workbook(path: Path) -> WorkbookFacts:
 
 def _source_paths(source_dir: Path) -> tuple[Path, ...]:
     paths = tuple(
-        sorted(source_dir.glob("*.xlsx"), key=lambda path: path.name.encode())
+        sorted(
+            (
+                path
+                for path in source_dir.glob("*.xlsx")
+                if not path.name.startswith("~$")
+            ),
+            key=lambda path: path.name.encode(),
+        )
     )
     if len(paths) != len(EXPECTED_SHA256):
         message = f"expected exactly three XLSX workbooks, found {len(paths)}"

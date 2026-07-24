@@ -130,7 +130,8 @@ def _find(connection: Connection, key: ReleaseKey) -> BundleRecord | None:
                   cache_content_sha,release_bundle_sha,ready_attempt_no
            FROM release_bundles
            WHERE materialization_id=? AND index_version_id=?
-             AND relation_snapshot_id=? AND ranking_version=?""",
+             AND relation_snapshot_id=? AND ranking_version=?
+             AND slot_policy_version=?""",
         key_values(key),
     ).fetchone()
     return None if row is None else _record(row)
@@ -139,8 +140,12 @@ def _find(connection: Connection, key: ReleaseKey) -> BundleRecord | None:
 def _insert(connection: Connection, key: ReleaseKey, now: str) -> BundleRecord:
     cursor = query(
         connection,
-        """INSERT INTO release_bundles VALUES(
-           NULL,?,?,?,?,0,0,NULL,NULL,'building',1,NULL,?,?)""",
+        """INSERT INTO release_bundles(
+             materialization_id,index_version_id,relation_snapshot_id,
+             ranking_version,slot_policy_version,expected_cache_rows,
+             written_cache_rows,cache_content_sha,release_bundle_sha,status,
+             attempt_no,ready_attempt_no,heartbeat_at,created_at
+           ) VALUES(?,?,?,?,?,0,0,NULL,NULL,'building',1,NULL,?,?)""",
         (*key_values(key), now, now),
     )
     if cursor.lastrowid is None:

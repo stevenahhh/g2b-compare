@@ -130,7 +130,10 @@ def scenario_cross_operation_offer_key(tmp_path: Path) -> None:
         _ = query(
             connection,
             """
-            INSERT INTO products VALUES (?, 'P-1', 'C', 'D', 'name', 'name', 1, ?)
+            INSERT INTO products(
+                materialization_id,product_id,category_no,detail_category_no,
+                product_name_raw,product_name_key,active,data_as_of
+            ) VALUES (?, 'P-1', 'C', 'D', 'name', 'name', 1, ?)
             """,
             (materialization_id, NOW),
         )
@@ -138,7 +141,10 @@ def scenario_cross_operation_offer_key(tmp_path: Path) -> None:
             _ = query(
                 connection,
                 """
-                INSERT INTO catalog_offers VALUES (
+                INSERT INTO catalog_offers(
+                    materialization_id,operation,offer_key,product_id,
+                    contract_price_won,unit_raw,unit_key,active,source_updated_at
+                ) VALUES (
                     ?, ?, 'same-key', 'P-1', 1000, '대', '대', 1, ?
                 )
                 """,

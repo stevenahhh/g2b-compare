@@ -158,6 +158,7 @@ _BUNDLE_COLUMNS: Final = (
     "ready_attempt_no",
     "heartbeat_at",
     "created_at",
+    "slot_policy_version",
 )
 _MATERIALIZATION_COLUMNS: Final = (
     "id",

@@ -55,6 +55,13 @@ class ProductRecord:
     attribute_coverage: str
     observed_option_roles: tuple[ObservedOptionRole, ...] = ()
     curated_relations: tuple[CuratedRelation, ...] = ()
+    spec_name_raw: str = ""
+    image_url: str = ""
+    contract_item_key: str = ""
+    supplier_name: str = ""
+    contract_method: str = ""
+    delivery_condition: str = ""
+    purchase_type: str = ""
 
 
 @dataclass(frozen=True, slots=True)

@@ -94,9 +94,7 @@ def _xml_item(contract_number: str) -> bytes:
     ).encode()
 
 
-def _xml_page(
-    items: bytes, *, result_code: str = "00", total_count: int = 1
-) -> bytes:
+def _xml_page(items: bytes, *, result_code: str = "00", total_count: int = 1) -> bytes:
     return (
         b"<response><header><resultCode>"
         + result_code.encode()
@@ -123,14 +121,10 @@ def test_authorized_json_fixture_becomes_typed_record_with_raw_unknowns(
     # Given
     row = _row(operation)
     items: TestItems = (
-        {"item": row}
-        if operation is Operation.GET_MAS_CONTRACT_PRODUCT_INFO
-        else [row]
+        {"item": row} if operation is Operation.GET_MAS_CONTRACT_PRODUCT_INFO else [row]
     )
     body = _json_page(items)
-    requester = ScriptedRequester(
-        [FakeResponse(200, "application/json", body)]
-    )
+    requester = ScriptedRequester([FakeResponse(200, "application/json", body)])
     # When
     page = ShoppingMallAdapter(HttpTransport(requester)).fetch(
         _request(operation), service_key=RUNTIME_KEY
@@ -146,6 +140,8 @@ def test_authorized_json_fixture_becomes_typed_record_with_raw_unknowns(
     assert record.raw_fields["futureUnknown"] == {"nested": "preserved"}
     assert page.quarantined == ()
     assert (page.raw_response, page.content_type) == (body, "application/json")
+
+
 def test_json_multi_page_results_remain_page_scoped() -> None:
     operation = Operation.GET_MAS_CONTRACT_PRODUCT_INFO
     first = _row(operation)
@@ -264,9 +260,11 @@ def test_timestamp_precedence(
     requester = ScriptedRequester(
         [FakeResponse(200, "application/json", _json_page([row]))]
     )
-    record = ShoppingMallAdapter(HttpTransport(requester)).fetch(
-        _request(operation), service_key=RUNTIME_KEY
-    ).records[0]
+    record = (
+        ShoppingMallAdapter(HttpTransport(requester))
+        .fetch(_request(operation), service_key=RUNTIME_KEY)
+        .records[0]
+    )
     assert record.timestamp.value == value
     assert record.timestamp.origin is origin
     assert record.timestamp.precedence == precedence

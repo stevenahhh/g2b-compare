@@ -90,8 +90,7 @@ def _component_drift(
     statements = {
         "index": "UPDATE index_versions SET index_artifact_sha='drift' WHERE id=10",
         "relation": (
-            "UPDATE relation_snapshots "
-            "SET relation_content_sha='drift' WHERE id=10"
+            "UPDATE relation_snapshots SET relation_content_sha='drift' WHERE id=10"
         ),
     }
     statement = statements[component]
@@ -174,12 +173,10 @@ def _ready_corruption(
     statements = {
         "cache": "UPDATE release_bundles SET cache_content_sha='drift' WHERE id=?",
         "relation-content": (
-            "UPDATE relation_snapshots "
-            "SET relation_content_sha='drift' WHERE id=10"
+            "UPDATE relation_snapshots SET relation_content_sha='drift' WHERE id=10"
         ),
         "relation-source": (
-            "UPDATE relation_snapshots "
-            "SET source_manifest_sha='drift' WHERE id=10"
+            "UPDATE relation_snapshots SET source_manifest_sha='drift' WHERE id=10"
         ),
         "bundle": "UPDATE release_bundles SET release_bundle_sha='drift' WHERE id=?",
     }
@@ -254,9 +251,7 @@ ROUTES: Final[dict[str, ScenarioRoute]] = {
     "relation-source-manifest-sha-drift": partial(
         _ready_corruption, mutation="relation-source"
     ),
-    "release-bundle-component-drift": partial(
-        _ready_corruption, mutation="bundle"
-    ),
+    "release-bundle-component-drift": partial(_ready_corruption, mutation="bundle"),
     "ready-same-tuple-noop": _ready_noop,
     "ready-active-retry-rejected": _active_retry_rejected,
     "active-pointer-immutable-on-retry": _active_pointer_on_retry,

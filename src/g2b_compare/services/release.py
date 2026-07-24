@@ -74,6 +74,7 @@ class ReleaseCoordinator:
             candidate.index_version_id,
             candidate.relation_snapshot_id,
             candidate.ranking_version,
+            candidate.slot_policy_version,
         )
         store = ReleaseStore(self._database)
         now = self._clock()

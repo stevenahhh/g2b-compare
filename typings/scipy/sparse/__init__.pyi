@@ -9,7 +9,8 @@ class csr_matrix:  # noqa: N801
     data: np.ndarray[tuple[int], np.dtype[np.float64]]
     def __init__(
         self,
-        arg1: csr_matrix | tuple[
+        arg1: csr_matrix
+        | tuple[
             np.ndarray[tuple[int], np.dtype[np.float64]],
             np.ndarray[tuple[int], np.dtype[np.int32]],
             np.ndarray[tuple[int], np.dtype[np.int64]],

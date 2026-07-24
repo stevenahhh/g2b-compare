@@ -42,8 +42,7 @@ def test_imports_exact_curated_relations_and_unbound_options_read_only() -> None
     rows = tuple(relation.row_no for relation in result.relations)
     assert rows == tuple(range(11, 23))
     assert all(
-        relation.source_sha == PINNED_SOURCE_SHA256
-        for relation in result.relations
+        relation.source_sha == PINNED_SOURCE_SHA256 for relation in result.relations
     )
     assert all(relation.sheet_name == "자재내역서" for relation in result.relations)
     assert len(result.quarantined) == 3

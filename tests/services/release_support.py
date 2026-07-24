@@ -109,7 +109,12 @@ def release_database(
         _seed_component_graph(connection, candidate_id, "new", product_ids)
         _ = query(
             connection,
-            """INSERT INTO release_bundles VALUES(
+            """INSERT INTO release_bundles(
+                id,materialization_id,index_version_id,relation_snapshot_id,
+                ranking_version,expected_cache_rows,written_cache_rows,
+                cache_content_sha,release_bundle_sha,status,attempt_no,
+                ready_attempt_no,heartbeat_at,created_at
+            ) VALUES(
                 ?, ?, ?, ?, 'v1', 0, 0, ?, ?, 'ready', 1, 1, ?, ?
             )""",
             (
@@ -187,7 +192,10 @@ def _seed_component_graph(
     for product_id in product_ids:
         _ = query(
             connection,
-            """INSERT INTO products VALUES(
+            """INSERT INTO products(
+               materialization_id,product_id,category_no,detail_category_no,
+               product_name_raw,product_name_key,active,data_as_of
+            ) VALUES(
                ?, ?, '46', '4601', '영상감시장치', '영상감시장치', 1, ?
             )""",
             (identifier, product_id, _iso(NOW)),

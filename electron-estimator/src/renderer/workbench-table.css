@@ -1,0 +1,128 @@
+.table-scroll {
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: auto;
+  background: var(--surface);
+  scrollbar-color: var(--secondary) var(--background);
+}
+
+.estimate-table {
+  inline-size: 100%;
+  min-inline-size: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+}
+
+.estimate-table th,
+.estimate-table td {
+  min-inline-size: 0;
+  padding: var(--space-none);
+  border-block-end: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.estimate-table th {
+  position: sticky;
+  z-index: 2;
+  inset-block-start: 0;
+  block-size: var(--row-regular);
+  padding-inline: var(--space-default);
+  color: var(--secondary);
+  background: var(--background);
+  text-align: start;
+}
+
+.estimate-table th:nth-child(1) {
+  inline-size: 18%;
+}
+
+.estimate-table th:nth-child(2) {
+  inline-size: 31%;
+}
+
+.estimate-table th:nth-child(3),
+.estimate-table th:nth-child(4) {
+  inline-size: 8%;
+}
+
+.estimate-table th:nth-child(5) {
+  inline-size: 16%;
+}
+
+.estimate-table th:nth-child(6) {
+  inline-size: 19%;
+}
+
+.estimate-row {
+  block-size: var(--row-regular);
+}
+
+.estimate-table[data-density="compact"] .estimate-row {
+  block-size: var(--row-compact);
+}
+
+.estimate-table[data-density="comfortable"] .estimate-row {
+  block-size: var(--row-comfortable);
+}
+
+.estimate-row.is-selected {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.estimate-row:hover {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+.cell-input {
+  inline-size: 100%;
+  min-block-size: 0;
+  block-size: 100%;
+  padding-inline: var(--space-default);
+  border: 0;
+  background: transparent;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.cell-input[data-editing="true"] {
+  background: var(--surface);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.number-cell {
+  padding-inline: var(--space-default) !important;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.empty-table {
+  block-size: 96px;
+  color: var(--secondary);
+  text-align: center;
+}
+
+.sticky-total {
+  position: sticky;
+  z-index: 3;
+  inset-block-end: 0;
+  display: flex;
+  min-block-size: var(--control-min);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-wide);
+  padding-inline: var(--space-section);
+  border-block-start: 2px solid var(--text);
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.sticky-total strong {
+  min-inline-size: 140px;
+  font-size: var(--font-size-section-title);
+  text-align: end;
+}

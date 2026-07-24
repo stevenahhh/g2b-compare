@@ -10,8 +10,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from g2b_compare.contracts.live import LiveCaptureConfig, run_live_capture
+from g2b_compare.db.connection import connect
 from g2b_compare.db.migrate import migrate
 from g2b_compare.db.prune import RawRetentionRepository
+from g2b_compare.db.repository import RepositoryContractError
+from g2b_compare.db.sql import as_int, as_text, query
 from g2b_compare.observability.health import readiness
 from g2b_compare.observability.logging import configure_logging, operation_log
 from g2b_compare.observability.runtime_attributes import (
@@ -93,6 +96,36 @@ def _dispatch_operational(
             {"ok": probe.ok, "status": probe.status, **probe.detail},
             not probe.ok,
         )
+    if command == "coverage-stats":
+        with connect(runtime.database) as connection:
+            rows = query(
+                connection,
+                """SELECT category_no,detail_category_no,product_count,
+                          numeric_span_count,parsed_semantic_count,
+                          attribute_covered_count
+                   FROM category_parse_stats
+                   WHERE materialization_id=(
+                     SELECT MAX(id) FROM materialization_snapshots
+                     WHERE status='complete'
+                   )
+                   ORDER BY category_no,detail_category_no""",
+            ).fetchall()
+        return emit(
+            {
+                "status": "ok",
+                "categories": [
+                    {
+                        "category_no": as_text(row[0]),
+                        "detail_category_no": as_text(row[1]),
+                        "product_count": as_int(row[2]),
+                        "numeric_span_count": as_int(row[3]),
+                        "parsed_semantic_count": as_int(row[4]),
+                        "attribute_covered_count": as_int(row[5]),
+                    }
+                    for row in rows
+                ],
+            }
+        )
     if command == "verify-secrets":
         leaks = verify_secrets(
             Path.cwd(),
@@ -148,11 +181,9 @@ def _capture_contract(runtime: RuntimePaths) -> int:
 
 def _import_relations(runtime: RuntimePaths) -> int:
     workbook = os.getenv("G2B_RELATIONS_WORKBOOK")
-    if not workbook:
-        return error("missing-relations-workbook", 2)
     relations, quarantined = import_relations(
         runtime.database,
-        Path(workbook).resolve(),
+        None if not workbook else Path(workbook).resolve(),
     )
     operation_log(configure_logging(), operation="import-relations", status="ok")
     return emit(
@@ -172,12 +203,24 @@ def _sync(args: Args, runtime: RuntimePaths) -> int:
             return failure
         return emit({"status": "synced", "mode": args.mode, "applied": applied})
     mode = "full" if args.mode == "full" else "delta"
-    results = run_catalog_sync(
-        runtime.database,
-        runtime.contract,
-        service_key,
-        mode,
-    )
+    try:
+        results = run_catalog_sync(
+            runtime.database,
+            runtime.contract,
+            service_key,
+            mode,
+        )
+    except RepositoryContractError as caught:
+        if caught.operation is None or caught.resume_not_before is None:
+            raise
+        return error(
+            "quota-ceiling-exhausted",
+            2,
+            {
+                "operation": caught.operation,
+                "resume_not_before": caught.resume_not_before,
+            },
+        )
     operation_log(
         configure_logging(),
         operation="sync",
@@ -231,7 +274,14 @@ def emit(document: dict[str, JsonValue], failed: bool = False) -> int:
     return int(failed)
 
 
-def error(code: str, status: int) -> int:
+def error(
+    code: str,
+    status: int,
+    details: dict[str, JsonValue] | None = None,
+) -> int:
     """Write one stable blocked CLI result."""
-    _ = sys.stderr.write(json.dumps({"error": code, "status": "blocked"}) + "\n")
+    document: dict[str, JsonValue] = {"error": code, "status": "blocked"}
+    if details is not None:
+        document.update(details)
+    _ = sys.stderr.write(json.dumps(document, sort_keys=True) + "\n")
     return status

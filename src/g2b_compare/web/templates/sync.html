@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="search-panel" aria-labelledby="sync-title">
+  <p class="eyebrow">데이터 동기화</p>
+  <h1 id="sync-title">수동 동기화</h1>
+  <p>버튼을 누르면 나라장터 공식 API에서 계약목록·규격을 내려받아 로컬 데이터를 갱신합니다. 완료까지 시간이 걸릴 수 있습니다.</p>
+  <div class="state-line" data-sync-state="{{ status.state }}">
+    <span class="state-dot" aria-hidden="true"></span>
+    {% if status.state == "idle" %}
+    <p>아직 동기화한 적이 없습니다.</p>
+    {% elif status.state == "running" %}
+    <p>동기화 진행 중 (현재 단계: <span class="mono">{{ status.stage }}</span>) — 시작 시각 {{ status.started_at }}</p>
+    {% elif status.state == "complete" %}
+    <p>마지막 동기화 완료 — {{ status.finished_at }}</p>
+    {% elif status.state == "failed" %}
+    <p>마지막 동기화 실패 (단계: <span class="mono">{{ status.stage }}</span>) — {{ status.finished_at }}</p>
+    {% if status.error %}<p class="field-error mono">{{ status.error }}</p>{% endif %}
+    {% endif %}
+  </div>
+  <form method="post" action="/sync">
+    <button type="submit"{% if status.state == "running" %} disabled{% endif %}>지금 동기화</button>
+  </form>
+</section>
+{% if status.state == "running" %}
+<meta http-equiv="refresh" content="5">
+{% endif %}
+{% endblock %}

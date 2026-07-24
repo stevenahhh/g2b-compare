@@ -39,7 +39,10 @@ def search_database(path: Path) -> SearchFixture:
 def _seed_product(connection: Connection, index: int, product_id: str) -> None:
     _ = query(
         connection,
-        """INSERT INTO catalog_offers VALUES(
+        """INSERT INTO catalog_offers(
+           materialization_id,operation,offer_key,product_id,contract_price_won,
+           unit_raw,unit_key,active,source_updated_at
+        ) VALUES(
            10,'getMASCntrctPrdctInfoList',?,?,?,'대','대',1,
            '2026-07-16T00:00:00Z')""",
         (f"offer-{product_id}", product_id, PRICES[index]),

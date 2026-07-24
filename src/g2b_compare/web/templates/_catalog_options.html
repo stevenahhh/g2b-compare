@@ -1,0 +1,32 @@
+{% if not fragment %}
+  <div class="option-parent" data-option-parent-id="{{ parent_product_id }}">
+    <p>본품 <span class="selectable">{{ parent_product_id }}</span>의 검증된 옵션 {{ total_count }}건</p>
+  </div>
+  <ol class="catalog-option-list">
+{% endif %}
+  {% for option in options %}
+    <li class="catalog-option-card" data-option-id="{{ option.product_id }}">
+      <p class="product-meta">하위 옵션 · <span class="selectable">{{ option.product_id }}</span></p>
+      <h3>{{ option.item_name }}</h3>
+      <p class="option-spec">{{ option.spec or "규격 정보 없음" }}</p>
+      <p class="price"><strong>{{ "{:,}".format(option.price_won) }}원</strong><span>/ {{ option.unit }}</span></p>
+      <form action="{% if estimate_id %}/estimates/{{ estimate_id }}/lines{% else %}/estimates/lines{% endif %}" method="post">
+        <input type="hidden" name="product_id" value="{{ option.product_id }}">
+        <input type="hidden" name="parent_product_id" value="{{ parent_product_id }}">
+        <input type="hidden" name="relation_id" value="{{ option.relation_id }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit">관급내역에 추가</button>
+      </form>
+      {% if option.detail_url %}<a class="catalog-detail-link" href="{{ option.detail_url }}" target="_blank" rel="noopener noreferrer">나라장터에서 보기</a>{% endif %}
+    </li>
+  {% else %}
+    <li class="empty-state option-empty" data-empty-options="{{ parent_product_id }}">
+      연결된 하위 옵션이 없음
+    </li>
+  {% endfor %}
+{% if not fragment %}
+    {% if total_count > options|length %}
+      <li class="option-loader" data-next-page="2">아래로 스크롤하면 다음 옵션을 불러옴</li>
+    {% endif %}
+  </ol>
+{% endif %}

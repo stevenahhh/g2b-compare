@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>나라장터 물품 검색</title>
+    <link rel="stylesheet" href="/static/mvp.css?v=20260722-4">
+    <script src="/static/catalog.js" defer></script>
+  </head>
+  <body class="catalog-page">
+    <main class="shell shell-wide catalog-shell">
+      <nav class="mvp-nav" aria-label="주 메뉴">
+        <a aria-current="page" href="/">물품 검색</a>
+        <a href="/estimates">관급내역</a>
+        <a href="/data">데이터 관리</a>
+      </nav>
+      <header class="page-header">
+        <h1>나라장터 물품 검색</h1>
+      </header>
+      <form class="search-panel" method="get" action="/" aria-busy="false">
+        <input type="hidden" name="estimate_id" value="{{ estimate_id }}">
+        <div class="catalog-search-row">
+          <label>통합 검색<input name="q" value="{{ query }}" placeholder="품명, 규격, 업체명, 물품번호"></label>
+          <label>정렬
+            <select name="sort">
+              <option value="price_asc"{% if sort.value == "price_asc" %} selected{% endif %}>가격 낮은순</option>
+              <option value="price_desc"{% if sort.value == "price_desc" %} selected{% endif %}>가격 높은순</option>
+              <option value="name_asc"{% if sort.value == "name_asc" %} selected{% endif %}>품명순</option>
+              <option value="product_id_asc"{% if sort.value == "product_id_asc" %} selected{% endif %}>물품번호순</option>
+            </select>
+          </label>
+          <button type="submit">검색</button>
+        </div>
+      </form>
+      <p class="result-count" data-total-count="{{ result.total_count }}">본품 검색 결과 {{ result.total_count }}건 · 현재 {{ result.items|length }}건 표시</p>
+      <div class="catalog-workspace">
+        <section class="catalog-scroll-region" tabindex="0" aria-label="본품 검색 결과 스크롤 영역">
+          <ol class="catalog-results" aria-label="본품 검색 결과">
+            {% with show_empty = true %}{% include "_catalog_items.html" %}{% endwith %}
+          </ol>
+          <div class="catalog-loader" data-next-page="{% if result.page < result.page_count %}{{ result.page + 1 }}{% endif %}" aria-live="polite">
+            {% if result.page < result.page_count %}아래로 스크롤하면 다음 결과를 불러옴{% else %}모든 결과를 불러옴{% endif %}
+          </div>
+        </section>
+        <aside class="catalog-options-panel" aria-label="선택한 본품의 하위 옵션" hidden>
+          <header>
+            <h2>하위 옵션</h2>
+            <button type="button" class="option-panel-close" aria-label="하위 옵션 닫기">닫기</button>
+          </header>
+          <div class="catalog-options-content" aria-live="polite"></div>
+        </aside>
+      </div>
+      {% if previous_url or next_url %}
+        <nav class="pagination" aria-label="검색 결과 페이지">
+          {% if previous_url %}<a class="previous-page" href="{{ previous_url }}">이전 30건</a>{% endif %}
+          {% if next_url %}<a class="next-page" href="{{ next_url }}">다음 30건</a>{% endif %}
+        </nav>
+      {% endif %}
+    </main>
+  </body>
+</html>

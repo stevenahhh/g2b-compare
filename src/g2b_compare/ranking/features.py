@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import hashlib
+import struct
+from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from functools import lru_cache
+from typing import TYPE_CHECKING, Final
 
 from rapidfuzz import fuzz
 
 from g2b_compare.search import index_builder
-from g2b_compare.search.index_format import DecodedCSR, decode_csr1
+from g2b_compare.search.index_format import DecodedCSR, decode_csr1, serialize_csr1
 from g2b_compare.search.models import IndexProduct
 
 from .formula import log_distance, value_similarity
@@ -17,6 +20,9 @@ from .matching import MatchResult, match_specs
 
 if TYPE_CHECKING:
     from g2b_compare.materialize.prices import ComparisonPrice
+
+PAIR_FEATURE_CACHE_MAXSIZE: Final = 150_000
+CONTEXT_FINGERPRINT_VERSION: Final = b"pair-features-context-v1\0"
 
 
 def build_index(request: index_builder.IndexBuildRequest) -> index_builder.IndexBundle:
@@ -44,6 +50,21 @@ class PreparedFeatureContext:
     documents: tuple[str, ...]
     word_matrix: DecodedCSR
     char_matrix: DecodedCSR
+    fingerprint: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        """Bind documents and both matrices to one non-forgeable cache identity."""
+        object.__setattr__(
+            self,
+            "fingerprint",
+            _context_fingerprint(self.documents, self.word_matrix, self.char_matrix),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _ContextKey:
+    fingerprint: str
+    context: PreparedFeatureContext = field(compare=False, hash=False, repr=False)
 
 
 def prepare_feature_context(corpus: tuple[str, ...]) -> PreparedFeatureContext:
@@ -75,6 +96,24 @@ def pair_features(
     candidate_price: ComparisonPrice,
 ) -> PairFeatures:
     """Calculate all pair components against the same fitted text corpus."""
+    return _cached_pair_features(
+        _ContextKey(context.fingerprint, context),
+        anchor_text,
+        candidate_text,
+        anchor_price,
+        candidate_price,
+    )
+
+
+@lru_cache(maxsize=PAIR_FEATURE_CACHE_MAXSIZE)
+def _cached_pair_features(
+    context_key: _ContextKey,
+    anchor_text: str,
+    candidate_text: str,
+    anchor_price: ComparisonPrice,
+    candidate_price: ComparisonPrice,
+) -> PairFeatures:
+    context = context_key.context
     matching = match_specs(anchor_text, candidate_text)
     price, distance, comparable = _price_features(anchor_price, candidate_price)
     return PairFeatures(
@@ -86,6 +125,40 @@ def pair_features(
         comparable,
         matching,
     )
+
+
+def pair_features_cache_info() -> tuple[int, int, int, int]:
+    """Return hits, misses, bound, and current entries for benchmark evidence."""
+    info = _cached_pair_features.cache_info()
+    return info.hits, info.misses, info.maxsize or 0, info.currsize
+
+
+def clear_pair_features_cache() -> None:
+    """Reset process-local pair memoization for deterministic measurements."""
+    _cached_pair_features.cache_clear()
+
+
+def _context_fingerprint(
+    corpus: tuple[str, ...],
+    word_matrix: DecodedCSR,
+    char_matrix: DecodedCSR,
+) -> str:
+    digest = hashlib.sha256(CONTEXT_FINGERPRINT_VERSION)
+    for document in corpus:
+        encoded = document.encode("utf-8")
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+    for matrix in (word_matrix, char_matrix):
+        encoded = serialize_csr1(
+            matrix.rows,
+            matrix.cols,
+            matrix.indptr,
+            matrix.indices,
+            matrix.data,
+        )
+        digest.update(struct.pack(">Q", len(encoded)))
+        digest.update(encoded)
+    return digest.hexdigest()
 
 
 def lexical_similarity(

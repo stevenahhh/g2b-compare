@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>데이터 관리</title>
+    <link rel="stylesheet" href="/static/mvp.css">
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="mvp-nav" aria-label="주 메뉴">
+        <a href="/">물품 검색</a>
+        <a href="/estimates">관급내역</a>
+        <a aria-current="page" href="/data">데이터 관리</a>
+      </nav>
+      <header class="page-header">
+        <p class="eyebrow">DATA</p>
+        <h1>데이터 관리</h1>
+      </header>
+      <section class="status-grid" aria-label="적재 현황">
+        <article><span>우선 업체</span><strong>{{ status.company_count }}</strong><small>개</small></article>
+        <article><span>옵션 원본</span><strong>{{ status.option_row_count }}</strong><small>행</small></article>
+        <article><span>고유 옵션</span><strong>{{ status.unique_option_count }}</strong><small>개</small></article>
+        <article><span>API 물품</span><strong>{{ status.product_count }}</strong><small>건</small></article>
+        <article><span>확인 관계</span><strong>{{ status.relation_count }}</strong><small>건</small></article>
+        <article><span>관계 확인 대기</span><strong>{{ status.pending_site_product_count }}</strong><small>건</small></article>
+      </section>
+      <p><a class="plain-link" href="/priority">우선수집 물품 DB 전체 보기</a></p>
+    </main>
+  </body>
+</html>

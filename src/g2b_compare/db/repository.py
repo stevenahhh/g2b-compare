@@ -22,11 +22,20 @@ class RepositoryContractError(Exception):
     """A requested persistence transition violates a database contract."""
 
     detail: str
+    operation: str | None
+    resume_not_before: str | None
 
-    def __init__(self, detail: str) -> None:
+    def __init__(
+        self,
+        detail: str,
+        operation: str | None = None,
+        resume_not_before: str | None = None,
+    ) -> None:
         """Initialize one rejected transition receipt."""
         super().__init__(detail)
         self.detail = detail
+        self.operation = operation
+        self.resume_not_before = resume_not_before
 
     @override
     def __str__(self) -> str:

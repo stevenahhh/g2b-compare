@@ -71,9 +71,7 @@ def _vector_matches(
 ) -> bool:
     features = tuple(
         feature
-        for feature, _index in sorted(
-            vocabulary.items(), key=lambda item: item[1]
-        )
+        for feature, _index in sorted(vocabulary.items(), key=lambda item: item[1])
     )
     fixed = (
         settings.analyzer,
@@ -104,7 +102,6 @@ def _vector_matches(
     return (
         fixed == expected_fixed
         and settings.features == features
-        and settings.vocabulary_sha256
-        == hashlib.sha256(vocabulary_bytes).hexdigest()
+        and settings.vocabulary_sha256 == hashlib.sha256(vocabulary_bytes).hexdigest()
         and settings.idf_sha256 == hashlib.sha256(idf_bytes).hexdigest()
     )

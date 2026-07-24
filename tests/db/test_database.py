@@ -16,14 +16,14 @@ def test_migration_is_idempotent_when_database_is_empty(tmp_path: Path) -> None:
     # When: the migration is applied twice
     migrate(database)
     migrate(database)
-    # Then: exactly one immutable migration receipt exists
+    # Then: one immutable receipt exists for every ordered migration
     with connect(database) as connection:
         row = query(
             connection,
             "SELECT COUNT(*), MIN(version) FROM schema_migrations",
         ).fetchone()
     assert row is not None
-    assert (as_int(row[0]), as_text(row[1])) == (2, "0001_initial")
+    assert (as_int(row[0]), as_text(row[1])) == (5, "0001_initial")
 
 
 def test_connection_applies_required_pragmas(tmp_path: Path) -> None:

@@ -155,9 +155,7 @@ def _product(row: SqlRow) -> SearchProduct:
     return SearchProduct(parsed[0], (parsed[1], parsed[2]), parsed[3], parsed[4])
 
 
-def score_members(
-    members: dict[str, bytes], raw_query: str
-) -> tuple[ScoreHit, ...]:
+def score_members(members: dict[str, bytes], raw_query: str) -> tuple[ScoreHit, ...]:
     """Transform one query with stored IDF and dot against normalized CSR rows."""
     product_rows = PRODUCT_ROWS_ADAPTER.validate_json(members["product-rows.json"])
     product_ids = tuple(row.product_id for row in product_rows)
@@ -169,8 +167,7 @@ def score_members(
     )
     char_scores = _score_one(members, "char", normalized.derived)
     scores = tuple(
-        (word + char) / 2.0
-        for word, char in zip(word_scores, char_scores, strict=True)
+        (word + char) / 2.0 for word, char in zip(word_scores, char_scores, strict=True)
     )
     return tuple(
         ScoreHit(product_id, score)

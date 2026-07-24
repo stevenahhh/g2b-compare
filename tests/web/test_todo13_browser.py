@@ -63,8 +63,7 @@ FORM_CONTAINMENT_PARTS = (
     "}",
 )
 DOCUMENT_CONTAINMENT = (
-    "() => document.documentElement.scrollWidth"
-    " <= document.documentElement.clientWidth"
+    "() => document.documentElement.scrollWidth <= document.documentElement.clientWidth"
 )
 TABLE_SCROLL_PARTS = (
     "() => {",
@@ -139,9 +138,7 @@ async def test_browser_interaction_styles_and_evidence(server_url: str) -> None:
         await _assert_form_contained(page)
         await _assert_document_contained(page)
         loading_expression = "".join(LOADING_PARTS)
-        loading = BOOLEAN.validate_python(
-            await page.evaluate(loading_expression)
-        )
+        loading = BOOLEAN.validate_python(await page.evaluate(loading_expression))
         assert loading is True
         await expect(page.locator("#results-region")).not_to_have_attribute(
             "aria-busy", "true"
@@ -165,9 +162,7 @@ async def test_browser_interaction_styles_and_evidence(server_url: str) -> None:
         await page.set_viewport_size({"width": 1024, "height": 768})
         _ = await page.goto(f"{server_url}/?product_name=CCTV")
         await _assert_form_contained(page)
-        assert BOOLEAN.validate_python(
-            await page.evaluate("".join(TABLE_SCROLL_PARTS))
-        )
+        assert BOOLEAN.validate_python(await page.evaluate("".join(TABLE_SCROLL_PARTS)))
         await _assert_document_contained(page)
         await _assert_computed_weights(page)
         _ = await page.screenshot(
@@ -183,9 +178,7 @@ async def test_browser_interaction_styles_and_evidence(server_url: str) -> None:
         _ = await no_js.goto(f"{server_url}/?product_name=CCTV")
         await expect(no_js.locator("tbody tr")).to_have_count(50)
         await _assert_document_contained(no_js)
-        assert BOOLEAN.validate_python(
-            await no_js.evaluate("".join(MOBILE_CELL_PARTS))
-        )
+        assert BOOLEAN.validate_python(await no_js.evaluate("".join(MOBILE_CELL_PARTS)))
         await _assert_computed_weights(no_js)
         await no_js.locator("tbody tr").first.scroll_into_view_if_needed()
         _ = await no_js.screenshot(
@@ -199,9 +192,7 @@ async def test_browser_interaction_styles_and_evidence(server_url: str) -> None:
 
 async def _assert_computed_weights(page: Page) -> None:
     expression = "".join(WEIGHT_PARTS)
-    weights = WEIGHTS.validate_python(
-        await page.evaluate(expression)
-    )
+    weights = WEIGHTS.validate_python(await page.evaluate(expression))
     assert set(weights["visible"]) == {"400"}
     assert set(weights["pseudo"]) <= {"400"}
 

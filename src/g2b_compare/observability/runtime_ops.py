@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from g2b_compare.db.connection import connect, connect_read_only
 from g2b_compare.db.sql import as_int, as_text, query
@@ -19,6 +20,9 @@ from g2b_compare.services.sqlite_search import SqliteComparatorCacheBuilder
 if TYPE_CHECKING:
     from pathlib import Path
 
+EMPTY_RELATION_MANIFEST_SHA: Final = hashlib.sha256(b"empty-relations-v1").hexdigest()
+EMPTY_RELATION_CONTENT_SHA: Final = hashlib.sha256(b"[]").hexdigest()
+
 
 class RuntimeOperationError(RuntimeError):
     """A local operation lacks a complete persisted candidate."""
@@ -28,11 +32,21 @@ class RuntimeOperationError(RuntimeError):
         super().__init__(reason)
 
 
-def import_relations(database: Path, workbook: Path) -> tuple[int, int]:
-    """Persist one verified workbook relation snapshot atomically."""
-    imported = import_workbook_relations(workbook)
-    if imported.snapshot is None:
-        raise RuntimeOperationError
+def import_relations(database: Path, workbook: Path | None) -> tuple[int, int]:
+    """Persist a verified workbook or an empty relation snapshot atomically."""
+    if workbook is None:
+        source_manifest_sha = EMPTY_RELATION_MANIFEST_SHA
+        relation_content_sha = EMPTY_RELATION_CONTENT_SHA
+        relations = ()
+        quarantined_count = 0
+    else:
+        imported = import_workbook_relations(workbook)
+        if imported.snapshot is None:
+            raise RuntimeOperationError
+        source_manifest_sha = imported.snapshot.source_manifest_sha
+        relation_content_sha = imported.snapshot.relation_content_sha
+        relations = imported.relations
+        quarantined_count = len(imported.quarantined)
     with connect(database) as connection:
         _ = query(connection, "BEGIN IMMEDIATE")
         _ = query(
@@ -40,8 +54,8 @@ def import_relations(database: Path, workbook: Path) -> tuple[int, int]:
             """INSERT INTO relation_snapshots VALUES(
                NULL,?,?,'building',?) ON CONFLICT(source_manifest_sha) DO NOTHING""",
             (
-                imported.snapshot.source_manifest_sha,
-                imported.snapshot.relation_content_sha,
+                source_manifest_sha,
+                relation_content_sha,
                 datetime.now(UTC).isoformat(),
             ),
         )
@@ -50,15 +64,15 @@ def import_relations(database: Path, workbook: Path) -> tuple[int, int]:
             """SELECT id,status FROM relation_snapshots
                WHERE source_manifest_sha=? AND relation_content_sha=?""",
             (
-                imported.snapshot.source_manifest_sha,
-                imported.snapshot.relation_content_sha,
+                source_manifest_sha,
+                relation_content_sha,
             ),
         ).fetchone()
         if row is None:
             raise RuntimeOperationError
         snapshot_id = as_int(row[0])
         if as_text(row[1]) == "building":
-            for relation in imported.relations:
+            for relation in relations:
                 _ = query(
                     connection,
                     """INSERT INTO curated_relations VALUES(?,?,?,?,?,?,?,?)""",
@@ -79,7 +93,7 @@ def import_relations(database: Path, workbook: Path) -> tuple[int, int]:
                 (snapshot_id,),
             )
         _ = query(connection, "COMMIT")
-    return len(imported.relations), len(imported.quarantined)
+    return len(relations), quarantined_count
 
 
 def rebuild_index(database: Path, artifact: Path) -> str:

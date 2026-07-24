@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from decimal import Decimal, InvalidOperation
+from decimal import InvalidOperation
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from uuid import uuid4
 
@@ -14,15 +14,19 @@ from pydantic import ValidationError
 from g2b_compare.services.release_models import ReleaseContractError
 from g2b_compare.services.release_reader import NO_READY_RELEASE
 from g2b_compare.services.search import execute_search
-from g2b_compare.services.search_models import (
-    SearchReader,
-    SearchRequest,
-    SearchServiceError,
-)
+from g2b_compare.services.search_models import SearchReader, SearchServiceError
 
-from .navigation import add_pagination, category_choices
+from .navigation import add_pagination
+from .rendering import (
+    STATE_COPY,
+    VALIDATION_COPY,
+    is_enhanced_request,
+    parse_search_request,
+    render_response,
+    search_error_response,
+)
 from .state import parse_statuses, result_state, sanitize_statuses
-from .viewmodels import search_view
+from .viewmodels import quota_status_view, search_view
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -32,17 +36,6 @@ if TYPE_CHECKING:
     from g2b_compare.services.release_models import ReleasePin
 
     from .types import ViewValue
-
-VALIDATION_COPY = "검색 조건을 확인하세요"
-STATE_COPY = {
-    "initial": "검색 조건을 입력하세요",
-    "no-active-snapshot": "검색 데이터가 아직 준비되지 않았습니다",
-    "no-matches": "정확히 일치하는 물품이 없습니다",
-    "current-results": "현재 로컬 데이터 기준 결과",
-    "stale": "데이터가 오래되었습니다",
-    "sync-failed-last-good": "최근 동기화에 실패하여 이전 데이터를 표시합니다",
-    "fatal-error": "검색을 처리할 수 없습니다",
-}
 
 
 @runtime_checkable
@@ -59,7 +52,7 @@ def build_router(
     templates: Environment,
     link_manifests: Mapping[str, Mapping[str, ViewValue]],
 ) -> APIRouter:
-    """Bind typed application dependencies to the HTTP route."""
+    """Bind typed application dependencies to the local-snapshot HTTP route."""
     router = APIRouter()
 
     def endpoint(request: Request) -> HTMLResponse | JSONResponse:
@@ -91,13 +84,14 @@ def _index(
         "statuses": [],
         "message": STATE_COPY["initial"],
         "rows": [],
+        **quota_status_view(reader),
     }
     if not submitted:
         return _initial_response(request, reader, templates, base)
     try:
-        search_request = _parse_request(dict(query))
+        search_request = parse_search_request(dict(query))
     except (ValidationError, ValueError, InvalidOperation):
-        return _response(
+        return render_response(
             request,
             templates,
             {
@@ -106,11 +100,18 @@ def _index(
                 "message": VALIDATION_COPY,
                 "field_error": VALIDATION_COPY,
             },
-            422 if _enhanced(request) else 200,
+            422 if is_enhanced_request(request) else 200,
         )
     try:
         result = execute_search(search_request, reader)
-        view = {**base, **search_view(result, link_manifests)}
+        view = {
+            **base,
+            **search_view(
+                result,
+                link_manifests,
+                tuple(request.query_params.multi_items()),
+            ),
+        }
         external = (
             reader.web_statuses(result.release)
             if isinstance(reader, SearchStatusReader)
@@ -123,9 +124,9 @@ def _index(
         view["primary_state"] = primary_state
         view["message"] = STATE_COPY[primary_state]
         add_pagination(view, list(request.query_params.multi_items()))
-        return _response(request, templates, view, 200)
+        return render_response(request, templates, view, 200)
     except SearchServiceError as error:
-        return _search_error_response(request, templates, base, error)
+        return search_error_response(request, templates, base, error, results_path="/")
     except ReleaseContractError as error:
         return _release_error_response(request, templates, base, error)
     except sqlite3.OperationalError:
@@ -154,7 +155,7 @@ def _initial_response(
         if reader.is_stale(release):
             statuses.append("stale")
         base["statuses"] = sanitize_statuses(statuses)
-        return _response(request, templates, base, 200)
+        return render_response(request, templates, base, 200)
     except ReleaseContractError as error:
         return _release_error_response(request, templates, base, error)
     except sqlite3.OperationalError:
@@ -183,98 +184,4 @@ def _release_error_response(
             "message": STATE_COPY[state],
             "request_id": uuid4().hex,
         }
-    return _response(request, templates, view, status)
-
-
-def _search_error_response(
-    request: Request,
-    templates: Environment,
-    base: dict[str, ViewValue],
-    error: SearchServiceError,
-) -> HTMLResponse | JSONResponse:
-    if error.code == "stale_snapshot":
-        view = {
-            **base,
-            "primary_state": "stale",
-            "statuses": ["stale"],
-            "message": STATE_COPY["stale"],
-        }
-        return _response(request, templates, view, 200)
-    if error.code in {"ambiguous_category", "ambiguous_detail_category"}:
-        choices = tuple(error.choices)
-        view = {
-            **base,
-            "primary_state": "validation-error",
-            "message": VALIDATION_COPY,
-            "choices": category_choices(base["form"], choices),
-            "choice_values": choices,
-            "response_kind": "category-choice",
-        }
-        return _response(request, templates, view, 422 if _enhanced(request) else 200)
-    view = {
-        **base,
-        "primary_state": "validation-error",
-        "message": VALIDATION_COPY,
-        "field_error": VALIDATION_COPY,
-    }
-    status = 422 if _enhanced(request) else 200
-    return _response(request, templates, view, status)
-
-
-def _parse_request(query: dict[str, str]) -> SearchRequest:
-    target = query.get("target_price_won", "")
-    tolerance = query.get("price_tolerance_pct", "")
-    page = query.get("page", "1")
-    return SearchRequest.model_validate(
-        {
-            "product_name": query.get("product_name", ""),
-            "category_code": query.get("category_code") or None,
-            "detail_category_code": query.get("detail_category_code") or None,
-            "spec_text": query.get("spec_text", ""),
-            "target_price_won": None if not target else int(target),
-            "price_unit": query.get("price_unit") or None,
-            "price_tolerance_pct": None if not tolerance else Decimal(tolerance),
-            "page": int(page),
-            "page_size": 50,
-        }
-    )
-
-
-def _enhanced(request: Request) -> bool:
-    return request.headers.get("x-requested-with") == "fetch"
-
-
-def _response(
-    request: Request,
-    templates: Environment,
-    view: dict[str, ViewValue],
-    status: int,
-) -> HTMLResponse | JSONResponse:
-    if _enhanced(request):
-        html = _render(templates, "results.html", view)
-        payload = {
-            "html": html,
-            "primary_state": view["primary_state"],
-            "kind": view.get("response_kind", "results"),
-            "choices": view.get("choice_values", []),
-        }
-        return JSONResponse(payload, status)
-    return _template(templates, "index.html", view, status)
-
-
-def _template(
-    templates: Environment,
-    name: str,
-    view: dict[str, ViewValue],
-    status: int,
-) -> HTMLResponse:
-    return HTMLResponse(_render(templates, name, view), status)
-
-
-def _render(
-    templates: Environment,
-    name: str,
-    view: dict[str, ViewValue],
-) -> str:
-    template = templates.get_template(name)
-    return template.render(**view)
+    return render_response(request, templates, view, status)

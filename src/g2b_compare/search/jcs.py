@@ -37,6 +37,5 @@ def jcs_members_valid(inputs: JcsInputs) -> bool:
         (inputs.member_map["char-vocabulary.json"], dict(inputs.char_vocab)),
     )
     return all(
-        canonical_json(value).encode("utf-8") == payload
-        for payload, value in values
+        canonical_json(value).encode("utf-8") == payload for payload, value in values
     )

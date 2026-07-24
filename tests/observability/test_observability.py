@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import sqlite3
 import threading
 from datetime import date, datetime
@@ -24,7 +25,12 @@ from g2b_compare.observability.logging import operation_log
 from g2b_compare.observability.runtime_attributes import run_attribute_sync
 from g2b_compare.observability.runtime_sync import run_catalog_sync
 from g2b_compare.observability.secrets import CANARY, scan_stream, verify_secrets
-from g2b_compare.observability.server import handler, run_server
+from g2b_compare.observability.server import (
+    LAN_BIND,
+    handler,
+    run_server,
+    serve_loopback,
+)
 from g2b_compare.sync.planner import DateWindow, OperationSchedule
 from g2b_compare.sync.publisher import publish_operation as real_publish_operation
 from tests.acceptance.todo_12_release_support import ready_candidate
@@ -34,6 +40,36 @@ from tests.sync.todo8_fixture import setup_five_sources
 from tests.sync.todo8_review_support import seed_ready_release
 
 PREPUBLICATION_CRASH = "synthetic-prepublication-crash"
+
+
+def test_server_allows_lan_bind(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed: list[str] = []
+
+    def run(
+        _database: Path,
+        _index: Path,
+        _contract: Path,
+        host: str,
+        _port: int,
+    ) -> int:
+        observed.append(host)
+        return 0
+
+    monkeypatch.setattr("g2b_compare.observability.server.run_server", run)
+
+    result = serve_loopback(
+        tmp_path / "g2b.sqlite3",
+        tmp_path / "search-index.bin",
+        tmp_path / "api-contract-observed.json",
+        LAN_BIND,
+        8765,
+    )
+
+    assert result == (0, None)
+    assert observed == [LAN_BIND]
 
 
 def test_operation_log_allows_only_safe_fields() -> None:
@@ -90,12 +126,12 @@ def test_server_passes_runtime_contract_to_ui(
     contract = tmp_path / "docs" / "api-contract-observed.json"
     contract.parent.mkdir()
     _ = contract.write_text("{}", encoding="utf-8")
-    observed: list[Path] = []
+    observed: list[tuple[Path, str | None]] = []
 
     class AppModule:
         def create_app(self, *, database: Path, link_manifest: Path) -> FastAPI:
             _ = database
-            observed.append(link_manifest)
+            observed.append((link_manifest, os.environ.get("G2B_SERVE_SPA")))
             return FastAPI()
 
     @final
@@ -122,6 +158,7 @@ def test_server_passes_runtime_contract_to_ui(
         "g2b_compare.observability.server.ThreadingHTTPServer",
         Server,
     )
+    monkeypatch.delenv("G2B_SERVE_SPA", raising=False)
 
     # When: the runtime server builds the UI.
     status = run_server(
@@ -134,7 +171,8 @@ def test_server_passes_runtime_contract_to_ui(
 
     # Then: UI links use the exact same verified runtime contract.
     assert status == 130
-    assert observed == [contract]
+    assert observed == [(contract, "1")]
+    assert "G2B_SERVE_SPA" not in os.environ
 
 
 def test_ready_endpoint_transitions_from_fresh_503_to_ready_200(

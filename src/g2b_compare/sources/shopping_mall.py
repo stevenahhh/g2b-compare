@@ -134,9 +134,7 @@ class ShoppingMallAdapter:
         for row in provider_page.rows:
             stable_key = tuple(_text(row, field) for field in STABLE_KEY_FIELDS)
             if any(not part for part in stable_key):
-                quarantined.append(
-                    QuarantinedRecord("missing-stable-source-key", row)
-                )
+                quarantined.append(QuarantinedRecord("missing-stable-source-key", row))
                 continue
             records.append(
                 _record(
@@ -177,9 +175,7 @@ def _record(
     )
 
 
-def _timestamp(
-    row: RawFields, observed_at: datetime
-) -> TimestampEvidence:
+def _timestamp(row: RawFields, observed_at: datetime) -> TimestampEvidence:
     changed = _text(row, "chgDt")
     if changed:
         return TimestampEvidence(changed, TimestampOrigin.PROVIDER_CHANGED, 2)

@@ -41,7 +41,7 @@ def test_sync_settings_require_service_key(monkeypatch: pytest.MonkeyPatch) -> N
 
     # When/Then: sync settings reject the missing secret
     with pytest.raises(ValidationError, match="service_key"):
-        SyncSettings()
+        _ = SyncSettings.model_validate({})
 
 
 def test_sync_settings_redact_service_key() -> None:
@@ -52,7 +52,8 @@ def test_sync_settings_redact_service_key() -> None:
 
     # When: sync settings are represented
     rendered = (
-        f"{SyncSettings(service_key=secret)!r} {SyncSettings(service_key=secret)}"
+        f"{SyncSettings.model_validate({'service_key': secret})!r} "
+        f"{SyncSettings.model_validate({'service_key': secret})}"
     )
 
     # Then: the secret bytes never appear
@@ -64,20 +65,20 @@ def test_app_settings_reject_non_loopback_bind(host: str) -> None:
     # Given: a non-approved bind host
     # When/Then: the boundary rejects public or arbitrary hosts
     with pytest.raises(ValidationError, match=r"127\.0\.0\.1"):
-        AppSettings(bind_host=host)
+        _ = AppSettings.model_validate({"bind_host": host})
 
 
 def test_app_settings_reject_invalid_daily_budget() -> None:
     # Given: a non-positive daily request budget
     # When/Then: configuration parsing rejects it
     with pytest.raises(ValidationError, match="daily_api_budget"):
-        AppSettings(daily_api_budget=0)
+        _ = AppSettings.model_validate({"daily_api_budget": 0})
 
 
 def test_production_base_is_official_https_only() -> None:
     # Given: the immutable official service base
     # When: it is parsed at the configuration boundary
-    base = ProductionBase(url=G2B_API_BASE_URL)
+    base = ProductionBase.model_validate({"url": G2B_API_BASE_URL})
 
     # Then: the official HTTPS host and path are retained
     assert str(base.url).rstrip("/") == G2B_API_BASE_URL
@@ -94,7 +95,7 @@ def test_production_base_rejects_override(url: str) -> None:
     # Given: a non-official or non-HTTPS base
     # When/Then: production base parsing rejects the override
     with pytest.raises(ValidationError, match="official HTTPS"):
-        ProductionBase(url=url)
+        _ = ProductionBase.model_validate({"url": url})
 
 
 def test_source_inventory_validates_four_declared_hashes(tmp_path: Path) -> None:
@@ -103,9 +104,12 @@ def test_source_inventory_validates_four_declared_hashes(tmp_path: Path) -> None
     lines: list[str] = []
     for index, relative in enumerate(paths):
         payload = f"payload-{index}".encode()
-        (tmp_path / relative).write_bytes(payload)
+        _ = (tmp_path / relative).write_bytes(payload)
         lines.append(f"{hashlib.sha256(payload).hexdigest()}  {relative.as_posix()}")
-    (tmp_path / "baseline.sha256").write_text("\n".join(lines), encoding="utf-8")
+    _ = (tmp_path / "baseline.sha256").write_text(
+        "\n".join(lines),
+        encoding="utf-8",
+    )
 
     # When: the inventory boundary validates the package
     inventory = validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))
@@ -117,22 +121,22 @@ def test_source_inventory_validates_four_declared_hashes(tmp_path: Path) -> None
 def test_source_inventory_rejects_missing_artifact(tmp_path: Path) -> None:
     # Given: a four-file declaration with no matching files
     paths = tuple(Path(f"source-{index}.bin") for index in range(4))
-    (tmp_path / "baseline.sha256").write_text("", encoding="utf-8")
+    _ = (tmp_path / "baseline.sha256").write_text("", encoding="utf-8")
 
     # When/Then: the first missing source is reported
     with pytest.raises(SourceArtifactError, match=r"source artifact.*missing"):
-        validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))
+        _ = validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))
 
 
 def test_source_inventory_rejects_missing_baseline(tmp_path: Path) -> None:
     # Given: four files but no hash baseline
     paths = tuple(Path(f"source-{index}.bin") for index in range(4))
     for relative in paths:
-        (tmp_path / relative).write_bytes(b"source")
+        _ = (tmp_path / relative).write_bytes(b"source")
 
     # When/Then: the absent baseline is reported
     with pytest.raises(SourceBaselineError, match=r"hash baseline.*missing"):
-        validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))
+        _ = validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))
 
 
 def test_source_inventory_rejects_unexpected_count(tmp_path: Path) -> None:
@@ -141,4 +145,4 @@ def test_source_inventory_rejects_unexpected_count(tmp_path: Path) -> None:
 
     # When/Then: the invariant of four sources is enforced
     with pytest.raises(SourceCountError, match="expected 4 source artifacts"):
-        validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))
+        _ = validate_source_inventory(tmp_path, paths, Path("baseline.sha256"))

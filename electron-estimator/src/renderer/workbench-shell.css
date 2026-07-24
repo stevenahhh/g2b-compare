@@ -1,0 +1,189 @@
+.workbench-shell {
+  display: grid;
+  grid-template-columns: var(--left-wide) minmax(0, 1fr) var(--right-wide);
+  block-size: 100dvb;
+  min-block-size: 0;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.left-rail {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  border-inline-end: 1px solid var(--border);
+  background: var(--text);
+}
+
+.rail-brand,
+.rail-item {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: var(--control-min);
+  gap: var(--space-panel);
+  padding-inline: var(--space-section);
+  border: 0;
+  border-block-end: 1px solid var(--secondary);
+  color: var(--surface);
+  background: var(--text);
+  text-align: start;
+}
+
+.rail-brand {
+  min-block-size: 60px;
+}
+
+.rail-item {
+  cursor: pointer;
+}
+
+.rail-item.is-current {
+  border-inline-start: 4px solid var(--accent);
+  padding-inline-start: var(--space-panel);
+  background: var(--secondary);
+}
+
+.rail-mark {
+  display: inline-grid;
+  inline-size: 24px;
+  block-size: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  border: 1px solid currentColor;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
+.center-pane {
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.workspace-header {
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 60px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-section);
+  padding-inline: var(--space-wide);
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.workspace-header h1 {
+  margin: 0;
+  font-size: var(--font-size-workspace-title);
+  line-height: var(--line-height-heading);
+}
+
+.workspace-header p {
+  margin: 0;
+  color: var(--secondary);
+  font-size: var(--font-size-label);
+  white-space: nowrap;
+}
+
+.dirty-state {
+  flex: 0 0 auto;
+  padding: var(--space-tight) var(--space-default);
+  border-inline-start: 3px solid var(--success);
+  color: var(--secondary);
+  background: var(--background);
+}
+
+.dirty-state.is-dirty {
+  border-color: var(--warning);
+  color: var(--text);
+}
+
+.workbench-notices {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-block-end: 1px solid var(--border);
+}
+
+.workbench-notice {
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-compact) var(--space-control);
+  border-inline-start-width: 4px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-compact);
+}
+
+.workbench-notice + .workbench-notice {
+  border-inline-end: 1px solid var(--border);
+}
+
+.workbench-toolbar {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) 116px auto;
+  gap: var(--space-default);
+  padding: var(--space-compact) var(--space-default);
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.workbench-toolbar input,
+.workbench-toolbar select {
+  inline-size: 100%;
+  padding-inline: var(--space-control);
+}
+
+.workbench-status {
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 28px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-section);
+  padding-inline: var(--space-default);
+  border-block-start: 1px solid var(--border);
+  color: var(--secondary);
+  background: var(--surface);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 1024px) {
+  .workbench-shell {
+    grid-template-columns: var(--left-narrow) minmax(0, 1fr);
+  }
+
+  .left-rail {
+    inline-size: var(--left-narrow);
+  }
+
+  .rail-brand,
+  .rail-item {
+    justify-content: center;
+    padding-inline: var(--space-none);
+  }
+
+  .rail-item.is-current {
+    padding-inline: var(--space-none);
+  }
+
+  .rail-label {
+    display: none;
+  }
+
+  .workspace-header {
+    padding-inline: var(--space-panel);
+  }
+
+  .workspace-header p {
+    max-inline-size: 570px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .workbench-shell:has(.provenance-inspector.is-open) .workbench-notices {
+    grid-template-columns: minmax(0, 1fr);
+    margin-inline-end: var(--right-overlay);
+  }
+}

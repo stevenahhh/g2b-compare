@@ -60,18 +60,27 @@ def test_quota_row_rejects_unapproved_status() -> None:
         _ = _row(Operation.GET_MAS_CONTRACT_PRODUCT_INFO, approved=False)
 
 
-def test_effective_ceiling_reserves_ten_percent_or_one_hundred() -> None:
+def test_effective_ceiling_uses_the_full_observed_provider_quota() -> None:
     # Given: the observed daily quota is 1,000.
-    row = _row(Operation.GET_PRODUCT_INDIVIDUAL_ATTRIBUTE)
+    row = _row(Operation.GET_MAS_CONTRACT_PRODUCT_INFO)
 
-    # When: the safety ceiling is calculated.
+    # When: the local dispatch ceiling is calculated.
     ceiling = effective_ceiling(row)
 
-    # Then: 100 calls are reserved and 900 remain available.
-    assert ceiling == 900
+    # Then: no unverified safety margin is deducted.
+    assert ceiling == 1000
 
 
-@pytest.mark.parametrize(("consumed", "expected"), [(897, 3), (898, 0), (900, 0)])
+def test_effective_ceiling_uses_attribute_collection_limit() -> None:
+    row = _row(Operation.GET_PRODUCT_INDIVIDUAL_ATTRIBUTE)
+
+    assert effective_ceiling(row) == 10_000
+
+
+@pytest.mark.parametrize(
+    ("consumed", "expected"),
+    [(9997, 3), (9998, 0), (10_000, 0)],
+)
 def test_probe_budget_allows_zero_calls_when_fewer_than_three_remain(
     consumed: int,
     expected: int,

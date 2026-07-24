@@ -21,3 +21,37 @@ test-results/
 browser-temp/
 evidence-temp/
 
+# Local runtime data and generated artifacts
+.g2b/
+g2b.sqlite3*
+data/
+dataset/
+outputs/
+tmp/
+scripts/.g2b/
+*.log
+
+# Agent and local tool state
+.omo/
+.codex-tmp/
+.gjc/
+.codegraph/
+.serena/
+.playwright-cli/
+.pnpm-store/
+.uv-cache/
+.uv-cache-env-loading/
+.claude/
+.agents/
+qa-r2/
+clean-green.*
+
+# Frontend and Electron dependencies/build output
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/dist/
+electron-estimator/node_modules/
+electron-estimator/.omo/
+electron-estimator/dist/
+electron-estimator/release/
+electron-estimator/test-results/

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import ROUND_HALF_EVEN, Decimal, localcontext
+from functools import lru_cache
 from typing import Final
 
 from .explain import Activity, Evidence, ScoreBreakdown
@@ -15,6 +16,7 @@ WEIGHT_F: Final = Decimal("0.20")
 WEIGHT_U: Final = Decimal("0.35")
 WEIGHT_P: Final = Decimal("0.10")
 DECAY: Final = Decimal("1.25")
+FORMULA_CACHE_MAXSIZE: Final = 150_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,10 +40,20 @@ def value_similarity(left: Decimal, right: Decimal) -> Decimal | None:
     """Return symmetric log-ratio decay for two positive values."""
     if left <= 0 or right <= 0:
         return None
+    return _positive_value_similarity(min(left, right), max(left, right))
+
+
+@lru_cache(maxsize=FORMULA_CACHE_MAXSIZE)
+def _positive_value_similarity(left: Decimal, right: Decimal) -> Decimal:
     with localcontext() as context:
         context.prec = 40
-        distance = (max(left, right) / min(left, right)).ln()
+        distance = (right / left).ln()
         return (-(distance / DECAY.ln())).exp()
+
+
+def value_similarity_cache_maxsize() -> int:
+    """Return the enforced process-local formula cache bound."""
+    return _positive_value_similarity.cache_info().maxsize or 0
 
 
 def log_distance(left: Decimal, right: Decimal) -> Decimal | None:

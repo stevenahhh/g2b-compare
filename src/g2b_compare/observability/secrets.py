@@ -129,6 +129,12 @@ def verify_secrets(
     candidates = dict.fromkeys((*tracked_files(root), *runtime, *paths))
     leaks: list[SecretLeak] = []
     for path in candidates:
+        try:
+            _ = path.stat()
+        except FileNotFoundError:
+            continue
+        except OSError:
+            raise SecretScanError(STORAGE_READ_FAILED) from None
         marker, is_sqlite = _scan_file(path, markers)
         if marker is not None:
             leaks.append(SecretLeak(path, marker))

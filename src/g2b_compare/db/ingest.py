@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Final
 
 from .connection import connect
@@ -42,6 +43,7 @@ ALLOWLISTED_PARAMETER_NAMES: Final = frozenset(
     }
 )
 SECRET_PARAMETER_MARKERS: Final = ("auth", "credential", "key", "secret", "token")
+QUOTA_CEILING_EXHAUSTED: Final = "quota ceiling exhausted"
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +86,7 @@ class IngestRepository:
             return _row_id(cursor)
 
     def create_page(self, page: SyncPageInput) -> int:
-        """Persist one verified page, allowing page one in distinct windows."""
+        """Persist one verified page, keeping the first capture on a retry."""
         with connect(self.database) as connection:
             cursor = query(
                 connection,
@@ -93,6 +95,7 @@ class IngestRepository:
                     run_id, window_id, page_no, request_manifest_id, body_sha,
                     item_count, total_count, status_code, content_type
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(run_id, window_id, page_no) DO NOTHING
                 """,
                 (
                     page.run_id,
@@ -106,7 +109,19 @@ class IngestRepository:
                     page.content_type,
                 ),
             )
-            return _row_id(cursor)
+            if cursor.rowcount:
+                return _row_id(cursor)
+            existing = query(
+                connection,
+                """
+                SELECT id FROM sync_pages
+                WHERE run_id = ? AND window_id = ? AND page_no = ?
+                """,
+                (page.run_id, page.window_id, page.page_no),
+            ).fetchone()
+            if existing is None:
+                raise RepositoryContractError(detail="duplicate page insert vanished")
+            return as_int(existing[0])
 
     def register_request(self, request: RequestInput) -> int:
         """Persist a secret-free canonical request or return its exact replay."""
@@ -191,20 +206,28 @@ class IngestRepository:
     def reserve_quota(self, quota: QuotaReservationInput) -> int:
         """Atomically consume one rolling-window call before network I/O."""
         if quota.ceiling <= 0:
-            raise RepositoryContractError(detail="quota ceiling exhausted")
+            raise RepositoryContractError(detail=QUOTA_CEILING_EXHAUSTED)
         with connect(self.database) as connection:
             _ = query(connection, "BEGIN IMMEDIATE")
             row = query(
                 connection,
                 """
-                SELECT COUNT(*) FROM api_call_ledger
+                SELECT COUNT(*), MIN(attempted_at_utc) FROM api_call_ledger
                 WHERE operation = ? AND attempted_at_utc >= ?
                 """,
                 (quota.operation, quota.cutoff_utc),
             ).fetchone()
             count = 0 if row is None else as_int(row[0])
             if count >= quota.ceiling:
-                raise RepositoryContractError(detail="quota ceiling exhausted")
+                if row is None or row[1] is None:
+                    raise RepositoryContractError(detail="quota ledger corrupt")
+                oldest = datetime.fromisoformat(as_text(row[1]))
+                resume = (oldest + timedelta(hours=24)).isoformat()
+                raise RepositoryContractError(
+                    QUOTA_CEILING_EXHAUSTED,
+                    operation=quota.operation,
+                    resume_not_before=resume,
+                )
             cursor = query(
                 connection,
                 """

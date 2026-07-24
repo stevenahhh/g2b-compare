@@ -91,6 +91,7 @@ class ObservedSchemaState(ProbeStateBase):
     selected_candidate: str = Field(min_length=1)
     required_fields: tuple[str, ...]
     stable_key_fields: tuple[str, ...]
+
     @field_validator("required_fields", "stable_key_fields")
     @classmethod
     def canonical_nonempty_fields(cls, value: tuple[str, ...]) -> tuple[str, ...]:

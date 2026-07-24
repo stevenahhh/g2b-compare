@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ draft.title }}</title>
+    <link rel="stylesheet" href="/static/mvp.css?v=20260722-4">
+    <script src="/static/estimate.js?v=20260722-2" defer></script>
+  </head>
+  <body>
+    <main class="shell shell-wide" data-estimate-id="{{ draft.id }}">
+      <nav class="mvp-nav" aria-label="주 메뉴">
+        <a href="/?estimate_id={{ draft.id }}">물품 검색</a>
+        <a aria-current="page" href="/estimates">관급내역</a>
+        <a href="/data">데이터 관리</a>
+      </nav>
+      <header class="estimate-header">
+        <div>
+          <p class="eyebrow">ESTIMATE · <span class="save-state">저장됨</span></p>
+          <h1>{{ draft.title }}</h1>
+          <p class="result-count">내역 {{ draft.lines|length }} / 9</p>
+        </div>
+        <div class="estimate-actions">
+          <form action="/estimates" method="post">
+            <button type="submit">새로 시작</button>
+          </form>
+          <button class="copy-estimate" type="button" data-copy-estimate="{{ draft.id }}"{% if not draft.lines %} disabled{% endif %}>Excel에 붙여넣기</button>
+          <a class="secondary-action{% if not export_ready %} is-disabled{% endif %}" href="/estimates/{{ draft.id }}/export.xlsx"{% if not export_ready %} aria-disabled="true" title="비교 물품 2개가 필요함"{% endif %}>.xlsx 내보내기 · 보조</a>
+        </div>
+      </header>
+      <div class="line-table-wrap">
+        <table class="estimate-table">
+          <thead>
+            <tr><th>연번</th><th>본품/옵션 경로</th><th>품명</th><th>규격</th><th>단위</th><th>수량</th><th>적용 단가</th><th>금액</th><th>G2B식별번호</th><th>업체명</th><th>행 작업</th></tr>
+          </thead>
+          <tbody>
+            {% for line in draft.lines %}
+              <tr data-line-id="{{ line.id }}" data-unit-price="{{ line.unit_price_won_snapshot }}">
+                <td data-copy-value="{{ line.line_no }}">{{ line.line_no }}</td>
+                <td data-copy-value="{% if line.line_kind == "option" %}본품 [{{ line.parent_product_id }}] > 옵션 [{{ line.product_id }}]{% else %}본품 [{{ line.product_id }}]{% endif %}">{% if line.line_kind == "option" %}본품 [{{ line.parent_product_id }}] &gt; 옵션 [{{ line.product_id }}]{% else %}본품 [{{ line.product_id }}]{% endif %}</td>
+                <td data-copy-value="{{ line.item_name_snapshot }}">{{ line.item_name_snapshot }}</td>
+                <td data-copy-value="{{ line.spec_snapshot }}">{{ line.spec_snapshot }}</td>
+                <td data-copy-value="{{ line.unit_snapshot }}">{{ line.unit_snapshot }}</td>
+                <td><input class="quantity-input" data-copy-input inputmode="decimal" value="{{ line.quantity }}" aria-label="{{ line.line_no }}번 수량"></td>
+                <td class="number-cell" data-copy-value="{{ line.unit_price_won_snapshot }}">{{ "{:,}".format(line.unit_price_won_snapshot) }}</td>
+                <td class="number-cell line-amount" data-copy-value="{{ line.quantity * line.unit_price_won_snapshot }}">{{ "{:,.0f}".format(line.quantity * line.unit_price_won_snapshot) }}</td>
+                <td data-copy-value="{{ line.product_id }}"><span class="selectable">{{ line.product_id }}</span></td>
+                <td data-copy-value="{{ line.company_snapshot }}">{{ line.company_snapshot }}</td>
+                <td><button class="delete-line secondary-button" type="button">삭제</button></td>
+              </tr>
+              <tr class="comparison-row">
+                <td colspan="11">
+                  <div class="comparison-grid">
+                    {% for comparison in comparisons.get(line.id, ()) %}
+                      <article data-comparison data-company="{{ comparison.company }}" data-spec="{{ comparison.spec }}" data-product-id="{{ comparison.product_id }}" data-price="{{ comparison.price_won }}">
+                        <strong>{{ comparison.slot }}사 · {{ comparison.company }}</strong>
+                        <span>{{ comparison.product_id }}</span>
+                        {% if comparison.attributes %}
+                          <table class="product-attributes comparison-attributes">
+                            <caption>상품 속성 정보</caption>
+                            <thead><tr><th>속성명</th><th>속성값</th><th>단위</th></tr></thead>
+                            <tbody>
+                              {% for attribute in comparison.attributes %}
+                                <tr><th>{{ attribute.name }}</th><td>{{ attribute.value }}</td><td>{{ attribute.unit }}</td></tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% endif %}
+                        <p>{{ comparison.spec }}</p>
+                        <b>{{ "{:,}".format(comparison.price_won) }}원</b>
+                      </article>
+                    {% endfor %}
+                    {% if comparisons.get(line.id, ())|length < 3 %}
+                      <p class="comparison-warning">비교 물품 2개가 필요함</p>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td class="table-empty" colspan="11">물품 검색에서 최대 9개 품목을 추가할 수 있음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+    <dialog class="confirm-dialog" data-confirm-dialog aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-description">
+      <form method="dialog">
+        <h2 id="confirm-dialog-title">내역 삭제</h2>
+        <p id="confirm-dialog-description">선택한 내역을 삭제할까요?</p>
+        <div class="confirm-dialog-actions">
+          <button class="secondary-button" type="submit" value="cancel">취소</button>
+          <button type="submit" value="confirm">삭제</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

@@ -1,9 +1,10 @@
 <ol class="comparators">
 {% for comparator in row.comparators %}
   <li>
-    <span class="mono">{{ comparator.rank }}</span>
+    <span class="comparator-rank">{{ comparator.rank }}</span>
     {% if comparator.name %}
-      <span>{{ comparator.name }}</span><span>{{ comparator.score|default('—', true) }}</span>
+      <span>{{ comparator.name }}</span>
+      {% if comparator.price %}<span class="comparator-price">{{ comparator.price }}원{% if comparator.unit %} / {{ comparator.unit }}{% endif %}</span>{% endif %}
       {% if comparator.status == "no_comparison_evidence" %}<span class="badge">비교 근거 부족</span>{% endif %}
     {% else %}
       <span class="badge">비교 후보 부족</span>

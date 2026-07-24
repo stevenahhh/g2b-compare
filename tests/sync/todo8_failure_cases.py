@@ -95,7 +95,7 @@ def _pagination_failure(scenario: str) -> Never:
 
 
 def _budget_failure() -> Never:
-    require_daily_budget(901, 900)
+    require_daily_budget(1001, 1000)
     raise AssertionError(BUDGET_NOT_REJECTED)
 
 

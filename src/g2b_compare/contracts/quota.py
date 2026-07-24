@@ -21,6 +21,7 @@ SHOPPING_SERVICE_ID: Final = "15129471"
 ATTRIBUTE_SERVICE_ID: Final = "15129417"
 MIN_PROBE_ATTEMPTS: Final = 3
 MAX_PROBE_ATTEMPTS: Final = 5
+ATTRIBUTE_COLLECTION_CEILING: Final = 10_000
 SERVICE_ERROR_CODE: Final = "service_operation_mismatch"
 SERVICE_ERROR_MESSAGE: Final = "operation is not authorized by the declared service"
 OPERATION_SET_ERROR_CODE: Final = "approved_operation_set"
@@ -144,9 +145,12 @@ class QuotaOperationMismatchError(Exception):
 
 
 def effective_ceiling(row: QuotaRow) -> int:
-    """Reserve the larger of ten percent or one hundred calls."""
-    ten_percent = (row.daily_quota + 9) // 10
-    return max(0, row.daily_quota - max(ten_percent, 100))
+    """Apply the approved attribute limit or the observed provider quota."""
+    match row.operation:
+        case Operation.GET_PRODUCT_INDIVIDUAL_ATTRIBUTE:
+            return ATTRIBUTE_COLLECTION_CEILING
+        case _:
+            return row.daily_quota
 
 
 def probe_budget(row: QuotaRow, usage: QuotaUsage) -> ProbeBudget:

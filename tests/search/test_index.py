@@ -131,15 +131,11 @@ def test_bundle_ownership_and_actual_member_derivations_are_strict(
         ),
         settings.model_copy(
             update={
-                "word": settings.word.model_copy(
-                    update={"vocabulary_sha256": "0" * 64}
-                )
+                "word": settings.word.model_copy(update={"vocabulary_sha256": "0" * 64})
             }
         ),
         settings.model_copy(
-            update={
-                "word": settings.word.model_copy(update={"idf_sha256": "0" * 64})
-            }
+            update={"word": settings.word.model_copy(update={"idf_sha256": "0" * 64})}
         ),
     )
     for mutation in mutations:

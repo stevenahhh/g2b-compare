@@ -57,6 +57,7 @@ def parser() -> argparse.ArgumentParser:
         "rebuild-index",
         "precompute",
         "verify",
+        "coverage-stats",
         "prune-raw",
     ):
         _ = commands.add_parser(name).add_argument("--dry-run", action="store_true")

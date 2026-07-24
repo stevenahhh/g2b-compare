@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "source_sha256": "2220cd9936ebdf908d64c0571a4c8de83973eaa89c6778a64afec07de7c5e701",
+  "template_sha256": "f344d2fcd12612170677eacc8b6ee4798ef730b8f5ea91b40ba8d7fcf0d694e4",
+  "sheet_names": [
+    "수량산출서 (2)", "표지 ", "설계설명서", "설계표지", "원가",
+    "도급집계표", "도급내역서", "도급일위대가표", "표준품셈", "노임단가",
+    "관급집계표", "관급내역서", "수량산출서", "단가조사", "물가정보",
+    "조달물품", "설치 구성도", "공정표", "견적서", "견적서2"
+  ],
+  "title_cell": {"sheet": "표지 ", "cell": "A5"},
+  "quantity_rows": {"sheet": "수량산출서", "start_row": 8, "count": 9},
+  "price_rows": {"sheet": "단가조사", "start_row": 5, "count": 9},
+  "image_sheet": "조달물품",
+  "image_slots": [
+    {"line_index": 7, "comparison_slot": "A", "anchor_index": 1, "anchor_kind": "twoCellAnchor", "from": [1, 90056, 17, 155372], "to": [5, 1124199, 17, 1631953], "media_path": "xl/media/estimate-slot-01.png", "relationship_id": "rIdEstimate01"},
+    {"line_index": 7, "comparison_slot": "B", "anchor_index": 2, "anchor_kind": "twoCellAnchor", "from": [7, 100943, 17, 155372], "to": [11, 960914, 17, 1631953], "media_path": "xl/media/estimate-slot-02.png", "relationship_id": "rIdEstimate02"},
+    {"line_index": 7, "comparison_slot": "C", "anchor_index": 3, "anchor_kind": "twoCellAnchor", "from": [12, 79172, 17, 155372], "to": [16, 939143, 17, 1631953], "media_path": "xl/media/estimate-slot-03.png", "relationship_id": "rIdEstimate03"},
+    {"line_index": 6, "comparison_slot": "A", "anchor_index": 4, "anchor_kind": "twoCellAnchor", "from": [1, 79171, 15, 166256], "to": [5, 1145970, 15, 1633311], "media_path": "xl/media/estimate-slot-04.png", "relationship_id": "rIdEstimate04"},
+    {"line_index": 6, "comparison_slot": "B", "anchor_index": 5, "anchor_kind": "twoCellAnchor", "from": [7, 79171, 15, 166256], "to": [11, 950027, 15, 1633311], "media_path": "xl/media/estimate-slot-05.png", "relationship_id": "rIdEstimate05"},
+    {"line_index": 6, "comparison_slot": "C", "anchor_index": 6, "anchor_kind": "twoCellAnchor", "from": [12, 79171, 15, 166256], "to": [16, 950027, 15, 1633311], "media_path": "xl/media/estimate-slot-06.png", "relationship_id": "rIdEstimate06"},
+    {"line_index": 5, "comparison_slot": "A", "anchor_index": 7, "anchor_kind": "twoCellAnchor", "from": [1, 79171, 13, 198914], "to": [5, 1124199, 13, 1523074], "media_path": "xl/media/estimate-slot-07.png", "relationship_id": "rIdEstimate07"},
+    {"line_index": 8, "comparison_slot": "A", "anchor_index": 8, "anchor_kind": "oneCellAnchor", "from": [1, 54431, 19, 206825], "to": null, "media_path": "xl/media/estimate-slot-08.png", "relationship_id": "rIdEstimate08"},
+    {"line_index": 8, "comparison_slot": "B", "anchor_index": 9, "anchor_kind": "oneCellAnchor", "from": [7, 54431, 19, 206825], "to": null, "media_path": "xl/media/estimate-slot-09.png", "relationship_id": "rIdEstimate09"},
+    {"line_index": 8, "comparison_slot": "C", "anchor_index": 10, "anchor_kind": "oneCellAnchor", "from": [12, 43546, 19, 206825], "to": null, "media_path": "xl/media/estimate-slot-10.png", "relationship_id": "rIdEstimate10"},
+    {"line_index": 4, "comparison_slot": "A", "anchor_index": 11, "anchor_kind": "twoCellAnchor", "from": [1, 76200, 11, 228600], "to": [5, 1132114, 11, 1552760], "media_path": "xl/media/estimate-slot-11.png", "relationship_id": "rIdEstimate11"},
+    {"line_index": 3, "comparison_slot": "A", "anchor_index": 12, "anchor_kind": "twoCellAnchor", "from": [1, 65315, 9, 206830], "to": [5, 1121229, 9, 1550042], "media_path": "xl/media/estimate-slot-12.png", "relationship_id": "rIdEstimate12"},
+    {"line_index": 2, "comparison_slot": "A", "anchor_index": 13, "anchor_kind": "twoCellAnchor", "from": [1, 76201, 7, 76200], "to": [5, 1121228, 7, 1709058], "media_path": "xl/media/estimate-slot-13.png", "relationship_id": "rIdEstimate13"},
+    {"line_index": 1, "comparison_slot": "A", "anchor_index": 14, "anchor_kind": "twoCellAnchor", "from": [1, 76202, 5, 206829], "to": [5, 1110344, 5, 1521462], "media_path": "xl/media/estimate-slot-14.png", "relationship_id": "rIdEstimate14"},
+    {"line_index": 1, "comparison_slot": "B", "anchor_index": 17, "anchor_kind": "twoCellAnchor", "from": [7, 65313, 5, 206828], "to": [11, 957942, 5, 1540514], "media_path": "xl/media/estimate-slot-15.png", "relationship_id": "rIdEstimate15"},
+    {"line_index": 3, "comparison_slot": "B", "anchor_index": 18, "anchor_kind": "twoCellAnchor", "from": [7, 76200, 9, 206829], "to": [11, 936171, 9, 1550041], "media_path": "xl/media/estimate-slot-16.png", "relationship_id": "rIdEstimate16"},
+    {"line_index": 4, "comparison_slot": "B", "anchor_index": 19, "anchor_kind": "twoCellAnchor", "from": [7, 76201, 11, 206828], "to": [11, 925285, 11, 1540514], "media_path": "xl/media/estimate-slot-17.png", "relationship_id": "rIdEstimate17"},
+    {"line_index": 2, "comparison_slot": "B", "anchor_index": 20, "anchor_kind": "twoCellAnchor", "from": [7, 54429, 7, 206828], "to": [11, 936171, 7, 1550040], "media_path": "xl/media/estimate-slot-18.png", "relationship_id": "rIdEstimate18"},
+    {"line_index": 5, "comparison_slot": "B", "anchor_index": 21, "anchor_kind": "twoCellAnchor", "from": [7, 76200, 13, 185057], "to": [11, 925285, 13, 1528269], "media_path": "xl/media/estimate-slot-19.png", "relationship_id": "rIdEstimate19"},
+    {"line_index": 1, "comparison_slot": "C", "anchor_index": 23, "anchor_kind": "twoCellAnchor", "from": [12, 76200, 5, 206829], "to": [16, 925286, 5, 1530989], "media_path": "xl/media/estimate-slot-20.png", "relationship_id": "rIdEstimate20"},
+    {"line_index": 2, "comparison_slot": "C", "anchor_index": 24, "anchor_kind": "twoCellAnchor", "from": [12, 87086, 7, 97973], "to": [16, 925286, 7, 1698173], "media_path": "xl/media/estimate-slot-21.png", "relationship_id": "rIdEstimate21"},
+    {"line_index": 3, "comparison_slot": "C", "anchor_index": 25, "anchor_kind": "twoCellAnchor", "from": [12, 65313, 9, 239485], "to": [16, 925286, 9, 1554118], "media_path": "xl/media/estimate-slot-22.png", "relationship_id": "rIdEstimate22"},
+    {"line_index": 5, "comparison_slot": "C", "anchor_index": 26, "anchor_kind": "twoCellAnchor", "from": [12, 65316, 13, 206830], "to": [16, 936172, 13, 1530990], "media_path": "xl/media/estimate-slot-23.png", "relationship_id": "rIdEstimate23"}
+  ]
+}

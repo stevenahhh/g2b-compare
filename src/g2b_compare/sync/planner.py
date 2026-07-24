@@ -89,14 +89,18 @@ def split_window(window: DateWindow) -> tuple[DateWindow, DateWindow]:
 
 
 def _partition(start: date, end: date, window_days: int) -> tuple[DateWindow, ...]:
+    """Partition [start, end] chronologically, then order newest-first."""
     if window_days < 1:
         raise SyncPlanningError(INVALID_WINDOW_SIZE)
     if start > end:
         return ()
-    windows: list[DateWindow] = []
+    bounds: list[tuple[date, date]] = []
     cursor = start
     while cursor <= end:
         window_end = min(end, cursor + timedelta(days=window_days - 1))
-        windows.append(DateWindow(len(windows), cursor, window_end))
+        bounds.append((cursor, window_end))
         cursor = window_end + timedelta(days=1)
-    return tuple(windows)
+    return tuple(
+        DateWindow(ordinal, window_start, window_end)
+        for ordinal, (window_start, window_end) in enumerate(reversed(bounds))
+    )

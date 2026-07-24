@@ -36,8 +36,7 @@ def _mixed_product_names(tmp_path: Path) -> tuple[str, str]:
     release = release_fixture()
     products = tuple(
         replace(product, product_name_key="다른이름")
-        if product.product_id.startswith("P-00-")
-        and int(product.product_id[-3:]) >= 10
+        if product.product_id.startswith("P-00-") and int(product.product_id[-3:]) >= 10
         else product
         for product in release.products
     )
@@ -52,18 +51,14 @@ def _mixed_product_names(tmp_path: Path) -> tuple[str, str]:
 
 def _exact_name_candidate_nine(tmp_path: Path) -> tuple[str, str]:
     release = release_fixture(pool_size=10)
-    return _blocked(
-        lambda: export_e0(release, tmp_path / "candidate-nine", seed=SEED)
-    )
+    return _blocked(lambda: export_e0(release, tmp_path / "candidate-nine", seed=SEED))
 
 
 def _lane_inactive(tmp_path: Path) -> tuple[str, str]:
     release = release_fixture(groups=11)
     inactive_id = "P-00-000"
     products = tuple(
-        replace(product, active=False)
-        if product.product_id == inactive_id
-        else product
+        replace(product, active=False) if product.product_id == inactive_id else product
         for product in release.products
     )
     output = tmp_path / "lane-inactive"
@@ -82,9 +77,7 @@ def _lane_dedupe(tmp_path: Path) -> tuple[str, str]:
     output = tmp_path / "lane-dedupe"
     _ = export_e0(release_fixture(), output, seed=SEED)
     rows = _jsonl(output / "pool.jsonl")
-    pairs = tuple(
-        (_text(row, "anchor_id"), _text(row, "candidate_id")) for row in rows
-    )
+    pairs = tuple((_text(row, "anchor_id"), _text(row, "candidate_id")) for row in rows)
     counts = Counter(anchor_id for anchor_id, _ in pairs)
     return type(pairs).__name__, (
         f"pairs={len(pairs)}; unique-pairs={len(set(pairs))}; "
@@ -136,9 +129,7 @@ def _parser_source_order(_: Path) -> tuple[str, str]:
     source = _mapping(row, "source")
     source_key = _text(source, "source_key")
     ordinal = _integer(source, "ordinal")
-    return type(source).__name__, (
-        f"source-key={source_key}; ordinal={ordinal}"
-    )
+    return type(source).__name__, (f"source-key={source_key}; ordinal={ordinal}")
 
 
 def _parser_stratum_overlap(_: Path) -> tuple[str, str]:
@@ -189,9 +180,7 @@ def _parser_template_sha(tmp_path: Path) -> tuple[str, str]:
 
 
 def _blocked(
-    action: Callable[
-        [], E0ExportReport | ParserTemplate
-    ],
+    action: Callable[[], E0ExportReport | ParserTemplate],
 ) -> tuple[str, str]:
     try:
         _ = action()

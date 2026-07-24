@@ -1,0 +1,222 @@
+{
+  "schema_version": "official-source-manifest-v1",
+  "dataset_version": "2026-H2-KR-CCTV-LAN-FIBER-v1",
+  "canonical_format": {
+    "encoding": "UTF-8",
+    "record_format": "JSON Lines",
+    "key_order": "lexicographic",
+    "separators": [
+      ",",
+      ":"
+    ],
+    "line_ending": "LF",
+    "final_record_lf": true,
+    "bom": false
+  },
+  "files": [
+    {
+      "dataset": "market",
+      "kind": "market_price",
+      "path": "../data/market-prices.jsonl",
+      "record_count": 64,
+      "sha256": "607f39517446e9089045ad098bfcb9b998385138f40297b005808785fd59fcb0",
+      "ordering": "work_code ASC",
+      "enriched_sha256": "83c4b7e782692b1aaa95297e10ba219a9a75982cf4c675c15ba325e1b7afdf9b"
+    },
+    {
+      "dataset": "productivity",
+      "kind": "standard_productivity",
+      "path": "../data/productivity.jsonl",
+      "record_count": 23,
+      "sha256": "567884f2d70c8d15d09f48cd2327ead5146edc6b51dd764a841206395a64f3e6",
+      "ordering": "researched workbook rows 5..27",
+      "enriched_sha256": "2f0d4aaf3e125e6472fc19842a8499dfc05d33c57fa0daeebe2ead9001335bf0"
+    },
+    {
+      "dataset": "wages",
+      "kind": "wage_rate",
+      "path": "../data/wages.jsonl",
+      "record_count": 10,
+      "sha256": "5157a575cc3a9f66c302163bd0f2c4b15c9b3b99e8167834fde89f2b54ae03c7",
+      "ordering": "job_code ASC",
+      "enriched_sha256": "f362090a2c9588d64ceae263beca9a978778ab083d1a7106ac152d3316070e76"
+    }
+  ],
+  "composite_sha256": "0705bbc698818fd1b291df2c554028253777e10503863fe2564830faf7e3fe16",
+  "market_breakdown": {
+    "categories": {
+      "CCTV": 22,
+      "LAN": 36,
+      "FIBER": 6
+    },
+    "material_included": 40,
+    "material_excluded": 24,
+    "reason_by_state": {
+      "included": "Official unit price includes material cost.",
+      "excluded": "Official unit price excludes material cost; sourced procurement or user-entered material price remains separate."
+    }
+  },
+  "sources": [
+    {
+      "source_id": "KICI_2026_STANDARD_PRODUCTIVITY",
+      "publisher": "한국정보통신산업연구원",
+      "document_title": "2026년 적용 정보통신공사 표준품셈",
+      "url": "https://www.kici.re.kr/page/support/view.html?board_id=norm_library&post_id=2162",
+      "pdf_sha256": "7c00add21c816c4118d9851d555889a6fd650679ddc65c3f420e007273f5d721",
+      "effective_from": "2026-01-01",
+      "bundled": false,
+      "license": {
+        "identifier": "KOGL-TYPE-4",
+        "label": "공공누리 제4유형",
+        "requirements": [
+          "attribution"
+        ],
+        "restrictions": [
+          "non-commercial",
+          "no-derivatives"
+        ],
+        "evidence": ".omo/ulw-research/20260723-electron-estimator/wave-1-digest.md"
+      },
+      "sections": [
+        {
+          "section": "4-1 광섬유케이블",
+          "pages": [
+            109,
+            110,
+            111,
+            112,
+            113
+          ]
+        },
+        {
+          "section": "4-3 꼬임케이블 및 접속",
+          "pages": [
+            120,
+            121,
+            122
+          ]
+        },
+        {
+          "section": "8-1 네트워크 설비",
+          "pages": [
+            235
+          ]
+        },
+        {
+          "section": "9-2-1 CCTV 설비",
+          "pages": [
+            300,
+            301,
+            305
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "KICI_2026_H2_MARKET_PRICE",
+      "publisher": "한국정보통신산업연구원",
+      "document_title": "2026년도 하반기 적용 정보통신공사 표준시장단가",
+      "url": "https://www.kici.re.kr/page/support/view.html?board_id=price_library&post_id=67009",
+      "pdf_sha256": "a77f45dfe5f1b95891d169f65b6eef25e4d6e72e06f2d4831fc0e2c858079a9e",
+      "effective_from": "2026-07-01",
+      "bundled": false,
+      "license": {
+        "identifier": "KOGL-TYPE-4",
+        "label": "공공누리 제4유형",
+        "requirements": [
+          "attribution"
+        ],
+        "restrictions": [
+          "non-commercial",
+          "no-derivatives"
+        ],
+        "evidence": ".omo/ulw-research/20260723-electron-estimator/wave-1-digest.md"
+      },
+      "sections": [
+        {
+          "section": "광섬유 및 LAN - 업무용 및 기타건축물",
+          "pages": [
+            69,
+            70,
+            71,
+            72,
+            73
+          ]
+        },
+        {
+          "section": "CCTV - 정보제어 및 보안분야",
+          "pages": [
+            97,
+            98,
+            99,
+            100
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "CAK_2026_H1_WAGE",
+      "publisher": "대한건설협회",
+      "document_title": "2026년 상반기 적용 건설업 임금실태 조사 보고서",
+      "url": "https://gwangju.cak.or.kr/download.do?uuid=a0e92670-b6b7-4764-a15f-40c34febeaa0.pdf",
+      "pdf_sha256": "b763ac6a64a245e633657e20d8625728c86ed215b3e75e16f6258e9230be9c8f",
+      "effective_from": "2026-01-01",
+      "bundled": false,
+      "license": {
+        "identifier": "SOURCE_TERMS_NOT_ESTABLISHED",
+        "label": "Reuse terms not established in local evidence",
+        "requirements": [
+          "reference by official URL and checksum only"
+        ],
+        "restrictions": [
+          "original PDF not bundled",
+          "redistribution permission not claimed"
+        ],
+        "evidence": "Local official PDF and prior research transcript provide no redistribution license."
+      },
+      "sections": [
+        {
+          "section": "전체직종 임금 - 일반 및 통신 직종",
+          "pages": [
+            10,
+            12,
+            13
+          ]
+        }
+      ]
+    }
+  ],
+  "canonical_projection": {
+    "checksum_field": "sha256",
+    "enriched_checksum_field": "enriched_sha256",
+    "excluded_fields_by_dataset": {
+      "market": [
+        "license_id",
+        "source_id"
+      ],
+      "productivity": [
+        "effective_from",
+        "license_id",
+        "source_id"
+      ],
+      "wages": [
+        "license_id",
+        "source_id"
+      ]
+    },
+    "purpose": "Preserves the mandated canonical rate-content checksums while the enriched file checksum covers direct row provenance.",
+    "normalizations": [
+      {
+        "dataset": "market",
+        "enriched_value": "SOURCE_DASH_NOT_SPECIFIED",
+        "field": "specification",
+        "work_codes": [
+          "IC2600004",
+          "IC34E0004"
+        ],
+        "canonical_code_point": 45
+      }
+    ]
+  },
+  "source_manifest_sha256": "482309efcfd22ca0cc15dc55c3e08d9b1dc01ae6ef15187946ccdf53fc0f0745"
+}

@@ -127,9 +127,7 @@ def observe_search(scenario: str, database_path: str) -> tuple[str, str]:
     elif scenario == "empty-db":
         result = _empty_database(database_path)
     elif scenario == "no-result":
-        result = _response(
-            SearchRequest(product_name="미존재"), ScenarioReader()
-        )
+        result = _response(SearchRequest(product_name="미존재"), ScenarioReader())
     elif scenario == "empty-pool-with-supplied-unit":
         request = SearchRequest(
             product_name="미존재",
@@ -171,9 +169,7 @@ def _empty_database(database_path: str) -> tuple[str, str]:
     raise AssertionError(detail)
 
 
-def _response(
-    request: SearchRequest, reader: ScenarioReader
-) -> tuple[str, str]:
+def _response(request: SearchRequest, reader: ScenarioReader) -> tuple[str, str]:
     response = execute_search(request, reader)
     return type(response).__name__, (
         f"status={response.status}; total={response.total_results}; "
@@ -201,8 +197,9 @@ def _service_inputs(
     other: ProductRecord,
 ) -> tuple[SearchRequest, ScenarioReader]:
     if scenario == "ambiguous-category":
-        result = SearchRequest(product_name="영상감시장치"), ScenarioReader(
-            (first, other)
+        result = (
+            SearchRequest(product_name="영상감시장치"),
+            ScenarioReader((first, other)),
         )
     elif scenario == "upper-only-ambiguous":
         request = SearchRequest(product_name="영상감시장치", category_code="45")
@@ -225,12 +222,8 @@ def _service_inputs(
         )
         result = request, ScenarioReader((first,))
     elif scenario == "price-unit-required":
-        request = SearchRequest(
-            product_name="영상감시장치", target_price_won=1_000_000
-        )
-        result = request, ScenarioReader(
-            (first, product_record("U", unit="개"))
-        )
+        request = SearchRequest(product_name="영상감시장치", target_price_won=1_000_000)
+        result = request, ScenarioReader((first, product_record("U", unit="개")))
     elif scenario == "unknown-price-unit":
         request = SearchRequest(
             product_name="영상감시장치",
@@ -239,8 +232,9 @@ def _service_inputs(
         )
         result = request, ScenarioReader((first,))
     elif scenario == "stale-snapshot":
-        result = SearchRequest(product_name="영상감시장치"), ScenarioReader(
-            (first,), stale=True
+        result = (
+            SearchRequest(product_name="영상감시장치"),
+            ScenarioReader((first,), stale=True),
         )
     elif scenario == "page-overflow":
         request = SearchRequest(product_name="영상감시장치", page=2)

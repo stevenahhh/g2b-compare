@@ -76,9 +76,17 @@ def stable_product_link(manifest: Mapping[str, ViewValue]) -> str | None:
     return f"https://shop.g2b.go.kr/link/GMSF001_01/?ctrtItemMngNo={encoded}"
 
 
-def product_link(manifest: Mapping[str, ViewValue], product_id: str) -> ProductLink:
-    """Fall back to the shop homepage while preserving a copyable product ID."""
+def product_link(
+    manifest: Mapping[str, ViewValue],
+    product_id: str,
+    *,
+    contract_item_key: str = "",
+) -> ProductLink:
+    """Prefer a verified or live contract-item link, then preserve the product ID."""
     deep_link = stable_product_link(manifest)
+    if deep_link is None and _ITEM_KEY.fullmatch(contract_item_key) is not None:
+        encoded = quote(contract_item_key, safe="-._~")
+        deep_link = f"https://shop.g2b.go.kr/link/GMSF001_01/?ctrtItemMngNo={encoded}"
     if deep_link is None:
         return ProductLink(SHOP_HOME, product_id)
     return ProductLink(deep_link, None)

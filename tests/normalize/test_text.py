@@ -4,6 +4,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from g2b_compare.normalize import normalize_text
+from g2b_compare.normalize.text import normalize_search_text
 
 
 @given(st.text())
@@ -50,3 +51,12 @@ def test_nfkc_casefold_and_protected_source_order() -> None:
         (13, 16),
         (18, 28),
     ]
+
+
+def test_search_aliases_link_megapixels_and_optical_zoom() -> None:
+    document = normalize_search_text(
+        "보조카메라:화소:2MP/최대줌:Optical x4",
+    )
+    query = normalize_search_text("200만화소 4배줌")
+
+    assert all(term in document for term in query.split())

@@ -229,9 +229,7 @@ async def test_real_stale_failed_database_serves_last_good_rows(
         fixture.release.candidate,
         builder,
     )
-    transport = httpx.ASGITransport(
-        app=create_app(database=fixture.release.path)
-    )
+    transport = httpx.ASGITransport(app=create_app(database=fixture.release.path))
     async with httpx.AsyncClient(
         transport=transport,
         base_url="http://stale.test",

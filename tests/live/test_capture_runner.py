@@ -65,9 +65,7 @@ def _config(tmp_path: Path) -> LiveCaptureConfig:
     quota = tmp_path / "quota.json"
     _ = quota.write_text(quota_manifest().model_dump_json(), encoding="utf-8")
     secret = tmp_path / "secret.html"
-    _ = secret.write_text(
-        f'<input value="{CANARY}" id="ServiceKey">', encoding="utf-8"
-    )
+    _ = secret.write_text(f'<input value="{CANARY}" id="ServiceKey">', encoding="utf-8")
     return LiveCaptureConfig(
         output_root=tmp_path / "out",
         ledger_path=tmp_path / "ledger.sqlite3",
@@ -102,7 +100,7 @@ def _seed_attempts(path: Path, operation: Operation, count: int) -> None:
                 attempted_at_utc=f"2026-07-15T00:00:0{ordinal}+00:00",
                 cutoff_utc="2026-07-14T00:00:00+00:00",
                 kst_date="2026-07-15",
-                ceiling=900,
+                ceiling=1000,
             )
         )
 

@@ -156,7 +156,7 @@ class FetchCommit:
 
 
 def dispatch_budget(window: QuotaWindow) -> DispatchBudget:
-    """Apply the 900 ceiling and indivisible three-call minimum."""
+    """Apply the observed ceiling and indivisible three-call minimum."""
     _require_verified(window.manifest)
     if window.rolling_consumed < 0 or window.provider_window_consumed < 0:
         raise AttributeQueueError(INVALID_QUOTA_USAGE)

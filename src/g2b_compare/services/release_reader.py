@@ -134,6 +134,7 @@ def _pin_from_connection(
         as_text(row[11]),
         as_text(row[12]),
         as_text(row[13]),
+        as_text(row[14]),
     )
 
 
@@ -155,7 +156,7 @@ b.index_version_id,b.relation_snapshot_id,b.ranking_version,
 m.normalization_version,m.materialization_policy_version,
 m.materialization_source_sha,i.index_artifact_sha,
 i.index_manifest_sha,r.source_manifest_sha,r.relation_content_sha,
-COALESCE(MAX(p.data_as_of),'') FROM release_bundles b
+COALESCE(MAX(p.data_as_of),''),b.slot_policy_version FROM release_bundles b
 JOIN active_release ar ON ar.bundle_id=b.id
 JOIN materialization_snapshots m ON m.id=b.materialization_id
 JOIN index_versions i ON i.id=b.index_version_id
@@ -168,7 +169,7 @@ b.index_version_id,b.relation_snapshot_id,b.ranking_version,
 m.normalization_version,m.materialization_policy_version,
 m.materialization_source_sha,i.index_artifact_sha,
 i.index_manifest_sha,r.source_manifest_sha,r.relation_content_sha,
-COALESCE(MAX(p.data_as_of),'') FROM release_bundles b
+COALESCE(MAX(p.data_as_of),''),b.slot_policy_version FROM release_bundles b
 JOIN materialization_snapshots m ON m.id=b.materialization_id
 JOIN index_versions i ON i.id=b.index_version_id
 JOIN relation_snapshots r ON r.id=b.relation_snapshot_id

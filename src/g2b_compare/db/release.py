@@ -99,10 +99,11 @@ class ReleaseStore:
                 _require_expected_cardinality(connection, record, written)
                 bundle_sha = release_bundle_sha(
                     ReleaseHashInput(
-                        current,
-                        key.ranking_version,
-                        written,
-                        cache_sha,
+                        components=current,
+                        ranking_version=key.ranking_version,
+                        expected_cache_rows=written,
+                        cache_content_sha=cache_sha,
+                        slot_policy_version=key.slot_policy_version,
                     )
                 )
                 _ready(
@@ -146,10 +147,11 @@ class ReleaseStore:
             raise ReleaseStoreError(READY_CORRUPTION) from error
         bundle_sha = release_bundle_sha(
             ReleaseHashInput(
-                component,
-                key.ranking_version,
-                written,
-                cache_sha,
+                components=component,
+                ranking_version=key.ranking_version,
+                expected_cache_rows=written,
+                cache_content_sha=cache_sha,
+                slot_policy_version=key.slot_policy_version,
             )
         )
         observed = (

@@ -52,6 +52,7 @@ class ReleaseHashInput:
     ranking_version: str
     expected_cache_rows: int
     cache_content_sha: str
+    slot_policy_version: str = "v2"
 
 
 def load_components(
@@ -179,6 +180,7 @@ def release_bundle_sha(identity: ReleaseHashInput) -> str:
             "materialization_source_sha": component.materialization_source_sha,
             "normalization_version": component.normalization_version,
             "ranking_version": identity.ranking_version,
+            "slot_policy_version": identity.slot_policy_version,
             "relation_content_sha": component.relation_content_sha,
             "source_manifest_sha": component.relation_source_manifest_sha,
         }

@@ -9,7 +9,14 @@
 </head>
 <body data-primary-state="{{ primary_state }}" data-statuses="{{ statuses|join(' ') }}">
   <a class="skip-link" href="#main">검색 결과로 건너뛰기</a>
-  <header class="topbar"><span>G2B COMPARE</span><span>로컬 릴리스</span></header>
+  <header class="topbar">
+    <span>G2B COMPARE</span>
+    <nav aria-label="주 메뉴">
+      <a href="/">물품 검색</a>
+      <a href="/estimates">관급내역</a>
+      <a href="/data">데이터 관리</a>
+    </nav>
+  </header>
   <main id="main">{% block content %}{% endblock %}</main>
 </body>
 </html>

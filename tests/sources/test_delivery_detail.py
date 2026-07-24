@@ -39,9 +39,7 @@ def test_preserves_event_level_roles_without_api_relations() -> None:
         "24684673",
     )
     assert all(event.source_operation == DELIVERY_OPERATION for event in result.events)
-    assert all(
-        event.observed_at == "2026-07-16T00:00:00Z" for event in result.events
-    )
+    assert all(event.observed_at == "2026-07-16T00:00:00Z" for event in result.events)
     assert result.relations == ()
     assert result.quarantined == ()
 

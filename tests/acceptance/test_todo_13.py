@@ -220,10 +220,7 @@ async def test_failure_exact_token_set() -> None:
 async def test_failure_option_event_provenance() -> None:
     observed = await get(FixtureReader((observed_product(1),)))
     curated = await get(FixtureReader((curated_product(1),)))
-    assert (
-        "배송내역에서 추가선택 역할 관측됨 — 본품 관계 미확정"
-        in observed.text
-    )
+    assert "배송내역에서 추가선택 역할 관측됨 — 본품 관계 미확정" in observed.text
     assert "사용자 내역서에 관계 명시됨" in curated.text
 
 

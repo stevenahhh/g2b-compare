@@ -1,0 +1,46 @@
+{% for product in result.items %}
+  <li class="product-card" data-main-product="{{ product.product_id }}" data-parent-product-id="{{ product.product_id }}" tabindex="0" aria-label="{{ product.item_name }} 하위 옵션 보기">
+    <figure class="catalog-product-image">
+      <img src="{{ product.image_url or '/static/product-placeholder.svg' }}" alt="{{ product.item_name }}" width="160" height="120" loading="lazy" onerror="this.onerror=null;this.src='/static/product-placeholder.svg'">
+    </figure>
+    <div class="catalog-product-main">
+      <h2>{{ product.item_name }}</h2>
+      {% if product.attributes %}
+        <table class="product-attributes">
+          <caption>상품 속성 정보</caption>
+          <thead><tr><th>속성명</th><th>속성값</th><th>단위</th></tr></thead>
+          <tbody>
+            {% for attribute in product.attributes %}
+              <tr><th>{{ attribute.name }}</th><td>{{ attribute.value }}</td><td>{{ attribute.unit }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+      <p class="product-spec"><span>규격</span><strong>{{ product.spec or "정보 없음" }}</strong></p>
+      <dl class="product-facts">
+        <div><dt>물품식별번호</dt><dd><span class="selectable">{{ product.product_id }}</span></dd></div>
+        <div><dt>계약업체</dt><dd>{{ product.company_name }}</dd></div>
+        {% if product.contract_method %}<div><dt>계약방법</dt><dd>{{ product.contract_method }}</dd></div>{% endif %}
+        {% if product.delivery_condition %}<div><dt>인도조건</dt><dd>{{ product.delivery_condition }}</dd></div>{% endif %}
+        {% if product.delivery_days %}<div><dt>납품기한</dt><dd>{{ product.delivery_days }}일</dd></div>{% endif %}
+        {% if product.contract_end_date %}<div><dt>계약종료일</dt><dd>{{ product.contract_end_date }}</dd></div>{% endif %}
+      </dl>
+      {% if not (product.contract_method or product.delivery_condition or product.delivery_days or product.contract_end_date) %}
+        <p class="source-note">엑셀 원본 · 계약 상세 미수집</p>
+      {% endif %}
+    </div>
+    <aside class="catalog-product-side">
+      <p class="price"><strong>{{ "{:,}".format(product.price_won) }}원</strong><span>/ {{ product.unit or "개" }}</span></p>
+      {% if estimate_id %}
+        <form action="/estimates/{{ estimate_id }}/lines" method="post">
+          <input type="hidden" name="product_id" value="{{ product.product_id }}">
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit">내역에 추가</button>
+        </form>
+      {% endif %}
+      {% if product.detail_url %}<a class="catalog-detail-link" href="{{ product.detail_url }}" target="_blank" rel="noopener noreferrer">나라장터에서 보기</a>{% endif %}
+    </aside>
+  </li>
+{% else %}
+  {% if show_empty %}<li class="empty-state">일치하는 저장 데이터가 없음</li>{% endif %}
+{% endfor %}

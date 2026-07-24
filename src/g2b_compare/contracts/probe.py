@@ -97,9 +97,7 @@ def attempt_probe(
         reason = "401-text" if status in {401, 403} else "http-status"
         raise CaptureBlockedError(operation, reason, len(attempts), status)
     if "application/json" not in response.headers.get("content-type", "").casefold():
-        raise CaptureBlockedError(
-            operation, "200-wrong-content-type", len(attempts)
-        )
+        raise CaptureBlockedError(operation, "200-wrong-content-type", len(attempts))
     try:
         return parse_page(response.content, operation)
     except WireContractError as error:

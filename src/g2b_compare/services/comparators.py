@@ -14,6 +14,7 @@ from g2b_compare.ranking.matching import MatchResult, match_specs
 from g2b_compare.ranking.topk import (
     ComparisonSlot,
     RankableProduct,
+    prepare_top_three_context,
     top_three,
 )
 
@@ -44,6 +45,7 @@ __all__ = [
     "ScoredRecord",
     "build_comparators",
     "compare_product",
+    "prepare_comparator_context",
     "score_pool",
     "validate_cached",
 ]
@@ -75,12 +77,24 @@ def score_pool(
 def compare_product(
     anchor: ProductRecord,
     candidates: tuple[ProductRecord, ...],
+    context: PreparedFeatureContext | None = None,
 ) -> tuple[ComparatorView, ComparatorView, ComparatorView]:
     """Anchor Ranking v1 on one product and attach release-pinned provenance."""
-    slots = top_three(anchor.rankable, tuple(item.rankable for item in candidates))
+    slots = top_three(
+        anchor.rankable,
+        tuple(item.rankable for item in candidates),
+        context,
+    )
     by_id = {item.rankable.product_id: item for item in candidates}
     views = tuple(_slot_view(anchor, slot, by_id) for slot in slots)
     return views[0], views[1], views[2]
+
+
+def prepare_comparator_context(
+    candidates: tuple[ProductRecord, ...],
+) -> PreparedFeatureContext:
+    """Prepare the exact product pool once for all uncached comparator rows."""
+    return prepare_top_three_context(tuple(item.rankable for item in candidates))
 
 
 def validate_cached(
@@ -158,6 +172,11 @@ def _slot_view(
         )
     candidate = candidates[slot.comparator.product_id]
     matching = match_specs(anchor.rankable.option_text, candidate.rankable.option_text)
+    missing = _missing(anchor.rankable, candidate.rankable, slot.explanation)
+    if slot.same_corp_as_higher_slot:
+        missing = tuple(
+            sorted((*missing, "same_corp_as_higher_slot"), key=str.encode)
+        )
     return ComparatorView(
         anchor.rankable.product_id,
         slot.rank,
@@ -165,7 +184,7 @@ def _slot_view(
         candidate,
         _score_view(slot.explanation),
         _matched(matching),
-        _missing(anchor.rankable, candidate.rankable, slot.explanation),
+        missing,
     )
 
 

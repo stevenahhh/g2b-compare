@@ -39,6 +39,7 @@ class _Offer:
     offer_key: str
     amount_won: int | None
     unit_key: str | None
+    contract_corp_id: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +117,7 @@ def _offers(connection: sqlite3.Connection, parameters: SqlParameters) -> _Offer
     rows = query(
         connection,
         """SELECT o.product_id,o.operation,o.offer_key,
-                   o.contract_price_won,o.unit_key
+                   o.contract_price_won,o.unit_key,o.contract_corp_id
             FROM catalog_offers o
             JOIN products p ON p.materialization_id=o.materialization_id
                            AND p.product_id=o.product_id
@@ -129,9 +130,11 @@ def _offers(connection: sqlite3.Connection, parameters: SqlParameters) -> _Offer
     for row in rows:
         grouped.setdefault(as_text(row[0]), []).append(
             _Offer(
-                as_text(row[1]), as_text(row[2]),
+                as_text(row[1]),
+                as_text(row[2]),
                 None if row[3] is None else as_int(row[3]),
                 None if row[4] is None else as_text(row[4]),
+                None if row[5] is None else as_text(row[5]),
             )
         )
     return grouped
@@ -157,8 +160,11 @@ def _attributes(
     for row in rows:
         grouped.setdefault(as_text(row[0]), []).append(
             ProductAttribute(
-                as_text(row[1]), as_int(row[2]), as_text(row[3]),
-                as_text(row[4]), as_text(row[5]),
+                as_text(row[1]),
+                as_int(row[2]),
+                as_text(row[3]),
+                as_text(row[4]),
+                as_text(row[5]),
                 None if row[6] is None else as_text(row[6]),
                 None if row[7] is None else as_text(row[7]),
                 as_text(row[8]),
@@ -185,8 +191,12 @@ def _roles(connection: sqlite3.Connection, parameters: SqlParameters) -> _RoleMa
     for row in rows:
         grouped.setdefault(as_text(row[0]), []).append(
             ObservedOptionRole(
-                as_int(row[1]), as_text(row[2]), as_text(row[3]),
-                str(as_int(row[4])), str(as_int(row[5])), as_text(row[6]),
+                as_int(row[1]),
+                as_text(row[2]),
+                as_text(row[3]),
+                str(as_int(row[4])),
+                str(as_int(row[5])),
+                as_text(row[6]),
                 as_text(row[7]),
             )
         )
@@ -199,8 +209,10 @@ def _relations(
     product_name_key: str | None,
 ) -> _RelationMap:
     parameters: SqlParameters = (
-        release.materialization_id, release.relation_snapshot_id,
-        product_name_key, product_name_key,
+        release.materialization_id,
+        release.relation_snapshot_id,
+        product_name_key,
+        product_name_key,
     )
     rows = query(
         connection,
@@ -218,8 +230,13 @@ def _relations(
     for row in rows:
         grouped.setdefault(as_text(row[0]), []).append(
             CuratedRelation(
-                as_text(row[1]), as_text(row[2]), as_text(row[3]),
-                as_text(row[4]), as_text(row[5]), as_text(row[6]), as_int(row[7]),
+                as_text(row[1]),
+                as_text(row[2]),
+                as_text(row[3]),
+                as_text(row[4]),
+                as_text(row[5]),
+                as_text(row[6]),
+                as_int(row[7]),
             )
         )
     return grouped
@@ -237,6 +254,16 @@ def _record(row: SqlRow, projection: _Projection) -> ProductRecord:
         option_text=option_text,
         active=True,
         price=_price(tuple(projection.offers.get(product_id, []))),
+        contract_corp_ids=tuple(
+            sorted(
+                {
+                    item.contract_corp_id
+                    for item in projection.offers.get(product_id, [])
+                    if item.contract_corp_id
+                },
+                key=str.encode,
+            )
+        ),
     )
     return ProductRecord(
         rankable,

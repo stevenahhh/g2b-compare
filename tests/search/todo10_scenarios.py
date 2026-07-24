@@ -120,8 +120,7 @@ def _validate_replaced(
     bundle: IndexBundle, name: str, value: bytes, *, reframe: bool = True
 ) -> None:
     members = tuple(
-        (member, value if member == name else raw)
-        for member, raw in bundle.members
+        (member, value if member == name else raw) for member, raw in bundle.members
     )
     manifest = bundle.manifest
     if reframe:
@@ -129,8 +128,7 @@ def _validate_replaced(
         raw_manifest = _manifest_value(parsed)
         raw_manifest["artifact_sha256"] = artifact_sha256(members)
         raw_manifest["member_sha256"] = {
-            member: hashlib.sha256(raw).hexdigest()
-            for member, raw in members
+            member: hashlib.sha256(raw).hexdigest() for member, raw in members
         }
         manifest = canonical_json(raw_manifest).encode("utf-8")
     _ = validate_bundle(members, manifest)

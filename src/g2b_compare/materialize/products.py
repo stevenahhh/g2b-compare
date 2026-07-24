@@ -36,6 +36,7 @@ class SourceOffer:
     active: bool
     source_updated_at: str
     raw_fields_json: str
+    contract_corp_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +61,7 @@ class MaterializedOffer:
     active: bool
     source_updated_at: str
     raw_fields_json: str
+    contract_corp_id: str = ""
 
     @property
     def namespaced_key(self) -> NamespacedOfferKey:
@@ -123,6 +125,7 @@ def _merge_one(
             and (product_id, item.operation, item.offer_key) not in cancellation_keys,
             source_updated_at=item.source_updated_at,
             raw_fields_json=item.raw_fields_json,
+            contract_corp_id=item.contract_corp_id,
         )
         for item in ordered
     )

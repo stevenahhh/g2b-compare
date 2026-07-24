@@ -87,11 +87,11 @@ def _load_attribute_data(
 _DATA_DIRECTORY: Final = Path(__file__).with_name("data")
 _UNIT_DATA: Final = _load_unit_data(
     json.loads,
-    _DATA_DIRECTORY / "units-v1.json",
+    _DATA_DIRECTORY / "units-v2.json",
 )
 _ATTRIBUTE_DATA: Final = _load_attribute_data(
     json.loads,
-    _DATA_DIRECTORY / "attributes-v1.json",
+    _DATA_DIRECTORY / "attributes-v2.json",
 )
 NORMALIZATION_VERSION: Final = _UNIT_DATA["version"]
 

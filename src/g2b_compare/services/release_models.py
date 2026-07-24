@@ -18,6 +18,7 @@ class ReleaseCandidate:
     index_version_id: int
     relation_snapshot_id: int
     ranking_version: str
+    slot_policy_version: str = "v2"
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +39,7 @@ class ReleasePin:
     relation_source_manifest_sha: str
     relation_content_sha: str
     data_as_of: str
+    slot_policy_version: str = "v2"
 
 
 class ReleaseDisposition(StrEnum):

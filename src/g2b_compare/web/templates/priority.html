@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우선수집 물품 DB</title>
+    <link rel="stylesheet" href="/static/mvp.css">
+  </head>
+  <body>
+    <main class="shell shell-wide">
+      <header class="page-header page-header-row">
+        <div>
+          <h1>우선수집 물품 DB</h1>
+          <p class="result-count">
+            업체 {{ status.company_count }}개 · 옵션 원본 {{ status.option_row_count }}행 ·
+            API 물품 {{ status.product_count }}건 · 확인 관계 {{ status.relation_count }}건
+          </p>
+        </div>
+        <div class="page-header-actions">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">다크 모드</button>
+          <a class="plain-link" href="/">기본 검색</a>
+        </div>
+      </header>
+
+      <form class="search-panel priority-search-panel" method="get" action="/priority">
+        <label class="sr-only" for="q">업체, 물품명, 규격 또는 식별번호</label>
+        <div class="search-row">
+          <input
+            id="q"
+            name="q"
+            value="{{ query }}"
+            placeholder="업체, 물품명, 규격 또는 식별번호"
+            autocomplete="off"
+          >
+          <button type="submit">강조</button>
+        </div>
+      </form>
+        <p class="field-help">입력한 내용은 목록을 제거하지 않고 일치하는 글자의 배경만 강조함.</p>
+
+      <p class="result-count">전체 {{ result.total_count }}건 · {{ result.page }} / {{ result.page_count }} 페이지</p>
+      <div
+        class="line-table-wrap priority-virtual-scroll"
+        data-page="{{ result.page }}"
+        data-page-count="{{ result.page_count }}"
+        role="region"
+        aria-label="우선수집 물품 목록"
+        tabindex="0"
+      >
+        <table class="line-table" aria-rowcount="{{ result.total_count + 1 }}">
+          <thead>
+            <tr aria-rowindex="1">
+              <th>연번</th>
+              <th>본품/옵션</th>
+              <th>품명</th>
+              <th>규격</th>
+              <th>단위</th>
+              <th>수량</th>
+              <th>단가</th>
+              <th>금액</th>
+              <th>G2B식별번호</th>
+              <th>계약방법</th>
+              <th>인도조건</th>
+              <th>납품기한</th>
+              <th>계약종료일</th>
+              <th>업체명</th>
+              <th>구매처</th>
+            </tr>
+          </thead>
+          <tbody class="priority-spacer priority-spacer-top" aria-hidden="true">
+            <tr><td colspan="15"></td></tr>
+          </tbody>
+          <tbody class="priority-results-body">
+            {% for item in result.items %}
+              <tr class="line-item" aria-rowindex="{{ (result.page - 1) * 30 + loop.index + 1 }}">
+                <td>{{ (result.page - 1) * 30 + loop.index }}</td>
+                <td class="path-cell">{{ item.path }}</td>
+                <td>{{ item.item_name }}</td>
+                <td class="spec-cell">{{ item.spec }}</td>
+                <td>{{ item.unit }}</td>
+                <td class="number-cell">1</td>
+                <td class="number-cell">{{ "{:,}".format(item.price_won) }}</td>
+                <td class="number-cell">{{ "{:,}".format(item.price_won) }}</td>
+                <td>{{ item.product_id }}</td>
+                <td>{{ item.contract_method }}</td>
+                <td>{{ item.delivery_condition }}</td>
+                <td>{% if item.delivery_days %}{{ item.delivery_days }}일{% endif %}</td>
+                <td>{{ item.contract_end_date }}</td>
+                <td>{{ item.company_name }}</td>
+                <td>
+                  {% if item.detail_url and item.detail_url.lower().startswith(("http://", "https://")) %}
+                    <a class="table-link" href="{{ item.detail_url }}" target="_blank" rel="noopener noreferrer">나라장터 보기</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="table-empty" colspan="15">일치하는 저장 데이터가 없음</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tbody class="priority-spacer priority-spacer-bottom" aria-hidden="true">
+            <tr><td colspan="15"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="priority-loader" aria-live="polite">
+        {% if result.page < result.page_count %}아래로 스크롤하면 다음 결과를 불러옴{% else %}모든 결과를 불러옴{% endif %}
+      </p>
+    </main>
+    <script src="/static/priority.js" defer></script>
+  </body>
+</html>

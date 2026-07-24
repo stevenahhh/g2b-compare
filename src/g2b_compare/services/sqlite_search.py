@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, final
 
 from g2b_compare.db.connection import connect_read_only
 from g2b_compare.db.sql import as_text, query
+from g2b_compare.normalize.spec_types import Relation, SpecSemantic
 from g2b_compare.normalize.text import normalize_text
 from g2b_compare.ranking.cache import CacheContractError
 
@@ -18,6 +20,7 @@ from .comparator_payload import (
 )
 from .comparators import ComparatorCacheError, compare_product
 from .release import open_release_reader, pin_active_release, read_anchor_payloads
+from .search_models import SpecFacet, SpecMatch
 from .sqlite_records import load_categories, load_product_records
 
 CACHE_ANCHOR_MISSING: Final = "cache-anchor-missing"
@@ -190,3 +193,140 @@ class SqliteSearchReader:
         if anchor is None:
             raise ComparatorCacheError
         return validate_comparator_payloads(anchor_id, slots, products)
+
+    def matching_specs(
+        self,
+        pin: ReleasePin,
+        semantics: tuple[SpecSemantic, ...],
+    ) -> tuple[SpecMatch, ...]:
+        """Return the products matching every interval semantic."""
+        matched: set[str] | None = None
+        sources: dict[str, set[str]] = {}
+        with open_release_reader(self._database, pin) as connection:
+            for semantic in semantics:
+                low, high = _semantic_interval(semantic)
+                rows = query(
+                    connection,
+                    """SELECT product_id,source_kind FROM product_spec_index
+                       WHERE materialization_id=? AND dimension=?
+                         AND (attribute_key='unknown' OR ?='unknown'
+                              OR attribute_key=?)
+                         AND (? IS NULL OR value_high IS NULL
+                              OR CAST(value_high AS NUMERIC)>=CAST(? AS NUMERIC))
+                         AND (? IS NULL OR value_low IS NULL
+                              OR CAST(value_low AS NUMERIC)<=CAST(? AS NUMERIC))
+                       ORDER BY product_id,source_kind""",
+                    (
+                        pin.materialization_id,
+                        semantic.dimension,
+                        semantic.attribute_key,
+                        semantic.attribute_key,
+                        low,
+                        low,
+                        high,
+                        high,
+                    ),
+                ).fetchall()
+                current = {as_text(row[0]) for row in rows}
+                matched = current if matched is None else matched.intersection(current)
+                for row in rows:
+                    sources.setdefault(as_text(row[0]), set()).add(as_text(row[1]))
+        product_ids = () if matched is None else tuple(sorted(matched))
+        return tuple(
+            SpecMatch(
+                product_id,
+                tuple(sorted(sources.get(product_id, ()), key=str.encode)),
+            )
+            for product_id in product_ids
+        )
+
+    def spec_facets(
+        self,
+        pin: ReleasePin,
+        product_ids: tuple[str, ...],
+    ) -> tuple[SpecFacet, ...]:
+        """Aggregate unique products by canonical structured value."""
+        selected = frozenset(product_ids)
+        if not selected:
+            return ()
+        with open_release_reader(self._database, pin) as connection:
+            rows = query(
+                connection,
+                """SELECT product_id,dimension,value_low,value_high,canonical_unit
+                   FROM product_spec_index WHERE materialization_id=?
+                   ORDER BY product_id,dimension,value_low,value_high,canonical_unit""",
+                (pin.materialization_id,),
+            ).fetchall()
+        grouped: dict[tuple[str, str, str, str], set[str]] = {}
+        for row in rows:
+            product_id = as_text(row[0])
+            if product_id not in selected or row[2] is None or row[3] is None:
+                continue
+            key = (
+                as_text(row[1]),
+                as_text(row[2]),
+                as_text(row[3]),
+                as_text(row[4]),
+            )
+            grouped.setdefault(key, set()).add(product_id)
+        facets = (
+            SpecFacet(key[0], _facet_value(key), len(products), _facet_value(key))
+            for key, products in grouped.items()
+        )
+        return tuple(
+            sorted(
+                facets,
+                key=lambda item: (
+                    -item.count,
+                    item.dimension.encode(),
+                    item.display_value.encode(),
+                ),
+            )
+        )
+
+
+def _semantic_interval(semantic: SpecSemantic) -> tuple[str | None, str | None]:
+    match semantic.relation:
+        case Relation.EQ:
+            value = _decimal(semantic.value)
+            return value, value
+        case Relation.GTE | Relation.GT:
+            return _decimal(semantic.value), None
+        case Relation.LTE | Relation.LT:
+            return None, _decimal(semantic.value)
+        case Relation.RANGE:
+            return _decimal(semantic.lower), _decimal(semantic.upper)
+
+
+def _decimal(value: Decimal | None) -> str | None:
+    return None if value is None else format(value, "f")
+
+
+def _facet_value(key: tuple[str, str, str, str]) -> str:
+    _dimension, low_raw, high_raw, unit = key
+    low = Decimal(low_raw)
+    high = Decimal(high_raw)
+    if low != high:
+        result = f"{format(low, 'f')}~{format(high, 'f')}{_unit_alias(unit)}"
+    elif unit == "pixel" and low % Decimal(10_000) == 0:
+        result = f"{format(low / Decimal(10_000), 'f')}만화소"
+    elif unit == "byte" and low % Decimal(1_000_000_000_000) == 0:
+        result = f"{format(low / Decimal(1_000_000_000_000), 'f')}TB"
+    elif unit == "byte" and low % Decimal(1_000_000_000) == 0:
+        result = f"{format(low / Decimal(1_000_000_000), 'f')}GB"
+    elif unit == "bps" and low % Decimal(1_000_000_000) == 0:
+        result = f"{format(low / Decimal(1_000_000_000), 'f')}Gbps"
+    elif unit == "bps" and low % Decimal(1_000_000) == 0:
+        result = f"{format(low / Decimal(1_000_000), 'f')}Mbps"
+    else:
+        result = f"{format(low, 'f')}{_unit_alias(unit)}"
+    return result
+
+
+def _unit_alias(unit: str) -> str:
+    return {
+        "channel": "CH",
+        "pixel": "화소",
+        "byte": "byte",
+        "bps": "bps",
+    }.get(unit, unit)

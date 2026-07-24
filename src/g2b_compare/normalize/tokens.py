@@ -14,7 +14,7 @@ _LITERAL_ALIASES: Final = tuple(
     re.escape(alias) for alias in ALIASES if alias not in {"MP", "PX", "FPS"}
 )
 UNIT_PATTERN: Final = "(?:" + "|".join((*_DOMAIN_LATIN, *_LITERAL_ALIASES)) + ")"
-QUANTITY_PATTERN: Final = rf"{NUMBER_WITH_MAN}{UNIT_PATTERN}"
+QUANTITY_PATTERN: Final = rf"-?{NUMBER_WITH_MAN}{UNIT_PATTERN}"
 DIMENSION_PATTERN: Final = (
     rf"{NUMBER_WITH_MAN}\s*[xX\u00d7]\s*{NUMBER_WITH_MAN}"
     rf"(?:\s*{UNIT_PATTERN})?"

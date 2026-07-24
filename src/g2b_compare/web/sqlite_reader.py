@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Final, final
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, final
+
+from pydantic import BaseModel, ConfigDict
 
 from g2b_compare.db.connection import connect_read_only
 from g2b_compare.db.sql import as_text, query
@@ -52,6 +54,7 @@ _FAILED_STATUSES: Final = frozenset({"failed"})
 _KST: Final = timezone(timedelta(hours=9))
 _SOURCE_MAX_LAG: Final = timedelta(days=2)
 _SYNC_MAX_AGE: Final = timedelta(hours=36)
+_QUOTA_STATUS_FILE: Final = "quota-status.json"
 _ACTIVE_SOURCE_DATES: Final = """
     SELECT products.data_as_of
     FROM active_release AS active
@@ -64,6 +67,17 @@ _SUCCESSFUL_SYNCS: Final = """
     FROM sync_runs
     WHERE status IN ('complete','completed') AND finished_at IS NOT NULL
 """
+
+
+class QuotaStatus(BaseModel):
+    """Persisted provider quota block displayed by the local GUI."""
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    error: Literal["quota-ceiling-exhausted"]
+    operation: str
+    resume_not_before: datetime
+    status: Literal["blocked"]
 
 
 def _utc_now() -> datetime:
@@ -124,6 +138,13 @@ class WebSqliteSearchReader:
         if _latest_failed(self._database):
             statuses.append("sync-failed-last-good")
         return tuple(sorted(statuses, key=str.encode))
+
+    def quota_status(self) -> QuotaStatus | None:
+        """Read the exact launcher-persisted quota receipt when present."""
+        path = self._database.parent / _QUOTA_STATUS_FILE
+        if not path.is_file():
+            return None
+        return QuotaStatus.model_validate_json(path.read_bytes())
 
 
 def _latest_failed(database: Path) -> bool:

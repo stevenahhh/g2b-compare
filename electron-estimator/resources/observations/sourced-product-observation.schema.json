@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sourced-product-observation.schema.json",
+  "title": "Sourced procurement product observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "observation_id",
+    "product_id",
+    "supplier_name",
+    "unit_price_won",
+    "unit",
+    "spec_snapshot",
+    "source_url",
+    "api_operation",
+    "observed_at",
+    "source_payload_sha256"
+  ],
+  "properties": {
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "product_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}$"
+    },
+    "supplier_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unit_price_won": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "spec_snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "api_operation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_payload_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authenticity": {
+      "$ref": "#/$defs/authenticity"
+    },
+    "supplier_location_evidence": {
+      "$ref": "#/$defs/provenanceEvidence"
+    },
+    "service_area_evidence": {
+      "$ref": "#/$defs/provenanceEvidence"
+    },
+    "selection_evidence": {
+      "$ref": "#/$defs/selectionEvidence"
+    },
+    "synthetic": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "supplier_name": {
+            "pattern": "(코리아넷|KoreaNet)"
+          }
+        },
+        "required": [
+          "supplier_name"
+        ]
+      },
+      "then": {
+        "required": [
+          "supplier_location_evidence",
+          "service_area_evidence"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "authenticity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source_payload_sha256"
+      ],
+      "properties": {
+        "kind": {
+          "const": "captured_source_payload"
+        },
+        "source_payload_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "provenanceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statement",
+        "source_url",
+        "observed_at",
+        "source_payload_sha256"
+      ],
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_payload_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "selectionEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_group",
+        "specification_fingerprint",
+        "eligible",
+        "auto_selected",
+        "lowest_observed_unit_price_won",
+        "compared_observation_ids"
+      ],
+      "properties": {
+        "comparison_group": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specification_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "eligible": {
+          "type": "boolean"
+        },
+        "auto_selected": {
+          "type": "boolean"
+        },
+        "lowest_observed_unit_price_won": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "compared_observation_ids": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

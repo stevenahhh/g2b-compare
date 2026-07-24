@@ -58,4 +58,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     _ = sys.stdout.write(result.model_dump_json() + "\n")
     return 0
 
+
 raise SystemExit(main())

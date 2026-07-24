@@ -1,0 +1,123 @@
+.provenance-inspector {
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-inline-start: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.inspector-heading {
+  display: flex;
+  min-block-size: 60px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-default);
+  padding: var(--space-control) var(--space-panel);
+  border-block-end: 1px solid var(--border);
+}
+
+.inspector-heading h2 {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--space-hairline);
+  margin: 0;
+  font-size: var(--font-size-panel-title);
+  line-height: var(--line-height-body);
+}
+
+.selected-line {
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: var(--font-size-caption);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspector-close {
+  min-inline-size: 56px;
+  padding-inline: var(--space-default);
+}
+
+.inspector-close[data-initial-focus="true"]:focus {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: -1px;
+}
+
+.inspector-body {
+  min-block-size: 0;
+  overflow: auto;
+}
+
+.calculation-summary,
+.empty-source {
+  padding: var(--space-panel);
+  border-block-end: 1px solid var(--border);
+  background: var(--background);
+}
+
+.calculation-summary h3,
+.empty-source h3 {
+  margin: var(--space-none) var(--space-none) var(--space-tight);
+  font-size: var(--font-size-label);
+}
+
+.calculation-summary p,
+.empty-source p {
+  margin: 0;
+  color: var(--secondary);
+  overflow-wrap: anywhere;
+}
+
+.selection-reason {
+  margin-block-start: var(--space-compact) !important;
+  color: var(--text) !important;
+  font-weight: 600;
+}
+
+.inspector-definitions,
+.inspector-evidence {
+  margin: 0;
+}
+
+.inspector-evidence {
+  border-block-start: 8px solid var(--background);
+}
+
+.inspector-definition {
+  display: grid;
+  gap: var(--space-hairline);
+  padding: var(--space-default) var(--space-panel);
+  border-block-end: 1px solid var(--border);
+}
+
+.inspector-definition dt {
+  color: var(--secondary);
+  font-size: var(--font-size-caption);
+}
+
+.inspector-definition dd {
+  min-inline-size: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+}
+
+@media (max-width: 1024px) {
+  .provenance-inspector {
+    position: fixed;
+    z-index: 20;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: var(--right-overlay);
+    visibility: hidden;
+    transform: translateX(100%);
+  }
+
+  .provenance-inspector.is-open {
+    visibility: visible;
+    transform: translateX(0);
+  }
+}

@@ -1,18 +1,15 @@
 const form=document.querySelector("#search-form");
 const region=document.querySelector("#results-region");
 if(form&&region){
-  const loadingStates=new Set(["current-results","no-matches","stale","sync-failed-last-good"]);
   const load=async(url)=>{
-    const state=region.querySelector("[data-primary-state]")?.dataset.primaryState;
-    const showLoading=loadingStates.has(state);
-    if(showLoading){region.setAttribute("aria-busy","true");}
+    region.setAttribute("aria-busy","true");
     try{
       const response=await fetch(url,{headers:{"X-Requested-With":"fetch"}});
       const payload=await response.json();
       region.innerHTML=payload.html;
       history.pushState({}, "", url);
     }finally{
-      if(showLoading){region.removeAttribute("aria-busy");}
+      region.removeAttribute("aria-busy");
     }
   };
   form.addEventListener("submit",(event)=>{
@@ -36,4 +33,10 @@ if(form&&region){
       if(value){void navigator.clipboard.writeText(value);}
     }
   });
+  region.addEventListener("error",(event)=>{
+    const target=event.target;
+    if(target instanceof HTMLImageElement&&target.closest(".product-image")){
+      target.hidden=true;
+    }
+  },true);
 }

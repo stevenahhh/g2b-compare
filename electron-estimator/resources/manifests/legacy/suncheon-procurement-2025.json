@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "legacy-workbook-profile-v1",
+  "profileId": "B",
+  "slug": "suncheon-procurement-2025",
+  "family": "three-quote-procurement",
+  "source": {
+    "filename": "순천 향교 CCTV 구매 설치 - 내역서(관급)(0706수정).xlsx",
+    "sha256": "2220cd9936ebdf908d64c0571a4c8de83973eaa89c6778a64afec07de7c5e701",
+    "packageParts": {
+      "count": 850,
+      "fingerprint": "12a51289af2c8d8b1dcbd7847effb5e8dd6a69366230f335cfc91526a0942f2f"
+    }
+  },
+  "sheetMap": [
+    {"name": "수량산출서 (2)", "part": "xl/worksheets/sheet1.xml", "dimension": "A1:BR65", "formulaCells": 75, "mergedRanges": 14, "externalFormulaReferences": 2},
+    {"name": "표지 ", "part": "xl/worksheets/sheet2.xml", "dimension": "A4:P28", "formulaCells": 0, "mergedRanges": 7, "externalFormulaReferences": 0},
+    {"name": "설계설명서", "part": "xl/worksheets/sheet3.xml", "dimension": "A1:I16", "formulaCells": 0, "mergedRanges": 3, "externalFormulaReferences": 0},
+    {"name": "설계표지", "part": "xl/worksheets/sheet4.xml", "dimension": "A1:O35", "formulaCells": 5, "mergedRanges": 23, "externalFormulaReferences": 1},
+    {"name": "원가", "part": "xl/worksheets/sheet5.xml", "dimension": "A1:O43", "formulaCells": 41, "mergedRanges": 1, "externalFormulaReferences": 0},
+    {"name": "도급집계표", "part": "xl/worksheets/sheet6.xml", "dimension": "A1:P36", "formulaCells": 7, "mergedRanges": 12, "externalFormulaReferences": 0},
+    {"name": "도급내역서", "part": "xl/worksheets/sheet7.xml", "dimension": "A1:N27", "formulaCells": 6, "mergedRanges": 11, "externalFormulaReferences": 0},
+    {"name": "도급일위대가표", "part": "xl/worksheets/sheet8.xml", "dimension": "A1:V15", "formulaCells": 26, "mergedRanges": 21, "externalFormulaReferences": 0},
+    {"name": "표준품셈", "part": "xl/worksheets/sheet9.xml", "dimension": "A1", "formulaCells": 0, "mergedRanges": 0, "externalFormulaReferences": 0},
+    {"name": "노임단가", "part": "xl/worksheets/sheet10.xml", "dimension": "A1:IV37", "formulaCells": 0, "mergedRanges": 14, "externalFormulaReferences": 0},
+    {"name": "관급집계표", "part": "xl/worksheets/sheet11.xml", "dimension": "A1:O23", "formulaCells": 10, "mergedRanges": 10, "externalFormulaReferences": 0},
+    {"name": "관급내역서", "part": "xl/worksheets/sheet12.xml", "dimension": "A1:W25", "formulaCells": 96, "mergedRanges": 16, "externalFormulaReferences": 0},
+    {"name": "수량산출서", "part": "xl/worksheets/sheet13.xml", "dimension": "A1:BF19", "formulaCells": 26, "mergedRanges": 12, "externalFormulaReferences": 1},
+    {"name": "단가조사", "part": "xl/worksheets/sheet14.xml", "dimension": "A1:R28", "formulaCells": 87, "mergedRanges": 10, "externalFormulaReferences": 1},
+    {"name": "물가정보", "part": "xl/worksheets/sheet15.xml", "dimension": "A1", "formulaCells": 0, "mergedRanges": 0, "externalFormulaReferences": 0},
+    {"name": "조달물품", "part": "xl/worksheets/sheet16.xml", "dimension": "A1:Q20", "formulaCells": 72, "mergedRanges": 28, "externalFormulaReferences": 0},
+    {"name": "설치 구성도", "part": "xl/worksheets/sheet17.xml", "dimension": "A1:K7", "formulaCells": 0, "mergedRanges": 1, "externalFormulaReferences": 0},
+    {"name": "공정표", "part": "xl/worksheets/sheet18.xml", "dimension": "A1:I10", "formulaCells": 1, "mergedRanges": 7, "externalFormulaReferences": 0},
+    {"name": "견적서", "part": "xl/worksheets/sheet19.xml", "dimension": "B2:R47", "formulaCells": 34, "mergedRanges": 17, "externalFormulaReferences": 0},
+    {"name": "견적서2", "part": "xl/worksheets/sheet20.xml", "dimension": "A1:G36", "formulaCells": 36, "mergedRanges": 11, "externalFormulaReferences": 0}
+  ],
+  "capacity": {
+    "rows": 9,
+    "locations": [
+      "수량산출서!F8:F16",
+      "수량산출서!G8:G16",
+      "수량산출서!H8:H16",
+      "수량산출서!I8:I16"
+    ],
+    "quoteBlocks": [
+      "단가조사!F5:I13",
+      "단가조사!J5:M13",
+      "단가조사!N5:Q13"
+    ]
+  },
+  "rowMap": {
+    "quantityRows": "수량산출서!8:16",
+    "priceRows": "단가조사!5:13",
+    "outputRows": "관급내역서!5:13"
+  },
+  "ownershipBoundary": "Cells not covered by an explicit ownership entry are TEMPLATE_STATIC and must not be changed.",
+  "ownership": {
+    "MODEL_INPUT": [
+      "수량산출서!B8:D16",
+      "수량산출서!F8:I16",
+      "수량산출서!K8:K16",
+      "단가조사!F5:F13",
+      "단가조사!H5:I13",
+      "단가조사!J5:J13",
+      "단가조사!L5:N13",
+      "단가조사!P5:R13"
+    ],
+    "VALID_TEMPLATE_FORMULA": [
+      "수량산출서!E8:E16",
+      "수량산출서!J8:J16",
+      "단가조사!A5:E13",
+      "단가조사!G5:G13",
+      "단가조사!K5:Q13",
+      "관급내역서!A5:U13",
+      "관급내역서!L19:L21",
+      "관급집계표!G4:K23",
+      "원가!D25:D26"
+    ],
+    "CANONICAL_OVERRIDE_FORMULA": [],
+    "GENERATED_DISPLAY": [
+      "수량산출서!A8:A16"
+    ],
+    "LEGACY_DORMANT": [
+      "도급집계표!A1:P36",
+      "도급내역서!A1:N27",
+      "도급일위대가표!A1:V15"
+    ],
+    "UNUSED_SLOT": [],
+    "TEMPLATE_STATIC": [
+      "<implicit-complement>"
+    ]
+  },
+  "appOwnedCells": [
+    "수량산출서!A8:D16",
+    "수량산출서!F8:I16",
+    "수량산출서!K8:K16",
+    "단가조사!F5:F13",
+    "단가조사!H5:I13",
+    "단가조사!J5:J13",
+    "단가조사!L5:N13",
+    "단가조사!P5:R13"
+  ],
+  "activeFormula": {
+    "algorithm": "research-active-formula-v1",
+    "recordFormat": "sheet!cell=formula joined with LF in workbook order",
+    "cellCount": 318,
+    "ranges": [
+      {"range": "설계표지!A1:J20", "formulaCells": 5, "fingerprint": "e0080334646429c9f8e6c4acf549d82bdcca8dbfc3fc6cb25518ab48cc8cdae5"},
+      {"range": "원가!A1:G26", "formulaCells": 21, "fingerprint": "65d055a943181fcc838a4fd3c88635655d0a1c98a7ab710f8594cf4af22f8452"},
+      {"range": "관급집계표!A1:L23", "formulaCells": 10, "fingerprint": "1f8e2475b9b09ac628ba7be736fe5e6575eb9b7e3588af3ce6647931be925f6b"},
+      {"range": "관급내역서!A1:V21", "formulaCells": 96, "fingerprint": "3e3624828978285aab7d7b1f16a863c0f02b9c622a9836f8ef65965e268326b3"},
+      {"range": "수량산출서!A1:K19", "formulaCells": 26, "fingerprint": "d2699223861bddfd6208682e399568d4913b6f73f0b4265a01648694b8c62e94"},
+      {"range": "단가조사!A1:R28", "formulaCells": 87, "fingerprint": "214149cbb49aa2c1b6670970f08eb5608a9df930fcdd776733d78aafa0ca1c68"},
+      {"range": "조달물품!A1:Q20", "formulaCells": 72, "fingerprint": "929a67e7549f531a4e314cd805cf3a0817ec63148722e499daf389e63b0d949e"},
+      {"range": "공정표!A1:I10", "formulaCells": 1, "fingerprint": "5616e635e6ad4a342baf11f1cdf9b66f3514962686059bc325c04496f5b7476f"}
+    ],
+    "combinedFingerprint": "fbc75ff96ab44d24867b16f5d6fa1c09f5964b1539b9d5c8cb5c8b2e501fe568"
+  },
+  "formulaCacheCells": [
+    "수량산출서!E8:E16",
+    "수량산출서!J8:J16",
+    "단가조사!A5:E13",
+    "단가조사!G5:G13",
+    "단가조사!K5:Q13",
+    "관급내역서!A5:U13",
+    "관급내역서!L19:L21",
+    "관급집계표!G4:K23",
+    "원가!D25:D26"
+  ],
+  "packageDriftAllowlist": [
+    "[Content_Types].xml#calcChain-override",
+    "xl/_rels/workbook.xml.rels#calcChain-relationship",
+    "xl/calcChain.xml",
+    "xl/workbook.xml#calcPr"
+  ],
+  "totalOracle": {
+    "subtotalWon": 20174460,
+    "rawFeeWon": 108942.084,
+    "totalWon": 20284000,
+    "cells": {
+      "subtotal": ["관급내역서!L19", "관급집계표!G4", "관급집계표!K4"],
+      "rawFee": ["관급내역서!L20", "관급집계표!G5", "관급집계표!K5"],
+      "total": ["관급내역서!L21", "관급집계표!G6", "관급집계표!K6", "관급집계표!G23", "관급집계표!K23", "원가!D25", "원가!D26"]
+    }
+  },
+  "baselineInventory": {
+    "externalLinks": {"count": 319, "fingerprint": "ff91eef933f5639231b9ee26cdca636c970b199a9b6e405985b611af3c6b512a"},
+    "definedNames": {
+      "count": 17901,
+      "fingerprint": "c9d4ce93a01aef34ebd89f6e030409cc65e54270b0e95ba823d77e66d48c07f6",
+      "problemCount": 14920,
+      "problemFingerprint": "d243caf4aea8370350b22358af860e4ddb31cb99c7dbb801002e157c5fb4a345",
+      "externalCount": 3514,
+      "externalFingerprint": "3eb7f72d23cb7a52c90c306d2548aa56f06b26e8089885e5422ffe2fc40a297a"
+    },
+    "formulaErrors": {
+      "formulaTextCount": 71,
+      "formulaTextFingerprint": "27141120bdfcce89eb9b054bd419d8a9c6be0d3a33a990a396fbae1a9462c1a5",
+      "cachedErrorCount": 93,
+      "cachedErrorFingerprint": "7cf7823f5a1c2b360c6b42296b312d45bb529615179966a2b640a0f6ecd26c09"
+    },
+    "calcChain": {
+      "present": true,
+      "entryCount": 522,
+      "fingerprint": "0e90bed78a8b6a7a96651e52f6792f657c869313fc894a320c62b94a15a23805"
+    }
+  },
+  "inheritedWarnings": {
+    "disposition": "No profile-specific inherited formula warnings.",
+    "originalFormulaCells": []
+  }
+}

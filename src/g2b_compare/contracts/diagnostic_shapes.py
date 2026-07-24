@@ -38,9 +38,7 @@ class ItemsShape(BaseModel):
     """Items container cardinality without item content."""
 
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
-    shape: Literal[
-        "direct-list", "wrapped-list", "wrapped-single", "missing", "other"
-    ]
+    shape: Literal["direct-list", "wrapped-list", "wrapped-single", "missing", "other"]
     count: int
 
 

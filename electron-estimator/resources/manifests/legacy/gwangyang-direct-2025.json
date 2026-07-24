@@ -1,0 +1,235 @@
+{
+  "schemaVersion": "legacy-workbook-profile-v1",
+  "profileId": "A",
+  "slug": "gwangyang-direct-2025",
+  "family": "direct-material",
+  "source": {
+    "filename": "250725-전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 내역서.xlsx",
+    "sha256": "445012e259ab5318a1d52468cce93ee28a55a8bcb467876f40a47a939e4668db",
+    "packageParts": {
+      "count": 46,
+      "fingerprint": "3ecc1bdac10cd74d50735c2cc6e9a1af3c9ad8c2bba2696ccf69c53d21ebcc38"
+    }
+  },
+  "sheetMap": [
+    {
+      "name": "갑지",
+      "part": "xl/worksheets/sheet1.xml",
+      "dimension": "A1:E12",
+      "formulaCells": 0,
+      "mergedRanges": 6,
+      "externalFormulaReferences": 0
+    },
+    {
+      "name": "표지",
+      "part": "xl/worksheets/sheet2.xml",
+      "dimension": "A1:N19",
+      "formulaCells": 5,
+      "mergedRanges": 29,
+      "externalFormulaReferences": 0
+    },
+    {
+      "name": "원가계산서",
+      "part": "xl/worksheets/sheet3.xml",
+      "dimension": "B1:H57",
+      "formulaCells": 4,
+      "mergedRanges": 20,
+      "externalFormulaReferences": 0
+    },
+    {
+      "name": "집계표",
+      "part": "xl/worksheets/sheet4.xml",
+      "dimension": "A1:N25",
+      "formulaCells": 20,
+      "mergedRanges": 10,
+      "externalFormulaReferences": 0
+    },
+    {
+      "name": "자재내역서",
+      "part": "xl/worksheets/sheet5.xml",
+      "dimension": "B1:R31",
+      "formulaCells": 37,
+      "mergedRanges": 23,
+      "externalFormulaReferences": 0
+    },
+    {
+      "name": "현명견적서",
+      "part": "xl/worksheets/sheet6.xml",
+      "dimension": "B1:H60",
+      "formulaCells": 19,
+      "mergedRanges": 11,
+      "externalFormulaReferences": 0
+    }
+  ],
+  "capacity": {
+    "rows": 16,
+    "groups": [
+      {
+        "id": "excellent-product",
+        "rowCells": [
+          "자재내역서!9",
+          "자재내역서!11:22"
+        ],
+        "count": 13
+      },
+      {
+        "id": "multiple-supplier",
+        "rowCells": [
+          "자재내역서!27:29"
+        ],
+        "count": 3
+      }
+    ],
+    "groupMovement": false
+  },
+  "rowMap": {
+    "itemRows": [
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      27,
+      28,
+      29
+    ],
+    "subtotalRows": [
+      23,
+      30
+    ],
+    "totalRow": 31
+  },
+  "ownershipBoundary": "Cells not covered by an explicit ownership entry are TEMPLATE_STATIC and must not be changed.",
+  "ownership": {
+    "MODEL_INPUT": [
+      "자재내역서!C9:G9",
+      "자재내역서!N9",
+      "자재내역서!C11:G22",
+      "자재내역서!N11:N22",
+      "자재내역서!C27:G29",
+      "자재내역서!N27:N29"
+    ],
+    "VALID_TEMPLATE_FORMULA": [
+      "자재내역서!H9",
+      "자재내역서!M9",
+      "자재내역서!H11:H23",
+      "자재내역서!M11:M23",
+      "자재내역서!H27:H30",
+      "자재내역서!M27:M31",
+      "집계표!D8:K13",
+      "원가계산서!E28:E30",
+      "표지!E10:E13",
+      "현명견적서!G19:G54"
+    ],
+    "CANONICAL_OVERRIDE_FORMULA": [],
+    "GENERATED_DISPLAY": [
+      "자재내역서!B9",
+      "자재내역서!B11:B22",
+      "자재내역서!B27:B29"
+    ],
+    "LEGACY_DORMANT": [
+      "자재내역서!I9:L31"
+    ],
+    "UNUSED_SLOT": [],
+    "TEMPLATE_STATIC": [
+      "<implicit-complement>"
+    ]
+  },
+  "appOwnedCells": [
+    "자재내역서!B9:G9",
+    "자재내역서!N9",
+    "자재내역서!B11:G22",
+    "자재내역서!N11:N22",
+    "자재내역서!B27:G29",
+    "자재내역서!N27:N29"
+  ],
+  "activeFormula": {
+    "algorithm": "research-active-formula-v1",
+    "recordFormat": "sheet!cell=formula joined with LF in workbook order",
+    "cellCount": 85,
+    "ranges": [
+      {"range": "표지!A1:L16", "formulaCells": 5, "fingerprint": "d09e04af292a3ba5bcfdaa2ec4ad0bccae51d01cce4b5237aa77e3e06aa7051b"},
+      {"range": "원가계산서!B1:H30", "formulaCells": 4, "fingerprint": "f8eee5d3741fcc42da626749e85b9acfe550071581ef2f0d47eff97b3f0caede"},
+      {"range": "집계표!A1:L24", "formulaCells": 20, "fingerprint": "508bf9d50cea11565e812b48e01dc6bf02c61a5c195bedbb7a554a88939c354e"},
+      {"range": "자재내역서!B1:N31", "formulaCells": 37, "fingerprint": "6ba9eb02c3f7cd8c748a0176f3600eb0b5656d35f59df31c086d2f813a44333e"},
+      {"range": "현명견적서!B1:H56", "formulaCells": 19, "fingerprint": "58c8e8d2d2e08b3d21347ab767b7457c7cd6f6129a8ad79e4163b96e87b8cdfc"}
+    ],
+    "combinedFingerprint": "12c6350721319f61a5d3415f9c549c33458a09ec3c2021c25b846518687fb894"
+  },
+  "formulaCacheCells": [
+    "자재내역서!H9",
+    "자재내역서!M9",
+    "자재내역서!H11:H23",
+    "자재내역서!M11:M23",
+    "자재내역서!H27:H30",
+    "자재내역서!M27:M31",
+    "집계표!D8:K13",
+    "원가계산서!E28:E30",
+    "표지!E10:E13",
+    "현명견적서!G19:G54"
+  ],
+  "packageDriftAllowlist": [
+    "[Content_Types].xml#calcChain-override",
+    "xl/_rels/workbook.xml.rels#calcChain-relationship",
+    "xl/calcChain.xml",
+    "xl/workbook.xml#calcPr"
+  ],
+  "totalOracle": {
+    "subtotalWon": 38938530,
+    "feeWon": 211000,
+    "totalWon": 39149530,
+    "cells": {
+      "subtotal": [
+        "자재내역서!M31",
+        "집계표!K10",
+        "원가계산서!E28"
+      ],
+      "fee": [
+        "집계표!K11",
+        "원가계산서!E29"
+      ],
+      "total": [
+        "집계표!K13",
+        "원가계산서!E30",
+        "표지!E10"
+      ]
+    }
+  },
+  "baselineInventory": {
+    "externalLinks": {
+      "count": 0,
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "definedNames": {
+      "count": 10528,
+      "fingerprint": "aaa934c8a8c28a8d20beb3a60443db2b4e0e68cb10d6408b8b729e7f1eb29c2b",
+      "problemCount": 8659,
+      "problemFingerprint": "56e0858386f752cdb099a6b1a0d661b7705159607de32ce12ebebba158aa4501",
+      "externalCount": 301,
+      "externalFingerprint": "b083c9a294a4b6d97682b405bf1bb5ec7d46ac58a3de96e158d91ecf63c522ae"
+    },
+    "formulaErrors": {
+      "formulaTextCount": 0,
+      "formulaTextFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cachedErrorCount": 0,
+      "cachedErrorFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "calcChain": {
+      "present": true,
+      "entryCount": 85,
+      "fingerprint": "49d3416c040094258769b7324189517e4393bcda4422fdb3df60e57b71250c9e"
+    }
+  },
+  "inheritedWarnings": {
+    "disposition": "No profile-specific inherited formula warnings.",
+    "originalFormulaCells": []
+  }
+}

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 CACHE_GOLDEN = "d54508ae23788d71648cbec61333f3eace5b1d539352c16625525f3d29da9e6b"
-BUNDLE_GOLDEN = "ae54ae3128077b3992f7d92f5eaa331d8c07a9b7cdaae34dd9406fd0e8f53260"
+BUNDLE_GOLDEN = "5c71c1db667f1650fb0b54815a75fe9d8c2c201d84bc524756eb33313deaf45e"
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,24 +1,39 @@
 <div class="state-line" data-primary-state="{{ primary_state }}" data-statuses="{{ statuses|join(' ') }}">
   <span class="state-dot" aria-hidden="true"></span>
   <p>{{ message }}</p>
-  {% if total is defined %}<span>{{ total }}건 · {{ page }}페이지</span>{% endif %}
+  {% if result_count is defined %}<span>현재 {{ result_count }}건 · {{ page }}페이지</span>
+  {% elif total is defined %}<span>{{ total }}건 · {{ page }}페이지</span>{% endif %}
 </div>
+{% if quota_operation is defined %}
+<div class="status-predicates quota-status" data-quota-operation="{{ quota_operation }}">
+  <span class="badge">로컬 호출 기록 한도 도달</span>
+  <p>공공데이터포털 실시간 잔여량이 아닌 로컬 기록 기준입니다. <span class="mono">{{ quota_operation }}</span> 수집은 <time datetime="{{ quota_resume_not_before }}">{{ quota_resume_display }}</time> 이후 재개할 수 있습니다.</p>
+</div>
+{% endif %}
 {% if statuses %}
 <div class="status-predicates" aria-label="데이터 상태">
   {% for status in statuses %}
   <span class="badge" data-status-predicate="{{ status }}">
     {% if status == "stale" %}데이터가 오래되었습니다
-    {% elif status == "sync-failed-last-good" %}최근 동기화에 실패하여 이전 데이터를 표시합니다
+    {% elif status == "sync-failed-last-good" %}최근 동기화 실패 · 이전 데이터 표시
     {% elif status == "partial-attribute" %}개별 속성 일부 미수집
-    {% elif status == "insufficient-comparator" %}insufficient-comparator
+    {% elif status == "insufficient-comparator" %}비교 후보 부족
     {% elif status == "no-evidence" %}비교 근거 부족
     {% elif status == "incompatible-price" %}가격 단위 비교 불가
+    {% elif status == "spec-filter-active" %}스펙 정확 필터 적용
+    {% elif status == "spec-source-attr" %}본품 속성 일치
+    {% elif status == "spec-source-spec" %}규격 텍스트 일치
+    {% elif status == "spec-source-option" %}추가선택 품목 일치
+    {% elif status == "same-corp-slot" %}동일 업체 후보 포함
     {% endif %}
   </span>
   {% endfor %}
 </div>
 {% endif %}
-<p class="loading-status" role="status">검색 중</p>
+<div class="loading-status" role="status" aria-live="assertive">
+  <span class="loading-spinner" aria-hidden="true"></span>
+  <span>나라장터에서 물품을 조회하고 있음</span>
+</div>
 {% if request_id is defined %}
 <p class="request-id" data-request-id="{{ request_id }}">요청 ID: <span class="mono">{{ request_id }}</span></p>
 {% endif %}
@@ -26,35 +41,59 @@
   {% include "category_choice.html" %}
 {% endif %}
 {% if rows %}
-<div class="table-wrap">
-  <table>
-    <thead><tr><th>물품</th><th>규격</th><th>가격</th><th>점수</th><th>기준일</th><th>비교 3개</th></tr></thead>
-    <tbody>
-    {% for row in rows %}
-      <tr data-statuses="{{ row.statuses|join(' ') }}">
-        <td data-label="물품">
-          <a class="product-link" href="{{ row.link_href }}">{{ row.name }}</a>
-          <span class="mono">{{ row.id }}</span>
-          {% if row.copy_id %}<button class="copy-id" type="button" data-copy-id="{{ row.copy_id }}">물품 ID 복사</button>{% endif %}
-          <small>{{ row.provenance }}</small>
-        </td>
-        <td data-label="규격">
-          {{ row.spec }}
-          {% if "partial-attribute" in row.statuses %}<span class="badge partial-attribute">개별 속성 일부 미수집</span>{% endif %}
-        </td>
-        <td data-label="가격">{% if row.price %}{{ row.price }}원 / {{ row.unit }}{% else %}<span class="badge">가격 단위 비교 불가</span>{% endif %}</td>
-        <td data-label="점수">{{ row.score|default('—', true) }}</td>
-        <td data-label="기준일">{{ row.data_as_of }}</td>
-        <td data-label="비교">{% include "comparators.html" %}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</div>
+{% if facets %}
+<nav class="spec-facets" aria-label="스펙 값 필터">
+  {% for facet in facets %}
+  <a href="{{ facet.href }}">{{ facet.value }} <span>{{ facet.count }}</span></a>
+  {% endfor %}
+</nav>
+{% endif %}
+<ol class="product-results" aria-label="검색된 물품">
+  {% for row in rows %}
+  <li class="product-card" data-product-id="{{ row.id }}" data-statuses="{{ row.statuses|join(' ') }}">
+    <div class="product-image">
+      <span class="image-fallback">이미지 없음</span>
+      {% if row.image_url %}
+      <img src="{{ row.image_url }}" alt="{{ row.title }}" loading="lazy" decoding="async">
+      {% endif %}
+    </div>
+    <article class="product-main">
+      <div class="product-tags">
+        {% if row.purchase_type %}<span class="badge">{{ row.purchase_type }}</span>{% endif %}
+        <span>{{ row.name }} ({{ row.category_code }})</span>
+      </div>
+      <h2><a class="product-link" href="{{ row.link_href }}" target="_blank" rel="noopener">{{ row.title }}</a></h2>
+      <p class="product-id">물품식별번호 <span class="mono">{{ row.id }}</span></p>
+      <p class="product-spec"><span>규격</span>{{ row.spec }}</p>
+      <dl class="product-meta">
+        <div><dt>계약업체</dt><dd>{{ row.supplier }}</dd></div>
+        <div><dt>계약구분</dt><dd>{{ row.contract_method }}</dd></div>
+        <div><dt>인도조건</dt><dd>{{ row.delivery_condition }}</dd></div>
+        <div><dt>최신 확인일</dt><dd>{{ row.data_as_of }}</dd></div>
+      </dl>
+      {% if row.copy_id %}<button class="copy-id" type="button" data-copy-id="{{ row.copy_id }}">물품식별번호 복사</button>{% endif %}
+    </article>
+    <aside class="product-price" aria-label="계약 가격">
+      <span>계약단가</span>
+      {% if row.price %}
+      <p>{{ row.price }}원</p>
+      <small>{{ row.unit }} 기준</small>
+      {% else %}
+      <p class="price-unavailable">가격 확인 불가</p>
+      {% endif %}
+      <a href="{{ row.link_href }}" target="_blank" rel="noopener">나라장터에서 보기</a>
+    </aside>
+    <details class="comparison-panel">
+      <summary>비슷한 물품 3개 보기</summary>
+      {% include "comparators.html" %}
+    </details>
+  </li>
+  {% endfor %}
+</ol>
 {% endif %}
 {% if previous_url or next_url %}
 <nav class="pagination" aria-label="검색 결과 페이지">
-  {% if previous_url %}<a class="previous-page" href="{{ previous_url }}">이전</a>{% endif %}
-  {% if next_url %}<a class="next-page" href="{{ next_url }}">다음</a>{% endif %}
+  {% if previous_url %}<a class="previous-page" href="{{ previous_url }}">이전 페이지</a>{% endif %}
+  {% if next_url %}<a class="next-page" href="{{ next_url }}">다음 30건</a>{% endif %}
 </nav>
 {% endif %}

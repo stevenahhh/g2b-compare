@@ -211,7 +211,7 @@ class IndexStore:
                 """
                 SELECT materialization_id FROM index_versions
                 WHERE status = 'complete' ORDER BY id DESC LIMIT 1
-                """
+                """,
             ).fetchone()
             if row is None:
                 raise IndexMembershipError(EMPTY_DATABASE)
@@ -255,7 +255,6 @@ class IndexStore:
                 "INSERT INTO search_index_members VALUES (?, ?, ?)",
                 (materialization_id, name, value),
             )
-
 
 
 def _as_bytes(value: SqlValue) -> bytes:

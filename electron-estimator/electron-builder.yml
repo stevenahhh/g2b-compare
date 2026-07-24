@@ -1,0 +1,31 @@
+appId: com.local.electron-estimator
+productName: Electron Estimator
+asar: true
+directories:
+  output: release
+files:
+  - dist/**
+  - resources/data/*.jsonl
+  - resources/manifests/legacy/*.json
+  - resources/observations/manifest.json
+  - resources/observations/observations.json
+  - resources/sources/source-manifest.json
+  - package.json
+  - "!node_modules/**/{test,tests,__tests__}/**"
+  - "!node_modules/**/*.test.*"
+  - "!node_modules/**/*.spec.*"
+  - "!node_modules/**/{test,tests,spec,__tests__}.*"
+  - "!**/*.map"
+  - "!**/*.{ts,tsx,mts,cts}"
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+nsis:
+  perMachine: false
+  allowElevation: false
+  oneClick: false

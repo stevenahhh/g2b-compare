@@ -5,7 +5,9 @@ import pytest
 from g2b_compare.contracts.state import page_size_failure
 
 
-@pytest.mark.parametrize("reported", (0, -1, 1001), ids=("zero", "negative", "over-max"))
+@pytest.mark.parametrize(
+    "reported", [0, -1, 1001], ids=("zero", "negative", "over-max")
+)
 def test_verify_limit_rejects_reported_size_outside_positive_range(
     reported: int,
 ) -> None:

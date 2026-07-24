@@ -2,37 +2,26 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from decimal import Decimal
 from functools import cache
-from math import sqrt
 from typing import Final
 
-from g2b_compare.normalize.numbers import NumberParseError
-from g2b_compare.normalize.spec_types import (
-    RangeParseError,
-    RelationParseError,
-    SpecSemantic,
-    UnitDimensionError,
-)
-from g2b_compare.normalize.specs import parse_specs
-from g2b_compare.normalize.units import UnitAliasError
-
 from .formula import range_similarity, value_similarity
+from .matching_context import (
+    ContextSpec,
+    context_is_eligible,
+    context_similarity,
+    extract_context_specs,
+)
 
-CONTEXT_THRESHOLD: Final = Decimal("0.75")
+__all__ = (
+    "ContextSpec",
+    "context_is_eligible",
+    "context_similarity",
+    "extract_context_specs",
+)
 UNKNOWN_ATTRIBUTES: Final = frozenset(("", "unknown"))
-_ATTRIBUTE_EQUALS: Final = re.compile(r"(?<![<>])=(?!=)")
-
-
-@dataclass(frozen=True, slots=True)
-class ContextSpec:
-    """One parsed semantic with its regex-v1 local context."""
-
-    semantic: SpecSemantic
-    context: str
-    ordinal: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,98 +70,19 @@ def match_specs(anchor_text: str, candidate_text: str) -> MatchResult:
     )
 
 
-def extract_context_specs(text: str) -> tuple[ContextSpec, ...]:
-    """Attach three-token left and right context to every parsed semantic."""
-    try:
-        parsed = parse_specs(_ATTRIBUTE_EQUALS.sub(" ", text))
-    except (
-        NumberParseError,
-        RangeParseError,
-        RelationParseError,
-        UnitDimensionError,
-        UnitAliasError,
-    ):
-        return ()
-    token_positions = _span_token_positions(parsed.normalized.tokens, parsed.semantics)
-    return tuple(
-        ContextSpec(
-            semantic,
-            _local_context(parsed.normalized.tokens, token_positions[index]),
-            index,
-        )
-        for index, semantic in enumerate(parsed.semantics)
-    )
-
-
-def context_similarity(left: str, right: str) -> Decimal:
-    """Calculate binary char_wb 3-5 gram cosine."""
-    if not left or not right:
-        return Decimal(0)
-    left_grams = _char_wb_grams(left)
-    right_grams = _char_wb_grams(right)
-    if not left_grams or not right_grams:
-        return Decimal(0)
-    score = len(left_grams & right_grams) / sqrt(len(left_grams) * len(right_grams))
-    return Decimal(str(score))
-
-
-def context_is_eligible(similarity: Decimal) -> bool:
-    """Apply the inclusive v1 unknown-attribute context boundary."""
-    return similarity >= CONTEXT_THRESHOLD
-
-
-def _char_wb_grams(text: str) -> frozenset[str]:
-    grams: set[str] = set()
-    for word in text.split():
-        padded = f" {word} "
-        for size in range(3, 6):
-            if size >= len(padded):
-                grams.add(padded)
-                break
-            grams.update(
-                padded[start : start + size] for start in range(len(padded) - size + 1)
-            )
-    return frozenset(grams)
-
-
-def _span_token_positions(
-    tokens: tuple[str, ...], semantics: tuple[SpecSemantic, ...]
-) -> tuple[int, ...]:
-    positions: list[int] = []
-    cursor = 0
-    previous_span: tuple[int, int] | None = None
-    previous_position = 0
-    for semantic in semantics:
-        span_key = (semantic.source_span.start_byte, semantic.source_span.end_byte)
-        if span_key == previous_span:
-            positions.append(previous_position)
-            continue
-        position = next(
-            (
-                index
-                for index in range(cursor, len(tokens))
-                if tokens[index] == semantic.source_span.normalized
-            ),
-            cursor,
-        )
-        positions.append(position)
-        cursor = position + 1
-        previous_span = span_key
-        previous_position = position
-    return tuple(positions)
-
-
-def _local_context(tokens: tuple[str, ...], quantity_index: int) -> str:
-    left = tokens[max(0, quantity_index - 3) : quantity_index]
-    right = tokens[quantity_index + 1 : quantity_index + 4]
-    return " ".join((*left, *right))
-
-
 def _maximum_matching(
     anchor: tuple[ContextSpec, ...], candidate: tuple[ContextSpec, ...]
 ) -> _Choice:
     dimensions_anchor = _dimension_counts(anchor)
     dimensions_candidate = _dimension_counts(candidate)
+    direct = _unique_known_choice(
+        anchor,
+        candidate,
+        dimensions_anchor,
+        dimensions_candidate,
+    )
+    if direct is not None:
+        return direct
 
     @cache
     def visit(anchor_index: int, used: int) -> _Choice:
@@ -200,6 +110,37 @@ def _maximum_matching(
         return best
 
     return visit(0, 0)
+
+
+def _unique_known_choice(
+    anchor: tuple[ContextSpec, ...],
+    candidate: tuple[ContextSpec, ...],
+    anchor_counts: dict[str, int],
+    candidate_counts: dict[str, int],
+) -> _Choice | None:
+    anchor_keys = tuple(item.semantic.attribute_key for item in anchor)
+    candidate_keys = tuple(item.semantic.attribute_key for item in candidate)
+    if (
+        any(key in UNKNOWN_ATTRIBUTES for key in (*anchor_keys, *candidate_keys))
+        or len(set(anchor_keys)) != len(anchor_keys)
+        or len(set(candidate_keys)) != len(candidate_keys)
+    ):
+        return None
+    candidate_by_key = {key: index for index, key in enumerate(candidate_keys)}
+    pairs: list[tuple[int, int, Decimal]] = []
+    for anchor_index, key in enumerate(anchor_keys):
+        candidate_index = candidate_by_key.get(key)
+        if candidate_index is None:
+            continue
+        weight = _edge_weight(
+            anchor[anchor_index],
+            candidate[candidate_index],
+            anchor_counts,
+            candidate_counts,
+        )
+        if weight is not None:
+            pairs.append((anchor_index, candidate_index, weight))
+    return _Choice(sum((pair[2] for pair in pairs), Decimal(0)), tuple(pairs))
 
 
 def _dimension_counts(specs: tuple[ContextSpec, ...]) -> dict[str, int]:

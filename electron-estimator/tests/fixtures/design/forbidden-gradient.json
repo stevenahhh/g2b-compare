@@ -1,0 +1,8 @@
+{
+  "surface": {
+    "shape": "square-tonal",
+    "radiusPx": 0,
+    "gradient": true,
+    "roundedCards": false
+  }
+}

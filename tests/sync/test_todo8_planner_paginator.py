@@ -19,8 +19,8 @@ def test_full_plan_is_exactly_five_sources_and_registration_backfills() -> None:
 
     assert tuple(item.operation for item in schedules) == tuple(Operation)[:5]
     registration = schedules[3]
-    assert registration.windows[0].start == date(2000, 1, 1)
-    assert registration.windows[-1].end == date(2026, 7, 15)
+    assert registration.windows[0].end == date(2026, 7, 15)
+    assert registration.windows[-1].start == date(2000, 1, 1)
     assert tuple(item.ordinal for item in registration.windows) == tuple(
         range(len(registration.windows))
     )

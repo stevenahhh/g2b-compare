@@ -8,13 +8,17 @@ dependencies = [
     "httpx",
     "jinja2",
     "joblib",
+    "openpyxl",
+    "playwright",
     "pydantic-settings",
     "rapidfuzz",
     "scikit-learn",
+    "uvicorn>=0.51.0",
 ]
 
 [project.scripts]
 g2b-compare = "g2b_compare.cli:main"
+g2b-priority = "g2b_compare.priority_cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -22,13 +26,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/g2b_compare"]
+artifacts = ["src/g2b_compare/web/frontend_dist/**"]
 
 [dependency-groups]
 dev = [
     "basedpyright",
     "hypothesis",
-    "openpyxl",
-    "playwright",
     "pytest",
     "pytest-asyncio",
     "pytest-playwright",

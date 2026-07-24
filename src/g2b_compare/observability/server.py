@@ -4,14 +4,18 @@ from __future__ import annotations
 
 import errno
 import json
+import os
+import sqlite3
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import import_module
-from typing import TYPE_CHECKING, Final, Protocol, override, runtime_checkable
+from queue import Empty
+from typing import TYPE_CHECKING, Final, Protocol, cast, override, runtime_checkable
 
 import anyio
 import httpx
 
-from g2b_compare.observability.health import Probe, health, readiness
+from g2b_compare.observability.health import Probe, readiness
+from g2b_compare.web.estimate_events import ESTIMATE_EVENTS
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,6 +26,7 @@ if TYPE_CHECKING:
 
 JSON_TYPE: Final = "application/json"
 LOOPBACK: Final = "127.0.0.1"
+LAN_BIND: Final = "0.0.0.0"  # noqa: S104 - LAN sharing is intentional.
 
 
 @runtime_checkable
@@ -45,8 +50,8 @@ def serve_loopback(
     host: str,
     port: int,
 ) -> tuple[int, str | None]:
-    """Map loopback policy and listener conflicts to stable CLI outcomes."""
-    if host != LOOPBACK:
+    """Map approved local binds and listener conflicts to stable CLI outcomes."""
+    if host not in {LOOPBACK, LAN_BIND}:
         return 2, "public-bind-refused"
     try:
         return run_server(database, index, contract, host, port), None
@@ -70,7 +75,15 @@ def run_server(
         module = import_module("g2b_compare.web.app")
         if not isinstance(module, _AppModule):
             raise _AppContractError
-        app = module.create_app(database=database, link_manifest=contract)
+        previous_spa_mode = os.environ.get("G2B_SERVE_SPA")
+        os.environ["G2B_SERVE_SPA"] = "1"
+        try:
+            app = module.create_app(database=database, link_manifest=contract)
+        finally:
+            if previous_spa_mode is None:
+                _ = os.environ.pop("G2B_SERVE_SPA", None)
+            else:
+                os.environ["G2B_SERVE_SPA"] = previous_spa_mode
         server.RequestHandlerClass = handler(app, database, index, contract)
         server.serve_forever()
     except KeyboardInterrupt:
@@ -80,7 +93,7 @@ def run_server(
     return 0
 
 
-def handler(
+def handler(  # noqa: C901 - handler factory owns HTTP verbs
     app: FastAPI,
     database: Path,
     index: Path,
@@ -90,8 +103,22 @@ def handler(
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
-            if self.path == "/healthz":
-                self._send_probe(health(database, index))
+            if self.path == "/api/estimates/events":
+                self._send_estimate_events()
+                return
+            if self.path in {"/livez", "/healthz"}:
+                self._send_probe(
+                    Probe(ok=True, status="alive", detail={"process": "ok"})
+                )
+                return
+            if self.path == "/readyz" and _priority_ready(database):
+                self._send_probe(
+                    Probe(
+                        ok=True,
+                        status="ready-priority-catalog",
+                        detail={"database": "ok", "priority_catalog": "ok"},
+                    )
+                )
                 return
             if self.path in {"/readyz", "/data-status"}:
                 self._send_probe(
@@ -103,16 +130,32 @@ def handler(
                     )
                 )
                 return
-            response = anyio.run(
-                _fetch,
-                app,
-                self.path,
-                {
-                    key: value
-                    for key, value in self.headers.items()
-                    if key.casefold() != "host"
-                },
-            )
+            self._proxy("GET")
+
+        def do_POST(self) -> None:
+            self._proxy("POST")
+
+        def do_PUT(self) -> None:
+            self._proxy("PUT")
+
+        def do_PATCH(self) -> None:
+            self._proxy("PATCH")
+
+        def do_DELETE(self) -> None:
+            self._proxy("DELETE")
+
+        def do_OPTIONS(self) -> None:
+            self._proxy("OPTIONS")
+
+        def _proxy(self, method: str) -> None:
+            length = int(self.headers.get("content-length", "0"))
+            body = self.rfile.read(length) if length else b""
+            headers = {
+                key: value
+                for key, value in self.headers.items()
+                if key.casefold() != "host"
+            }
+            response = anyio.run(_fetch, app, self.path, headers, method, body)
             self.send_response(response.status_code)
             for key, value in response.headers.items():
                 if key.casefold() not in {"content-length", "transfer-encoding"}:
@@ -120,6 +163,27 @@ def handler(
             self.send_header("Content-Length", str(len(response.content)))
             self.end_headers()
             _ = self.wfile.write(response.content)
+
+        def _send_estimate_events(self) -> None:
+            subscriber = ESTIMATE_EVENTS.subscribe()
+            try:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                _ = self.wfile.write(b"event: ready\ndata: {}\n\n")
+                self.wfile.flush()
+                while True:
+                    try:
+                        payload = subscriber.get(timeout=15).as_sse().encode()
+                    except Empty:
+                        payload = b": keep-alive\n\n"
+                    _ = self.wfile.write(payload)
+                    self.wfile.flush()
+            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+                return
+            finally:
+                ESTIMATE_EVENTS.unsubscribe(subscriber)
 
         def _send_probe(self, probe: Probe) -> None:
             body = json.dumps(
@@ -139,14 +203,28 @@ def handler(
     return Handler
 
 
+def _priority_ready(database: Path) -> bool:
+    try:
+        with sqlite3.connect(database) as connection:
+            row = cast(
+                "tuple[int] | None",
+                connection.execute("SELECT COUNT(*) FROM priority_products").fetchone(),
+            )
+    except sqlite3.Error:
+        return False
+    return row is not None and int(row[0]) > 0
+
+
 async def _fetch(
     app: FastAPI,
     path: str,
     headers: dict[str, str],
+    method: str = "GET",
+    body: bytes = b"",
 ) -> httpx.Response:
-    transport = httpx.ASGITransport(app=app)
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
     async with httpx.AsyncClient(
         transport=transport,
         base_url="http://127.0.0.1",
     ) as client:
-        return await client.get(path, headers=headers)
+        return await client.request(method, path, headers=headers, content=body)

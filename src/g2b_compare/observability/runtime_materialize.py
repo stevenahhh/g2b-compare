@@ -22,6 +22,7 @@ from g2b_compare.materialize.repository import (
     CandidateRows,
     publish_candidate,
 )
+from g2b_compare.materialize.spec_index import build_spec_projection
 from g2b_compare.observability.runtime_ops import RuntimeOperationError
 
 if TYPE_CHECKING:
@@ -34,6 +35,7 @@ COMPLETE_STATES: Final = (
     "complete-empty",
     "carried-forward",
 )
+OPTION_ROLES: Final = frozenset({"선택사양(별도구매)", "동시구매"})
 MATERIALIZATION_SOURCE_MISSING: Final = "materialization-source-missing"
 ATTRIBUTE_SNAPSHOT_INCOMPLETE: Final = "attribute-snapshot-incomplete"
 
@@ -45,7 +47,7 @@ def materialize(database: Path) -> int:
     materialization_id = repository.create(
         catalog_id,
         attribute_id,
-        ("v1", "v1"),
+        ("v2", "v1"),
     )
     with connect(database) as connection:
         state = query(
@@ -57,10 +59,16 @@ def materialize(database: Path) -> int:
         return materialization_id
     products = merge_products(_offers(database), ())
     attributes, covered = _attributes(database, attribute_id)
+    specs, stats = build_spec_projection(
+        products,
+        attributes,
+        covered,
+        _option_specs(database),
+    )
     publish_candidate(
         database,
         materialization_id,
-        CandidateRows(products, attributes, covered),
+        CandidateRows(products, attributes, covered, specs, stats),
     )
     return materialization_id
 
@@ -150,6 +158,7 @@ def _offer(
         active=True,
         source_updated_at=_first(raw, "chgDt", "rgstDt") or observed_at,
         raw_fields_json=RAW_FIELDS.dump_json(raw).decode(),
+        contract_corp_id=_first(raw, "cntrctCorpNo", "cntrctCorpBizno"),
     )
 
 
@@ -198,6 +207,30 @@ def _attributes(
         for attribute in materialize_attributes(tuple(grouped[product_id]))
     )
     return attributes, tuple(as_text(row[0]) for row in covered_rows)
+
+
+def _option_specs(database: Path) -> tuple[tuple[str, str], ...]:
+    with connect(database) as connection:
+        rows = query(
+            connection,
+            """SELECT records.product_id,records.raw_fields_json
+               FROM active_source_snapshots AS active
+               JOIN source_records AS records
+                 ON records.source_snapshot_id=active.snapshot_id
+                AND records.operation=active.operation
+               WHERE records.operation=? AND records.is_tombstone=0
+               ORDER BY records.source_record_key""",
+            (Operation.GET_DELIVERY_REQUEST_DETAIL.value,),
+        ).fetchall()
+    result: list[tuple[str, str]] = []
+    for row in rows:
+        raw = RAW_FIELDS.validate_json(as_text(row[1]))
+        if _text(raw, "optnDivCdNm") not in OPTION_ROLES:
+            continue
+        text = _first(raw, "prdctIdntNoNm", "prdctSpecNm")
+        if text:
+            result.append((as_text(row[0]), text))
+    return tuple(result)
 
 
 def _first(raw: dict[str, JsonScalar], *keys: str) -> str:

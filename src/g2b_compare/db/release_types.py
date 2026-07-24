@@ -18,6 +18,7 @@ class ReleaseKey:
     index_version_id: int
     relation_snapshot_id: int
     ranking_version: str
+    slot_policy_version: str = "v2"
 
 
 class BundleStatus(StrEnum):
@@ -69,11 +70,12 @@ class ReleaseStoreError(Exception):
         return self.code
 
 
-def key_values(key: ReleaseKey) -> tuple[int, int, int, str]:
+def key_values(key: ReleaseKey) -> tuple[int, int, int, str, str]:
     """Project one key into canonical SQL parameter order."""
     return (
         key.materialization_id,
         key.index_version_id,
         key.relation_snapshot_id,
         key.ranking_version,
+        key.slot_policy_version,
     )

@@ -15,9 +15,15 @@ ALLOWED_STATUSES: Final = frozenset(
     {
         "incompatible-price",
         "insufficient-comparator",
+        "live-search-truncated",
         "no-evidence",
         "partial-attribute",
         "stale",
+        "same-corp-slot",
+        "spec-filter-active",
+        "spec-source-attr",
+        "spec-source-option",
+        "spec-source-spec",
         "sync-failed-last-good",
     }
 )

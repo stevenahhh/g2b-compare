@@ -59,13 +59,13 @@ _RANGE_RE: Final = re.compile(
 _RELATION_RE: Final = re.compile(
     "".join(
         (
-            rf"^(?P<number>{NUMBER_WITH_MAN})(?P<unit>{UNIT_PATTERN})\s*",
+            rf"^(?P<number>-?{NUMBER_WITH_MAN})(?P<unit>{UNIT_PATTERN})\s*",
             r"(?P<relation>이상|이하|초과|미만|>=|<=|>|<)$",
         ),
     ),
 )
 _SCALAR_RE: Final = re.compile(
-    rf"^(?P<number>{NUMBER_WITH_MAN})(?P<unit>{UNIT_PATTERN})$",
+    rf"^(?P<number>-?{NUMBER_WITH_MAN})(?P<unit>{UNIT_PATTERN})$",
 )
 _NEGATIVE_RE: Final = re.compile(
     "".join(
@@ -100,7 +100,12 @@ _RELATIONS: Final = {
 
 
 def _canonical_value(number: str, unit: Unit, raw: str) -> Decimal:
-    return require_positive(parse_number(number), raw=raw) * unit.factor
+    negative = number.startswith("-")
+    value = parse_number(number[1:] if negative else number)
+    if unit.dimension == "temperature":
+        signed = -value if negative else value
+        return signed * unit.factor
+    return require_positive(value, raw=raw) * unit.factor
 
 
 def _span(source: ProtectedSpan, kind: SpecKind) -> SpecSpan:
@@ -234,7 +239,9 @@ def _reject_invalid(raw: str) -> None:
     negative = _NEGATIVE_RE.search(raw)
     if negative is not None:
         value = parse_number(negative.group("number"))
-        raise InvalidQuantityError(negative.group(0), -value, negative=True)
+        unit = resolve_unit(negative.group("unit"))
+        if unit.dimension != "temperature":
+            raise InvalidQuantityError(negative.group(0), -value, negative=True)
     korean_number = _KOREAN_NUMBER_RE.search(raw)
     if korean_number is not None:
         raise UnsupportedNumberError(korean_number.group("number"), pure_korean=True)

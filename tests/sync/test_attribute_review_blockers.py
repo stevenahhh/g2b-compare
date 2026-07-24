@@ -55,7 +55,7 @@ def test_review_quota_reservation_is_bound_to_http_dispatch(tmp_path: Path) -> N
             LEDGER_INSERT,
             (
                 (Operation.GET_PRODUCT_INDIVIDUAL_ATTRIBUTE, attempted_at, "2026-07-16")
-                for _index in range(899)
+                for _index in range(9999)
             ),
         )
     response = ResponseStub(200, attribute_body())
@@ -65,14 +65,14 @@ def test_review_quota_reservation_is_bound_to_http_dispatch(tmp_path: Path) -> N
     _ = adapter.fetch_page(AttributeRequest(1, "22065235", 1, 10))
     with pytest.raises(AttributeQuotaError, match="quota-ceiling"):
         _ = adapter.fetch_page(AttributeRequest(2, "22065235", 1, 10))
-    assert requester.dispatch_counts == [900]
+    assert requester.dispatch_counts == [10_000]
 
     resumed_at = NOW_DT + timedelta(hours=24, microseconds=1)
     resumed = LedgerRequester(database, response)
     resumed_adapter = make_adapter(database, tmp_path / "raw", resumed, resumed_at)
     _ = resumed_adapter.fetch_page(AttributeRequest(2, "22065235", 1, 10))
     cutoff = (resumed_at - timedelta(hours=24) + timedelta(microseconds=1)).isoformat()
-    assert resumed.dispatch_counts == [901]
+    assert resumed.dispatch_counts == [10_001]
     assert (
         IngestRepository(database).quota_usage(
             Operation.GET_PRODUCT_INDIVIDUAL_ATTRIBUTE, cutoff

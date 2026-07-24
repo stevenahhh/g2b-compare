@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
     from .attributes import ProductAttribute
     from .products import CanonicalProduct
+    from .spec_index import CategoryParseStat, ProductSpecRow
 
 NOT_BUILDING: Final = "candidate is not building"
 DUPLICATE_PRODUCT: Final = "candidate product duplicate"
@@ -37,6 +38,8 @@ class CandidateRows:
     products: tuple[CanonicalProduct, ...]
     attributes: tuple[CandidateAttribute, ...]
     covered_product_ids: tuple[str, ...]
+    specs: tuple[ProductSpecRow, ...] = ()
+    parse_stats: tuple[CategoryParseStat, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,8 +94,8 @@ def _persist_candidate(
                 """INSERT INTO products(
                        materialization_id, product_id, category_no,
                        detail_category_no, product_name_raw, product_name_key,
-                       active, data_as_of
-                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                       active, data_as_of, spec_name, detail, characteristic
+                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     materialization_id,
                     product.product_id,
@@ -102,6 +105,9 @@ def _persist_candidate(
                     product.product_name_key,
                     int(product.active),
                     product.data_as_of,
+                    product.spec_name,
+                    product.detail,
+                    product.characteristic,
                 ),
             )
             for offer in product.offers:
@@ -112,8 +118,8 @@ def _persist_candidate(
                     """INSERT INTO catalog_offers(
                            materialization_id, operation, offer_key, product_id,
                            contract_price_won, unit_raw, unit_key, active,
-                           source_updated_at
-                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                           source_updated_at, contract_corp_id
+                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         materialization_id,
                         offer.operation.value,
@@ -124,6 +130,7 @@ def _persist_candidate(
                         unit_key,
                         int(offer.active),
                         offer.source_updated_at,
+                        offer.contract_corp_id or None,
                     ),
                 )
         for item in rows.attributes:
@@ -149,6 +156,40 @@ def _persist_candidate(
                     attribute.parse_status,
                 ),
             )
+        for item in rows.specs:
+            _ = query(
+                connection,
+                """INSERT INTO product_spec_index(
+                       materialization_id,product_id,source_kind,attribute_key,
+                       dimension,relation,value_low,value_high,canonical_unit,ordinal
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    materialization_id,
+                    item.product_id,
+                    item.source_kind,
+                    item.attribute_key,
+                    item.dimension,
+                    item.relation,
+                    item.value_low,
+                    item.value_high,
+                    item.canonical_unit,
+                    item.ordinal,
+                ),
+            )
+        for item in rows.parse_stats:
+            _ = query(
+                connection,
+                """INSERT INTO category_parse_stats VALUES(?,?,?,?,?,?,?)""",
+                (
+                    materialization_id,
+                    item.category_no,
+                    item.detail_category_no,
+                    item.product_count,
+                    item.numeric_span_count,
+                    item.parsed_semantic_count,
+                    item.attribute_covered_count,
+                ),
+            )
         _ = query(
             connection,
             "UPDATE materialization_snapshots SET status = 'complete' WHERE id = ?",
@@ -165,6 +206,8 @@ def _validate(rows: CandidateRows) -> None:
     if not frozenset(rows.covered_product_ids).issubset(product_set):
         raise MaterializationValidationError(INVALID_COVERAGE)
     if any(item.product_id not in product_set for item in rows.attributes):
+        raise MaterializationValidationError(MISSING_ATTRIBUTE_PRODUCT)
+    if any(item.product_id not in product_set for item in rows.specs):
         raise MaterializationValidationError(MISSING_ATTRIBUTE_PRODUCT)
 
 

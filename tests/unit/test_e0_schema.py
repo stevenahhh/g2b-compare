@@ -27,7 +27,7 @@ def write_e0_package(root: Path) -> tuple[Path, Path]:
         '{"record_id":"r2","stratum":"negative","label":0}',
     )
     payload = ("\n".join(records) + "\n").encode()
-    records_path.write_bytes(payload)
+    _ = records_path.write_bytes(payload)
     manifest = {
         "schema_version": "e0-v1",
         "total_count": 2,
@@ -42,7 +42,7 @@ def write_e0_package(root: Path) -> tuple[Path, Path]:
         ],
     }
     manifest_path = root / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    _ = manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     return manifest_path, records_path
 
 
@@ -74,7 +74,7 @@ def test_e0_validator_rejects_missing_declared_file(tmp_path: Path) -> None:
 
     # When/Then: file presence validation fails
     with pytest.raises(E0MissingFileError, match="missing"):
-        validate_e0_package(manifest_path)
+        _ = validate_e0_package(manifest_path)
 
 
 def test_e0_validator_rejects_bad_schema(tmp_path: Path) -> None:
@@ -82,11 +82,11 @@ def test_e0_validator_rejects_bad_schema(tmp_path: Path) -> None:
     manifest_path, _ = write_e0_package(tmp_path)
     manifest = load_manifest(manifest_path)
     manifest["schema_version"] = "e0-v0"
-    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    _ = manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     # When/Then: schema parsing fails at the boundary
     with pytest.raises(E0SchemaError, match="schema"):
-        validate_e0_package(manifest_path)
+        _ = validate_e0_package(manifest_path)
 
 
 def test_e0_validator_rejects_bad_count(tmp_path: Path) -> None:
@@ -94,11 +94,11 @@ def test_e0_validator_rejects_bad_count(tmp_path: Path) -> None:
     manifest_path, _ = write_e0_package(tmp_path)
     manifest = load_manifest(manifest_path)
     manifest["total_count"] = 3
-    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    _ = manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     # When/Then: exact count validation fails
     with pytest.raises(E0CountError, match="count"):
-        validate_e0_package(manifest_path)
+        _ = validate_e0_package(manifest_path)
 
 
 def test_e0_validator_rejects_bad_stratum(tmp_path: Path) -> None:
@@ -106,18 +106,18 @@ def test_e0_validator_rejects_bad_stratum(tmp_path: Path) -> None:
     manifest_path, _ = write_e0_package(tmp_path)
     manifest = load_manifest(manifest_path)
     manifest["strata"] = {"positive": 2}
-    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    _ = manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     # When/Then: exact stratum validation fails
     with pytest.raises(E0StratumError, match="stratum"):
-        validate_e0_package(manifest_path)
+        _ = validate_e0_package(manifest_path)
 
 
 def test_e0_validator_rejects_tampered_hash(tmp_path: Path) -> None:
     # Given: a valid manifest followed by tampering
     manifest_path, records_path = write_e0_package(tmp_path)
-    records_path.write_text("tampered\n", encoding="utf-8")
+    _ = records_path.write_text("tampered\n", encoding="utf-8")
 
     # When/Then: the declared content hash fails
     with pytest.raises(E0HashError, match="hash"):
-        validate_e0_package(manifest_path)
+        _ = validate_e0_package(manifest_path)

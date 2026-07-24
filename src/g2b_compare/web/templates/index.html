@@ -1,21 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="search-panel" aria-labelledby="search-title">
-  <p class="eyebrow">물품 탐색</p>
-  <h1 id="search-title">유사물품 검색</h1>
-  <form id="search-form" method="get" action="/">
-    <label>물품명<input name="product_name" required maxlength="100" value="{{ form.product_name|default('') }}"{% if field_error %} aria-invalid="true" aria-describedby="product-name-error"{% endif %}></label>
+  <p class="eyebrow">{% if live_mode %}실시간 물품 탐색{% else %}물품 탐색{% endif %}</p>
+  <h1 id="search-title">{% if live_mode %}실시간 유사물품 검색{% else %}유사물품 검색{% endif %}</h1>
+  <form id="search-form" method="get" action="{{ form_action|default('/') }}">
+    <label>물품명<input name="product_name" required maxlength="100" placeholder="예: 영상감시장치" value="{{ form.product_name|default('') }}"{% if field_error %} aria-invalid="true" aria-describedby="product-name-error"{% endif %}></label>
     {% if field_error %}<p class="field-error" id="product-name-error">{{ field_error }}</p>{% endif %}
-    <label>규격 및 조건<textarea name="spec_text" maxlength="500">{{ form.spec_text|default('') }}</textarea></label>
-    <div class="form-row">
-      <label>목표가격(원)<input name="target_price_won" inputmode="numeric" value="{{ form.target_price_won|default('') }}"></label>
-      <label>단위<input name="price_unit" value="{{ form.price_unit|default('') }}"></label>
-    </div>
-    <div class="form-row">
-      <label>허용범위(%)<input name="price_tolerance_pct" inputmode="decimal" value="{{ form.price_tolerance_pct|default('') }}"></label>
-      <label>대분류 코드<input name="category_code" value="{{ form.category_code|default('') }}"></label>
-    </div>
-    <label>세부분류 코드<input name="detail_category_code" value="{{ form.detail_category_code|default('') }}"></label>
+    <label>원하는 스펙·옵션<textarea name="spec_text" maxlength="500" placeholder="예: 800만화소, 실외형">{{ form.spec_text|default('') }}</textarea></label>
+    {% if live_mode %}
+    <label>정렬 기준
+      <select name="sort">
+        <option value="official"{% if form.sort|default('official') == 'official' %} selected{% endif %}>나라장터 기본순</option>
+        <option value="recent"{% if form.sort == 'recent' %} selected{% endif %}>최신등록순</option>
+        <option value="price_asc"{% if form.sort == 'price_asc' %} selected{% endif %}>낮은가격순</option>
+        <option value="price_desc"{% if form.sort == 'price_desc' %} selected{% endif %}>높은가격순</option>
+      </select>
+    </label>
+    {% endif %}
+    <details class="advanced-filters"{% if form.target_price_won or form.price_unit or form.price_tolerance_pct or form.category_code or form.detail_category_code or form.spec_filter %} open{% endif %}>
+      <summary>고급 필터</summary>
+      <div class="advanced-fields">
+        {% if not live_mode %}
+        <label>스펙 정확 필터<input name="spec_filter" maxlength="500" placeholder="예: 800만화소, 500GB 이상" value="{{ form.spec_filter|default('') }}"></label>
+        {% endif %}
+        <div class="form-row">
+          <label>목표가격(원)<input name="target_price_won" inputmode="numeric" value="{{ form.target_price_won|default('') }}"></label>
+          <label>단위<input name="price_unit" placeholder="예: 조" value="{{ form.price_unit|default('') }}"></label>
+        </div>
+        <div class="form-row">
+          <label>허용범위(%)<input name="price_tolerance_pct" inputmode="decimal" value="{{ form.price_tolerance_pct|default('') }}"></label>
+          <label>대분류 코드<input name="category_code" value="{{ form.category_code|default('') }}"></label>
+        </div>
+        <label>세부분류 코드<input name="detail_category_code" value="{{ form.detail_category_code|default('') }}"></label>
+      </div>
+    </details>
     <button type="submit">검색</button>
   </form>
 </section>
