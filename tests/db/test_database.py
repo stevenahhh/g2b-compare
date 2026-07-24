@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import sqlite3
 from typing import TYPE_CHECKING
 
 from g2b_compare.db.connection import BUSY_TIMEOUT_MS, connect
@@ -37,6 +39,28 @@ def test_migration_accepts_crlf_checkout(tmp_path: Path) -> None:
 
     database = tmp_path / "database.sqlite3"
     migrate(database, MIGRATION_DIRECTORY)
+    migrate(database, migrations)
+
+
+def test_migration_accepts_legacy_crlf_receipts(tmp_path: Path) -> None:
+    migrations = tmp_path / "migrations"
+    migrations.mkdir()
+    for source in MIGRATION_DIRECTORY.glob("*.sql"):
+        target = migrations / source.name
+        target.write_bytes(
+            source.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+        )
+
+    database = tmp_path / "database.sqlite3"
+    migrate(database, MIGRATION_DIRECTORY)
+    with sqlite3.connect(database) as connection:
+        for source in migrations.glob("*.sql"):
+            legacy_sha = hashlib.sha256(source.read_bytes()).hexdigest()
+            _ = connection.execute(
+                "UPDATE schema_migrations SET source_sha = ? WHERE version = ?",
+                (legacy_sha, source.stem),
+            )
+        connection.commit()
     migrate(database, migrations)
 
 

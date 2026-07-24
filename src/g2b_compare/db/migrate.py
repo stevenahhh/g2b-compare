@@ -55,8 +55,10 @@ def migrate(database: Path, migration_directory: Path = MIGRATION_DIRECTORY) -> 
 
 
 def _apply_migration(connection: sqlite3.Connection, path: Path) -> None:
-    source = path.read_bytes().replace(b"\r\n", b"\n")
+    raw_source = path.read_bytes()
+    source = raw_source.replace(b"\r\n", b"\n")
     source_sha = hashlib.sha256(source).hexdigest()
+    legacy_source_sha = hashlib.sha256(raw_source).hexdigest()
     version = path.stem
     applied = query(
         connection,
@@ -64,7 +66,7 @@ def _apply_migration(connection: sqlite3.Connection, path: Path) -> None:
         (version,),
     ).fetchone()
     if applied is not None:
-        if applied != (source_sha,):
+        if applied[0] not in {source_sha, legacy_source_sha}:
             raise MigrationDriftError(
                 version=version,
                 expected_sha=str(applied[0]),
