@@ -259,7 +259,7 @@
   {#if error}<p class="state-message state-message--error">{error}</p>{/if}
   <p class="catalog-summary" aria-live="polite">
     {#if loading}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>검색 중</span>
-    {:else}코리아넷 본품 {result.total_count.toLocaleString()}건{/if}
+    {:else}본품 {result.total_count.toLocaleString()}건{/if}
   </p>
   <div class:selected-column={selected} class="catalog-columns">
     <div class="catalog-scroll" bind:this={listElement} onscroll={scrollCatalog} aria-busy={loading}>

@@ -239,7 +239,7 @@
       if (version === searchVersion) {
         productResults = result.items;
         productTotal = result.total_count;
-        if (!productResults.length) searchError = "일치하는 코리아넷 물품 없음.";
+        if (!productResults.length) searchError = "일치하는 물품 없음.";
       }
       try { await putCatalogCache(cacheKey, result); } catch {}
     } catch (caught) {
@@ -423,7 +423,7 @@
   </section>
   {#if error}<p class="state-message state-message--error" role="status">{error}</p>{/if}
   <div class="document-workspace">
-  <section class="panel catalog-workspace document-catalog" aria-label="코리아넷 물품 검색">
+  <section class="panel catalog-workspace document-catalog" aria-label="물품 검색">
     <div class="document-search-anchor" bind:this={searchAnchor}>
       <div class="catalog-controls">
         <label for="document-product-search">
@@ -450,7 +450,7 @@
           </select>
         </label>
       </div>
-      <div id="document-search-results" class="document-search-overlay" class:is-open={searchOpen} role="region" aria-label="코리아넷 물품 검색 결과">
+      <div id="document-search-results" class="document-search-overlay" class:is-open={searchOpen} role="region" aria-label="물품 검색 결과">
           <div class="document-search-overlay__header">
             <p class="catalog-summary" aria-live="polite">
               {#if searching}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>검색 중</span>
