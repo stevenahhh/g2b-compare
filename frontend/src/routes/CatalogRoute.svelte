@@ -7,8 +7,8 @@
   let { search = "", onSearch = () => {}, onFailure = () => {}, onSynced = () => {} } = $props();
   const PAGE_SIZE = 30;
   const KOREANET = "주식회사 코리아넷";
-  const CATALOG_ROW_HEIGHT = 156;
-  const OPTION_ROW_HEIGHT = 112;
+  const CATALOG_ROW_HEIGHT = 128;
+  const OPTION_ROW_HEIGHT = 80;
   const OVERSCAN = 4;
   const RELATION_KINDS = ["selection", "additional", "construction"];
   const emptyPage = () => ({ items: [], page: 1, page_count: 1, total_count: 0 });
@@ -368,7 +368,7 @@
   .option-group { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
   .option-group + .option-group { border-block-start: 1px solid var(--line); }
   .option-panel__eyebrow { display: block; color: var(--muted); font-size: 11px; }
-  .option-group__header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 180px); gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-3); border-block-end: 1px solid var(--line); }
+  .option-group__header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 180px); gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-3); border-block-end: 1px solid var(--line); background: var(--surface-subtle); }
   .option-group h3 { margin: 0; font-size: 12px; }
   .option-group h3 span { margin-inline-start: var(--space-1); color: var(--muted); font-weight: 400; }
   .option-group__header label { margin: 0; }
@@ -387,4 +387,10 @@
   .option-row .catalog-card__actions .button, .option-row .g2b-link { min-height: 32px; padding-inline: var(--space-2); font-size: 11px; }
   .option-empty { padding: var(--space-3); }
   .option-loading { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); color: var(--muted); font-size: 12px; }
+
+  @media (max-width: 899px) {
+    .catalog-columns.selected-column { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(360px, 0.8fr) minmax(480px, 1fr); }
+    .catalog-columns.selected-column .catalog-scroll { block-size: 360px; }
+    .catalog-columns.selected-column .option-panel { block-size: 480px; border-block-start: 0; }
+  }
 </style>
