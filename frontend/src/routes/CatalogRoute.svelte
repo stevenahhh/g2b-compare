@@ -360,22 +360,22 @@
 <style>
   .catalog-card__select { align-self: stretch; align-items: center; }
   .catalog-columns.selected-column .catalog-card { grid-template-columns: minmax(0, 1fr) 112px; }
-  .option-panel { display: grid; block-size: clamp(560px, calc(100dvh - 264px), 760px); grid-template-rows: auto minmax(0, 1fr); }
-  .option-panel__header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: 1px solid var(--line); background: var(--surface-subtle); }
-  .option-panel__header h2 { min-width: 0; margin: 0; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .option-panel__header button { min-height: 36px; padding-inline: var(--space-3); }
+  .option-panel { display: grid; block-size: clamp(480px, calc(100dvh - 178px), 820px); grid-template-rows: auto minmax(0, 1fr); }
+  .option-panel__header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-block-end: 1px solid var(--line); background: var(--surface-subtle); }
+  .option-panel__header h2 { min-width: 0; margin: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .option-panel__header button { min-height: 32px; padding-inline: var(--space-3); }
   .option-groups { display: grid; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); }
   .option-group { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
   .option-group + .option-group { border-block-start: 1px solid var(--line); }
   .option-panel__eyebrow { display: block; color: var(--muted); font-size: 11px; }
-  .option-group__header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 220px); gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-4); border-block-end: 1px solid var(--line); }
-  .option-group h3 { margin: 0; font-size: 13px; }
+  .option-group__header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 180px); gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-3); border-block-end: 1px solid var(--line); }
+  .option-group h3 { margin: 0; font-size: 12px; }
   .option-group h3 span { margin-inline-start: var(--space-1); color: var(--muted); font-weight: 400; }
   .option-group__header label { margin: 0; }
   .option-group__header input { min-height: 32px; padding-inline: var(--space-2); font-size: 12px; }
   .option-panel .option-scroll { block-size: auto; min-height: 0; padding-inline-end: 0; }
-  .option-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 112px; block-size: 112px; align-content: center; align-items: center; padding: var(--space-2) var(--space-3); }
-  .option-row > img { width: 64px; height: 64px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius-compact); background: var(--surface); }
+  .option-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 104px; block-size: 80px; align-content: center; align-items: center; padding: var(--space-2) var(--space-3); }
+  .option-row > img { width: 44px; height: 44px; object-fit: contain; border: 1px solid var(--line); border-radius: 0; background: var(--surface); }
   .option-row__details { min-width: 0; }
   .option-row__details > strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .option-row__details > span { display: block; margin-block-start: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -385,6 +385,6 @@
   .option-row__price { color: var(--ink) !important; font-weight: 700; font-variant-numeric: tabular-nums; }
   .option-row .catalog-card__actions { gap: var(--space-1); }
   .option-row .catalog-card__actions .button, .option-row .g2b-link { min-height: 32px; padding-inline: var(--space-2); font-size: 11px; }
-  .option-empty { padding: var(--space-4); }
-  .option-loading { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-4); color: var(--muted); font-size: 12px; }
+  .option-empty { padding: var(--space-3); }
+  .option-loading { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); color: var(--muted); font-size: 12px; }
 </style>

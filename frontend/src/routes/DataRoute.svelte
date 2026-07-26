@@ -152,7 +152,7 @@
   }
 
   .data-count {
-    min-block-size: 120px;
+    min-block-size: 72px;
     align-content: center;
   }
 

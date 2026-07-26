@@ -713,7 +713,7 @@
     all: unset;
     display: inline-block;
     cursor: text;
-    border-radius: var(--radius-2, 6px);
+    border-radius: 0;
     padding-inline: var(--space-1, 4px);
   }
   .page-title-edit:hover,
@@ -742,18 +742,16 @@
   }
 
   .document-catalog,
-  .document-sheet {
-    margin-block-start: var(--space-4);
-  }
+  .document-sheet { margin-block-start: var(--space-2); }
 
   .document-workspace {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-3);
+    gap: 0;
   }
 
   .document-catalog {
-    padding: var(--space-3);
+    padding: var(--space-2);
   }
 
   .document-catalog .catalog-controls {
@@ -782,7 +780,7 @@
 
   .document-search-overlay {
     position: absolute;
-    inset-block-start: calc(100% + var(--space-2));
+    inset-block-start: 100%;
     inset-inline: 0;
     z-index: 10;
     display: grid;
@@ -790,9 +788,9 @@
     block-size: min(620px, calc(100dvh - 220px));
     padding: var(--space-2);
     border: 1px solid var(--line);
-    border-radius: var(--radius-surface);
+    border-radius: 0;
     background: var(--surface);
-    box-shadow: 0 var(--space-2) var(--space-6) color-mix(in srgb, var(--ink) 14%, transparent);
+    box-shadow: 0 var(--space-2) var(--space-4) color-mix(in srgb, var(--ink) 12%, transparent);
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -808,7 +806,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-2);
+    gap: 0;
     min-block-size: 36px;
   }
 
@@ -852,12 +850,12 @@
     gap: var(--space-2);
     padding: var(--space-2);
     border: 1px solid var(--line);
-    border-radius: var(--radius-control);
+    border-radius: 0;
     background: var(--surface);
   }
 
   .document-search-overlay .catalog-card + .catalog-card {
-    margin-block-start: var(--space-2);
+    margin-block-start: -1px;
   }
 
   .document-search-overlay .catalog-card:hover {
@@ -914,7 +912,7 @@
     grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
     border: 1px solid var(--line);
-    border-radius: var(--radius-control);
+    border-radius: 0;
     background: var(--surface);
   }
 
@@ -945,9 +943,9 @@
   .document-option-group h3 { margin: 0; padding: var(--space-2) var(--space-3); font-size: 12px; }
   .document-option-group h3 span { color: var(--muted); font-weight: 400; }
   .document-option-scroll { min-block-size: 0; overflow: auto; }
-  .document-option-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 94px; align-items: center; gap: var(--space-2); min-block-size: 76px; padding: var(--space-2) var(--space-3); }
+  .document-option-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) 90px; align-items: center; gap: var(--space-2); min-block-size: 64px; padding: var(--space-2) var(--space-3); }
   .document-option-row + .document-option-row { border-block-start: 1px solid var(--line); }
-  .document-option-row img { inline-size: 36px; block-size: 36px; object-fit: contain; background: var(--canvas); }
+  .document-option-row img { inline-size: 32px; block-size: 32px; object-fit: contain; background: var(--canvas); }
   .document-option-row > div:nth-child(2) { min-inline-size: 0; }
   .document-option-row strong, .document-option-row span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .document-option-row strong { font-size: 12px; }
@@ -987,7 +985,7 @@
   }
 
   .document-table {
-    min-inline-size: 2500px;
+    min-inline-size: 2200px;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
@@ -998,8 +996,8 @@
     padding: var(--space-3);
     border-inline-end: 1px solid var(--line);
     border-block-end: 1px solid var(--line);
-    font-size: 13px;
-    line-height: 1.45;
+    font-size: 12px;
+    line-height: 1.35;
     overflow-wrap: anywhere;
     vertical-align: middle;
   }
@@ -1016,22 +1014,22 @@
 
   .document-table thead tr:first-child th {
     inset-block-start: 0;
-    block-size: 44px;
+    block-size: 36px;
   }
 
   .document-table thead tr:nth-child(2) th {
-    inset-block-start: 44px;
-    block-size: 44px;
+    inset-block-start: 36px;
+    block-size: 36px;
   }
 
   .document-table tbody tr {
-    min-block-size: 84px;
+    min-block-size: 64px;
   }
 
   .document-sequence {
     display: grid;
     justify-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
     text-align: center;
   }
 
@@ -1076,7 +1074,7 @@
     inline-size: 100%;
     padding: 0;
     border: 0;
-    border-radius: var(--radius-compact);
+    border-radius: 0;
     color: inherit;
     background: transparent;
     font: inherit;
@@ -1098,10 +1096,10 @@
     overflow: auto;
     padding: var(--space-3);
     border: 1px solid var(--line);
-    border-radius: var(--radius-control);
+    border-radius: 0;
     color: var(--ink);
     background: var(--surface);
-    box-shadow: 0 var(--space-2) var(--space-6) color-mix(in srgb, var(--ink) 14%, transparent);
+    box-shadow: 0 var(--space-2) var(--space-4) color-mix(in srgb, var(--ink) 12%, transparent);
     font-size: 13px;
     line-height: 1.55;
     pointer-events: none;
@@ -1143,7 +1141,7 @@
   }
 
   .document-empty-row td {
-    block-size: 72px;
+    block-size: 56px;
   }
 
   .document-table .loading-placeholder {
@@ -1151,13 +1149,13 @@
     margin-block: var(--space-1);
   }
 
-  .col-sequence { inline-size: 70px; }
-  .col-name { inline-size: 180px; }
-  .col-spec { inline-size: 300px; }
-  .col-unit { inline-size: 70px; }
-  .col-price { inline-size: 120px; }
-  .col-company { inline-size: 130px; }
-  .col-company-spec { inline-size: 300px; }
-  .col-id { inline-size: 130px; }
-  .col-note { inline-size: 120px; }
+  .col-sequence { inline-size: 56px; }
+  .col-name { inline-size: 150px; }
+  .col-spec { inline-size: 240px; }
+  .col-unit { inline-size: 56px; }
+  .col-price { inline-size: 100px; }
+  .col-company { inline-size: 110px; }
+  .col-company-spec { inline-size: 240px; }
+  .col-id { inline-size: 110px; }
+  .col-note { inline-size: 100px; }
 </style>
