@@ -91,5 +91,5 @@
 {/if}
 
 <style>
-  .estimate-state { margin-block-start: var(--space-3); }
+  .estimate-state { margin-block-start: var(--space-5); }
 </style>
