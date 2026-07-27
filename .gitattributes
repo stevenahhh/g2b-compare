@@ -1,3 +1,5 @@
 tests/fixtures/**/*.json text eol=lf
 tests/acceptance/provenance/*.json text eol=lf
 src/g2b_compare/db/migrations/*.sql text eol=lf
+*.pdf binary
+*.png binary
