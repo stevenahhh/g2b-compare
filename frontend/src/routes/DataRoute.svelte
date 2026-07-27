@@ -152,8 +152,7 @@
   }
 
   .data-count {
-    min-block-size: 120px;
-    align-content: center;
+    min-block-size: 92px;
   }
 
   .legacy-tools__label {

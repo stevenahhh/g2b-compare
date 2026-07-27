@@ -7,10 +7,19 @@
   let { search = "", onSearch = () => {}, onFailure = () => {}, onSynced = () => {} } = $props();
   const PAGE_SIZE = 30;
   const KOREANET = "주식회사 코리아넷";
-  const CATALOG_ROW_HEIGHT = 156;
+  // Cards are uniform-height (virtualisation math depends on it), so the row
+  // height is derived from how many rows the widest attribute set needs at the
+  // currently measured card width. Guessing from panel state alone clipped
+  // attributes whenever the window was narrow.
+  const CARD_BASE_HEIGHT = 108;
+  const ATTRIBUTE_ROW_HEIGHT = 48;
+  const ATTRIBUTE_COLUMN_MIN = 140;
+  const ATTRIBUTE_COLUMN_GAP = 16;
   const OPTION_ROW_HEIGHT = 112;
+  const OPTION_VIEWPORT_HEIGHT = 520;
   const OVERSCAN = 4;
   const RELATION_KINDS = ["selection", "additional", "construction"];
+  const RELATION_LABELS = { selection: "선택품목", additional: "추가선택품목", construction: "공사" };
   const emptyPage = () => ({ items: [], page: 1, page_count: 1, total_count: 0 });
   let sort = $state("price_asc");
   let page = $state(1);
@@ -24,9 +33,10 @@
   let loading = $state(false);
   let error = $state("");
   let listElement;
-  let selectionElement = $state();
-  let additionalElement = $state();
-  let constructionElement = $state();
+  let gridElement = $state();
+  let cardWidth = $state(0);
+  let optionElement = $state();
+  let activeKind = $state("selection");
   let restored = $state(false);
   let requestVersion = 0;
   const optionRequestVersions = { selection: 0, additional: 0, construction: 0 };
@@ -36,10 +46,26 @@
   let loadedSort = null;
   const catalogKey = (requestedPage) => `catalog:v3:${KOREANET}:${search}:${sort}:${requestedPage}`;
   const optionKey = (kind, query, requestedPage) => `relations:v3:${KOREANET}:${kind}:${query}:${sort}:${requestedPage}`;
-  const catalogWindow = $derived(windowFor(result.items, catalogScrollTop, CATALOG_ROW_HEIGHT, 560));
-  const selectionWindow = $derived(windowFor(options.selection.items, optionScrollTop.selection, OPTION_ROW_HEIGHT, 180));
-  const additionalWindow = $derived(windowFor(options.additional.items, optionScrollTop.additional, OPTION_ROW_HEIGHT, 280));
-  const constructionWindow = $derived(windowFor(options.construction.items, optionScrollTop.construction, OPTION_ROW_HEIGHT, 180));
+  const maxAttributeCount = $derived(
+    result.items.reduce((most, item) => Math.max(most, (item.attributes ?? []).length), 0),
+  );
+  const attributeColumns = $derived.by(() => {
+    const details = cardWidth - 32 - 3 - (selected ? 132 : 150) - 12 - 72 - 12;
+    if (details <= 0) return 3;
+    const fit = Math.floor(
+      (details + ATTRIBUTE_COLUMN_GAP) / (ATTRIBUTE_COLUMN_MIN + ATTRIBUTE_COLUMN_GAP),
+    );
+    return Math.max(1, fit);
+  });
+  const catalogRowHeight = $derived(
+    CARD_BASE_HEIGHT
+      + Math.max(1, Math.ceil(maxAttributeCount / attributeColumns)) * ATTRIBUTE_ROW_HEIGHT,
+  );
+  const catalogWindow = $derived(windowFor(result.items, catalogScrollTop, catalogRowHeight, 560));
+  const activeOptions = $derived(options[activeKind]);
+  const activeWindow = $derived(
+    windowFor(activeOptions.items, optionScrollTop[activeKind], OPTION_ROW_HEIGHT, OPTION_VIEWPORT_HEIGHT),
+  );
 
   function id() { return [...crypto.getRandomValues(new Uint8Array(16))].map((value) => value.toString(16).padStart(2, "0")).join(""); }
   function titleFor(sequence) {
@@ -70,6 +96,7 @@
       selectedProductId: selected?.product_id ?? null,
       scrollTop: catalogScrollTop,
       optionScrollTop: { ...optionScrollTop },
+      activeKind,
     });
   }
   function mergeCatalogPage(previous, incoming, requestedPage) {
@@ -131,6 +158,7 @@
     optionPages = { selection: 1, additional: 1, construction: 1 };
     relationSearch = { selection: "", additional: "", construction: "" };
     optionScrollTop = { selection: 0, additional: 0, construction: 0 };
+    activeKind = "selection";
     await saveView();
     await Promise.all(RELATION_KINDS.map(async (kind) => {
       const lastPage = Math.max(1, restoredPages[kind] ?? 1);
@@ -180,8 +208,9 @@
       void loadCatalog(page);
     }
   }
-  function scrollOptions(kind) {
-    const element = kind === "selection" ? selectionElement : kind === "additional" ? additionalElement : constructionElement;
+  function scrollOptions() {
+    const element = optionElement;
+    const kind = activeKind;
     if (!element) return;
     optionScrollTop = { ...optionScrollTop, [kind]: element.scrollTop };
     void saveView();
@@ -191,6 +220,14 @@
       void loadOptions(kind, nextPage);
     }
   }
+  function showKind(kind) {
+    if (activeKind === kind) return;
+    activeKind = kind;
+    void saveView();
+    requestAnimationFrame(() => {
+      if (optionElement) optionElement.scrollTop = optionScrollTop[kind] ?? 0;
+    });
+  }
   function relationStatus(item) {
     if (!selected) return "";
     if (item.parent_product_id === selected.product_id) return `연결됨 · 본품 ${selected.name} (${selected.product_id})`;
@@ -199,6 +236,11 @@
   function isRelated(item) { return selected && item.parent_product_id === selected.product_id; }
 
   onMount(() => {
+    const observer = new ResizeObserver(([entry]) => { cardWidth = entry.contentRect.width; });
+    if (gridElement) {
+      cardWidth = gridElement.getBoundingClientRect().width;
+      observer.observe(gridElement);
+    }
     void getAppState("catalogView").then(async (state) => {
       let initialSearch = search;
       let initialSort = sort;
@@ -216,13 +258,12 @@
           if (item) await select(item, state.optionPages ?? { selection: 1, additional: 1, construction: 1 });
         }
         relationSearch = { ...relationSearch, ...(state.relationSearch ?? {}) };
+        if (RELATION_KINDS.includes(state.activeKind)) activeKind = state.activeKind;
         catalogScrollTop = state.scrollTop ?? 0;
         optionScrollTop = typeof state.optionScrollTop === "object" ? { selection: 0, additional: 0, construction: 0, ...state.optionScrollTop } : { selection: state.optionScrollTop ?? 0, additional: state.optionScrollTop ?? 0, construction: state.optionScrollTop ?? 0 };
         requestAnimationFrame(() => {
           if (listElement) listElement.scrollTop = catalogScrollTop;
-          if (selectionElement) selectionElement.scrollTop = optionScrollTop.selection;
-          if (additionalElement) additionalElement.scrollTop = optionScrollTop.additional;
-          if (constructionElement) constructionElement.scrollTop = optionScrollTop.construction;
+          if (optionElement) optionElement.scrollTop = optionScrollTop[activeKind] ?? 0;
         });
       } else {
         await loadCatalog(1);
@@ -236,6 +277,7 @@
       restored = true;
       void loadCatalog(1);
     });
+    return () => observer.disconnect();
   });
   $effect(() => {
     if (!restored || (search === loadedSearch && sort === loadedSort)) return;
@@ -263,7 +305,7 @@
   </p>
   <div class:selected-column={selected} class="catalog-columns">
     <div class="catalog-scroll" bind:this={listElement} onscroll={scrollCatalog} aria-busy={loading}>
-      <div class="catalog-grid">
+      <div class="catalog-grid" bind:this={gridElement} style:--catalog-row={`${catalogRowHeight}px`}>
         {#if loading && result.items.length === 0}
           {#each [1, 2, 3] as placeholder}
             <article class="loading-card" aria-hidden="true">
@@ -298,59 +340,41 @@
     {#if selected}
       <aside class="option-panel" aria-labelledby="option-title">
         <header class="option-panel__header"><div><span class="option-panel__eyebrow">선택한 본품</span><h2 id="option-title">{selected.name} · {selected.product_id}</h2></div><button class="button--secondary" type="button" onclick={closeOptions}>닫기</button></header>
-        <div class="option-groups">
-          <section class="option-group" aria-labelledby="selection-title">
-            <div class="option-group__header"><h3 id="selection-title">선택품목 <span>{options.selection.total_count.toLocaleString()}건</span></h3><label><span class="visually-hidden">선택품목 검색</span><input type="search" value={relationSearch.selection} placeholder="선택품목 검색" oninput={(event) => changeRelationSearch("selection", event)} /></label></div>
-            <div class="option-scroll" bind:this={selectionElement} onscroll={() => scrollOptions("selection")} aria-busy={optionLoading.selection}>
-              <div class="virtual-spacer" style:height={`${selectionWindow.top}px`}></div>
-              {#each selectionWindow.items as item (`${item.relation_id}:${item.product_id}`)}
-                <article class:option-row--connected={isRelated(item)} class="option-row">
-                  <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
-                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
-                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
-                </article>
-              {/each}
-              <div class="virtual-spacer" style:height={`${selectionWindow.bottom}px`}></div>
-              {#if optionLoading.selection && options.selection.items.length === 0}
-                <div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>선택품목 불러오는 중</span></div>
-              {/if}
-              {#if !optionLoading.selection && options.selection.items.length === 0}<p class="state-message option-empty">선택품목 없음.</p>{/if}
-            </div>
-          </section>
-          <section class="option-group" aria-labelledby="additional-title">
-            <div class="option-group__header"><h3 id="additional-title">추가선택품목 <span>{options.additional.total_count.toLocaleString()}건</span></h3><label><span class="visually-hidden">추가선택품목 검색</span><input type="search" value={relationSearch.additional} placeholder="추가선택품목 검색" oninput={(event) => changeRelationSearch("additional", event)} /></label></div>
-            <div class="option-scroll" bind:this={additionalElement} onscroll={() => scrollOptions("additional")} aria-busy={optionLoading.additional}>
-              <div class="virtual-spacer" style:height={`${additionalWindow.top}px`}></div>
-              {#each additionalWindow.items as item (`${item.relation_id}:${item.product_id}`)}
-                <article class:option-row--connected={isRelated(item)} class="option-row">
-                  <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
-                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
-                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
-                </article>
-              {/each}
-              <div class="virtual-spacer" style:height={`${additionalWindow.bottom}px`}></div>
-              {#if optionLoading.additional && options.additional.items.length === 0}
-                <div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>추가선택품목 불러오는 중</span></div>
-              {/if}
-              {#if !optionLoading.additional && options.additional.items.length === 0}<p class="state-message option-empty">추가선택품목 없음.</p>{/if}
-            </div>
-          </section>
-          <section class="option-group" aria-labelledby="construction-title">
-            <div class="option-group__header"><h3 id="construction-title">공사 <span>{options.construction.total_count.toLocaleString()}건</span></h3><label><span class="visually-hidden">공사 검색</span><input type="search" value={relationSearch.construction} placeholder="공사 검색" oninput={(event) => changeRelationSearch("construction", event)} /></label></div>
-            <div class="option-scroll" bind:this={constructionElement} onscroll={() => scrollOptions("construction")} aria-busy={optionLoading.construction}>
-              <div class="virtual-spacer" style:height={`${constructionWindow.top}px`}></div>
-              {#each constructionWindow.items as item (`${item.relation_id}:${item.product_id}`)}
-                <article class:option-row--connected={isRelated(item)} class="option-row">
-                  <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
-                  <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, "\u00a0:\u00a0")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
-                  <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
-                </article>
-              {/each}
-              <div class="virtual-spacer" style:height={`${constructionWindow.bottom}px`}></div>
-              {#if optionLoading.construction && options.construction.items.length === 0}<div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>공사 불러오는 중</span></div>{/if}
-              {#if !optionLoading.construction && options.construction.items.length === 0}<p class="state-message option-empty">공사 없음.</p>{/if}
-            </div>
-          </section>
+        <div class="option-tabs" role="tablist" aria-label="연결된 품목 유형">
+          {#each RELATION_KINDS as kind}
+            <button
+              class="option-tab"
+              type="button"
+              role="tab"
+              id={`option-tab-${kind}`}
+              aria-selected={activeKind === kind}
+              aria-controls="option-tabpanel"
+              onclick={() => showKind(kind)}
+            >{RELATION_LABELS[kind]}<span>{options[kind].total_count.toLocaleString()}</span></button>
+          {/each}
+        </div>
+        <div class="option-body" role="tabpanel" id="option-tabpanel" aria-labelledby={`option-tab-${activeKind}`}>
+          <div class="option-group__header">
+            <label>
+              <span class="visually-hidden">{RELATION_LABELS[activeKind]} 검색</span>
+              <input type="search" value={relationSearch[activeKind]} placeholder={`${RELATION_LABELS[activeKind]} 검색`} oninput={(event) => changeRelationSearch(activeKind, event)} />
+            </label>
+          </div>
+          <div class="option-scroll" bind:this={optionElement} onscroll={scrollOptions} aria-busy={optionLoading[activeKind]}>
+            <div class="virtual-spacer" style:height={`${activeWindow.top}px`}></div>
+            {#each activeWindow.items as item (`${item.relation_id}:${item.product_id}`)}
+              <article class:option-row--connected={isRelated(item)} class="option-row">
+                <img src={item.image_url || "/static/product-placeholder.svg"} alt={`${item.name} 상품 이미지`} onerror={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/static/product-placeholder.svg"; }} />
+                <div class="option-row__details"><strong>{item.name}</strong><span>{item.spec.replace(/\s+:\s+(?=[\d,])/g, " : ")}</span><span class="relation-status" class:relation-status--connected={isRelated(item)}>{relationStatus(item)}</span><span class="option-row__price">{item.price_won?.toLocaleString()}원 / {item.unit}</span></div>
+                <div class="catalog-card__actions"><a class="g2b-link" href={item.g2b_url}>나라장터에서 보기</a><button class="button button--secondary" type="button" onclick={() => add(item, "option", selected)}>리스트에 추가</button></div>
+              </article>
+            {/each}
+            <div class="virtual-spacer" style:height={`${activeWindow.bottom}px`}></div>
+            {#if optionLoading[activeKind] && activeOptions.items.length === 0}
+              <div class="option-loading" role="status"><span class="loading-spinner" aria-hidden="true"></span><span>{RELATION_LABELS[activeKind]} 불러오는 중</span></div>
+            {/if}
+            {#if !optionLoading[activeKind] && activeOptions.items.length === 0}<p class="state-message option-empty">{RELATION_LABELS[activeKind]} 없음.</p>{/if}
+          </div>
         </div>
       </aside>
     {/if}
@@ -359,20 +383,45 @@
 
 <style>
   .catalog-card__select { align-self: stretch; align-items: center; }
-  .catalog-columns.selected-column .catalog-card { grid-template-columns: minmax(0, 1fr) 112px; }
-  .option-panel { display: grid; block-size: clamp(560px, calc(100dvh - 264px), 760px); grid-template-rows: auto minmax(0, 1fr); }
+  .catalog-columns.selected-column .catalog-card { grid-template-columns: minmax(0, 1fr) 132px; }
+  .option-panel { display: grid; min-block-size: 0; grid-template-rows: auto auto minmax(0, 1fr); }
   .option-panel__header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: 1px solid var(--line); background: var(--surface-subtle); }
   .option-panel__header h2 { min-width: 0; margin: 0; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .option-panel__header button { min-height: 36px; padding-inline: var(--space-3); }
-  .option-groups { display: grid; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); }
-  .option-group { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
-  .option-group + .option-group { border-block-start: 1px solid var(--line); }
   .option-panel__eyebrow { display: block; color: var(--muted); font-size: 11px; }
-  .option-group__header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 220px); gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-4); border-block-end: 1px solid var(--line); }
-  .option-group h3 { margin: 0; font-size: 13px; }
-  .option-group h3 span { margin-inline-start: var(--space-1); color: var(--muted); font-weight: 400; }
+
+  .option-tabs { display: flex; gap: var(--space-1); padding: var(--space-2) var(--space-3) 0; border-block-end: 1px solid var(--line); }
+  .option-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 38px;
+    padding-inline: var(--space-3);
+    border: 0;
+    border-block-end: 2px solid transparent;
+    border-radius: var(--radius-compact) var(--radius-compact) 0 0;
+    color: var(--muted);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .option-tab span {
+    padding-inline: 6px;
+    border-radius: 999px;
+    color: var(--muted);
+    background: var(--surface-subtle);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .option-tab:hover { color: var(--ink); background: var(--surface-subtle); }
+  .option-tab[aria-selected="true"] { border-block-end-color: var(--accent); color: var(--accent-dark); background: transparent; }
+  .option-tab[aria-selected="true"] span { color: var(--accent-dark); background: var(--surface-selected); }
+
+  .option-body { display: grid; min-block-size: 0; grid-template-rows: auto minmax(0, 1fr); }
+  .option-group__header { padding: var(--space-2) var(--space-3); border-block-end: 1px solid var(--line); }
   .option-group__header label { margin: 0; }
-  .option-group__header input { min-height: 32px; padding-inline: var(--space-2); font-size: 12px; }
+  .option-group__header input { min-height: 34px; padding-inline: var(--space-3); font-size: 12px; }
   .option-panel .option-scroll { block-size: auto; min-height: 0; padding-inline-end: 0; }
   .option-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 112px; block-size: 112px; align-content: center; align-items: center; padding: var(--space-2) var(--space-3); }
   .option-row > img { width: 64px; height: 64px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius-compact); background: var(--surface); }

@@ -126,6 +126,8 @@ h2 { font-size: 18px; font-weight: 600; }
 input, select { min-height: 44px; border: 1px solid var(--line); border-radius: var(--radius-control); color: var(--ink); background: var(--surface); }
 input { width: 100%; padding-inline: var(--space-4); }
 select { padding-inline: var(--space-3); }
+input:hover, select:hover { border-color: var(--line-strong); }
+input::placeholder { color: var(--muted); }
 .button,
 button { min-height: 44px; padding-inline: var(--space-5); border: 1px solid transparent; border-radius: var(--radius-control); color: var(--surface); background: var(--accent); cursor: pointer; font-weight: 600; }
 .button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }

@@ -13,6 +13,15 @@
 .shell__body { grid-row: 3; min-inline-size: 0; min-block-size: 0; overflow: auto; outline: 0; scrollbar-gutter: stable; }
 .content { width: min(1480px, calc(100% - 48px)); margin-inline: auto; padding-block: var(--space-5) var(--space-8); }
 
+/* Routes whose primary list owns the scrolling fill the viewport instead of
+   adding a second, near-useless page scrollbar on top of the inner one. */
+.content[data-route="catalog"] {
+  display: grid;
+  block-size: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding-block-end: var(--space-5);
+}
+
 .offline-banner { grid-row: 2; display: flex; min-height: 48px; align-items: center; justify-content: center; gap: var(--space-4); padding-inline: var(--space-6); border-bottom: 1px solid var(--warning); color: var(--warning-ink); background: var(--warning-surface); font-size: 13px; }
 .offline-banner button { min-height: 36px; padding-inline: var(--space-3); }
 

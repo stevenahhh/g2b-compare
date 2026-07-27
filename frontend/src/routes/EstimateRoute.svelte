@@ -467,11 +467,11 @@
 </header>
 {#if document}
   <section class="page-actions">
-    <button class="button--secondary" type="button" onclick={() => onNavigate("/estimates")}>닫기</button>
+    <button class="button--secondary document-back" type="button" onclick={() => onNavigate("/estimates")}>닫기</button>
     <button class="button" type="button" onclick={openProductSearch}>내역 추가</button>
-    <button class="button--secondary" type="button" onclick={copyTable}>{copyStatus || "표 복사"}</button>
+    <button class="button" type="button" onclick={copyTable}>{copyStatus || "표 복사"}</button>
     <button class="button--secondary" type="button" onclick={copyTsv}>TSV 내려받기</button>
-    {#if remote?.export_ready}<a class="button" href={`/estimates/${id}/export.xlsx`}>XLSX 내려받기</a>{/if}
+    {#if remote?.export_ready}<a class="button button--secondary" href={`/estimates/${id}/export.xlsx`}>XLSX 내려받기</a>{/if}
   </section>
   {#if error}<p class="state-message state-message--error" role="status">{error}</p>{/if}
   <div class="document-workspace">
@@ -739,6 +739,11 @@
   }
   .state-message + .document-workspace {
     margin-block-start: var(--space-2);
+  }
+
+  /* Keep navigation away from the destructive-adjacent export cluster. */
+  .document-back {
+    margin-inline-end: auto;
   }
 
   .document-catalog,
@@ -1012,6 +1017,32 @@
     font-size: 12px;
     font-weight: 700;
     text-align: center;
+  }
+
+  /* Freeze 연번 and 품명 so the row stays identifiable while the remaining
+     ~1000px of comparison columns scroll horizontally. */
+  .document-table tbody td:nth-child(1),
+  .document-table tbody td:nth-child(2) {
+    position: sticky;
+    z-index: 1;
+    background: var(--surface);
+  }
+  .document-table thead tr:first-child th:nth-child(1),
+  .document-table thead tr:first-child th:nth-child(2) {
+    z-index: 3;
+  }
+  .document-table tbody td:nth-child(1),
+  .document-table thead tr:first-child th:nth-child(1) {
+    inset-inline-start: 0;
+  }
+  .document-table tbody td:nth-child(2),
+  .document-table thead tr:first-child th:nth-child(2) {
+    inset-inline-start: 70px;
+  }
+  .document-table tbody td:nth-child(2),
+  .document-table thead tr:first-child th:nth-child(2) {
+    border-inline-end: 1px solid var(--line-strong);
+    box-shadow: 6px 0 8px -8px color-mix(in srgb, var(--ink) 45%, transparent);
   }
 
   .document-table thead tr:first-child th {
