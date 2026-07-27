@@ -1019,30 +1019,20 @@
     text-align: center;
   }
 
-  /* Freeze 연번 and 품명 so the row stays identifiable while the remaining
-     ~1000px of comparison columns scroll horizontally. */
-  .document-table tbody td:nth-child(1),
-  .document-table tbody td:nth-child(2) {
+  /* Freeze only 연번 so the row stays identifiable while the remaining
+     columns scroll horizontally. 품명 was sticky too but its fixed
+     left offset broke the column width/wrap at narrow viewports. */
+  .document-table tbody td:nth-child(1) {
     position: sticky;
     z-index: 1;
-    background: var(--surface);
-  }
-  .document-table thead tr:first-child th:nth-child(1),
-  .document-table thead tr:first-child th:nth-child(2) {
-    z-index: 3;
-  }
-  .document-table tbody td:nth-child(1),
-  .document-table thead tr:first-child th:nth-child(1) {
     inset-inline-start: 0;
-  }
-  .document-table tbody td:nth-child(2),
-  .document-table thead tr:first-child th:nth-child(2) {
-    inset-inline-start: 70px;
-  }
-  .document-table tbody td:nth-child(2),
-  .document-table thead tr:first-child th:nth-child(2) {
+    background: var(--surface);
     border-inline-end: 1px solid var(--line-strong);
     box-shadow: 6px 0 8px -8px color-mix(in srgb, var(--ink) 45%, transparent);
+  }
+  .document-table thead tr:first-child th:nth-child(1) {
+    z-index: 3;
+    inset-inline-start: 0;
   }
 
   .document-table thead tr:first-child th {
