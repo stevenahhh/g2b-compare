@@ -1,0 +1,114 @@
+@page {
+  size: A4;
+  margin: 13mm 15mm;
+}
+
+body {
+  margin: 0;
+  color: #000;
+  font-family: "Malgun Gothic", sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.32;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  counter-reset: document-page;
+}
+
+#title-block-header {
+  display: none;
+}
+
+.page {
+  box-sizing: border-box;
+  position: relative;
+  min-height: 271mm;
+  padding-bottom: 8mm;
+  break-after: page;
+  page-break-after: always;
+  counter-increment: document-page;
+}
+
+.page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+
+.page::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  color: #64748b;
+  font-size: 8pt;
+  text-align: center;
+  content: counter(document-page) " / 10";
+}
+
+.cover {
+  padding-top: 55mm;
+}
+
+h1 {
+  margin: 0 0 6mm;
+  font-size: 20pt;
+}
+
+h2 {
+  margin: 5mm 0 2.5mm;
+  font-size: 14pt;
+}
+
+h3 {
+  margin: 4mm 0 2mm;
+  font-size: 11pt;
+}
+
+p,
+ul,
+ol,
+table,
+pre,
+blockquote {
+  margin-top: 0;
+  margin-bottom: 2.5mm;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+
+th,
+td {
+  padding: 1.8mm;
+  border: 1px solid #000;
+  text-align: left;
+  vertical-align: top;
+}
+
+pre {
+  padding: 3mm;
+  border: 1px solid #000;
+  font-family: Consolas, monospace;
+  font-size: 8.5pt;
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+code {
+  font-family: Consolas, monospace;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+blockquote {
+  margin-left: 0;
+  padding-left: 4mm;
+  border-left: 2px solid #000;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
