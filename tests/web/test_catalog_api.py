@@ -123,6 +123,38 @@ async def test_catalog_products_json_contract_and_combined_search(tmp_path: Path
 
 
 @pytest.mark.asyncio
+async def test_catalog_products_can_prioritize_company_without_filtering_others(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "g2b.sqlite3"
+    _seed_api_fixture(database)
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE priority_products SET price_won = ? WHERE product_id = ?",
+            (2_000_000, "25000001"),
+        )
+    app = _api_app(database)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/catalog/products",
+            params={
+                "preferred_company_name": "코리아넷",
+                "sort": "price_asc",
+                "page_size": 2,
+            },
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_count"] == 3
+    assert body["items"][0]["company_name"] == "코리아넷"
+    assert body["items"][1]["company_name"] == "공급사 A"
+
+
+@pytest.mark.asyncio
 async def test_catalog_options_json_has_relation_and_parent_and_pagination(tmp_path: Path) -> None:
     database = tmp_path / "g2b.sqlite3"
     _seed_api_fixture(database)

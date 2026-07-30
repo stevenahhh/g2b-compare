@@ -238,14 +238,14 @@
     const version = ++searchVersion;
     searching = true;
     searchError = "";
-    const cacheKey = `document-products:v3:${query}:${productSort}`;
+    const cacheKey = `document-products:v4:${query}:${productSort}`;
     const cached = await getCatalogCache(cacheKey).catch(() => null);
     if (cached && version === searchVersion) {
       productResults = cached.items;
       productTotal = cached.total_count;
     }
     try {
-      const queryParams = `company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(query)}&sort=${productSort}&page=1&page_size=100`;
+      const queryParams = `preferred_company_name=${encodeURIComponent(KOREANET)}&q=${encodeURIComponent(query)}&sort=${productSort}&page=1&page_size=100`;
       const result = await requestJson(`/api/catalog/products?${queryParams}`);
       if (version === searchVersion) {
         productResults = result.items;

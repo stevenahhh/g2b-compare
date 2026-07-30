@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import sqlite3
 from functools import lru_cache
-from typing import TYPE_CHECKING, Annotated, Literal, assert_never
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal, assert_never
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
 
 from g2b_compare.normalize.text import normalize_search_text
 from g2b_compare.priority_attributes import parse_product_attributes
@@ -28,25 +29,33 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+class _CatalogProductQuery(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    q: str = Field(default="", max_length=500)
+    company_name: str = Field(default="", max_length=200)
+    preferred_company_name: str = Field(default="", max_length=200)
+    sort: PriorityLineSort = PriorityLineSort.PRICE_ASC
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=30, ge=1, le=100)
+
+
 def build_catalog_api_router(database: Path) -> APIRouter:
     """Build catalog JSON routes backed by the existing priority catalog."""
     router = APIRouter()
 
     @router.get("/api/catalog/products", response_model=CatalogPageResponse)
     def products(
-        q: Annotated[str, Query(max_length=500)] = "",
-        company_name: Annotated[str, Query(max_length=200)] = "",
-        sort: PriorityLineSort = PriorityLineSort.PRICE_ASC,
-        page: Annotated[int, Query(ge=1)] = 1,
-        page_size: Annotated[int, Query(ge=1, le=100)] = 30,
+        query: Annotated[_CatalogProductQuery, Query()],
     ) -> CatalogPageResponse:
         result = list_catalog_products(
             database,
-            q,
-            page=page,
-            page_size=page_size,
-            sort=sort,
-            company_name=company_name,
+            query.q,
+            page=query.page,
+            page_size=query.page_size,
+            sort=query.sort,
+            company_name=query.company_name,
+            preferred_company_name=query.preferred_company_name,
         )
         items = [
             _product_response(item)

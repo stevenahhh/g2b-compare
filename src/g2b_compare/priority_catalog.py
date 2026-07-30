@@ -45,6 +45,15 @@ SELECT product.category_name, product.spec, product.unit, product.price_won,
 
 
 @dataclass(frozen=True, slots=True)
+class _CompanyOrder:
+    filter_name: str = ""
+    preferred_name: str = ""
+
+
+_DEFAULT_COMPANY_ORDER: Final = _CompanyOrder()
+
+
+@dataclass(frozen=True, slots=True)
 class _CatalogIndex:
     products: dict[str, CatalogProduct]
     documents: tuple[tuple[str, str], ...]
@@ -60,7 +69,7 @@ class _CatalogIndex:
         page: int,
         page_size: int,
         sort: PriorityLineSort,
-        company_name: str = "",
+        company_order: _CompanyOrder = _DEFAULT_COMPANY_ORDER,
     ) -> CatalogProductPage:
         """Search the warmed local index and return one sorted page."""
         terms = tuple(normalize_search_text(query).split())
@@ -70,8 +79,9 @@ class _CatalogIndex:
                 for product_id, document in self.documents
                 if _contains_all(document, terms)
                 and (
-                    not company_name
-                    or self.products[product_id].company_name == company_name
+                    not company_order.filter_name
+                    or self.products[product_id].company_name
+                    == company_order.filter_name
                 )
             }
             matches.update(
@@ -79,8 +89,9 @@ class _CatalogIndex:
                 for product_id, document in self.legacy_documents
                 if _contains_all(document, terms) and product_id in self.products
                 and (
-                    not company_name
-                    or self.products[product_id].company_name == company_name
+                    not company_order.filter_name
+                    or self.products[product_id].company_name
+                    == company_order.filter_name
                 )
             )
             for group, document in self.group_documents:
@@ -90,17 +101,29 @@ class _CatalogIndex:
                         for product_id in self.group_products.get(group, ())
                         if product_id in self.products
                         and (
-                            not company_name
-                            or self.products[product_id].company_name == company_name
+                            not company_order.filter_name
+                            or self.products[product_id].company_name
+                            == company_order.filter_name
                         )
                     )
         else:
             matches = {
                 product_id
                 for product_id, product in self.products.items()
-                if not company_name or product.company_name == company_name
+                if not company_order.filter_name
+                or product.company_name == company_order.filter_name
             }
         ordered = self.ordered_ids[sort]
+        if company_order.preferred_name:
+            ordered = tuple(
+                sorted(
+                    ordered,
+                    key=lambda product_id: (
+                        self.products[product_id].company_name
+                        != company_order.preferred_name
+                    ),
+                )
+            )
         offset = (page - 1) * page_size
         page_ids: list[str] = []
         for product_id in ordered:
@@ -207,6 +230,7 @@ def list_catalog_products(  # noqa: PLR0913
     page_size: int,
     sort: PriorityLineSort,
     company_name: str = "",
+    preferred_company_name: str = "",
 ) -> CatalogProductPage:
     """Return main products, including parents matched through child options."""
     return _current_index(database).page(
@@ -214,7 +238,7 @@ def list_catalog_products(  # noqa: PLR0913
         page=page,
         page_size=page_size,
         sort=sort,
-        company_name=company_name,
+        company_order=_CompanyOrder(company_name, preferred_company_name),
     )
 
 
