@@ -31,3 +31,30 @@
 .modal__panel h2 { margin-block-end: var(--space-3); }
 .modal__panel p { margin-block-end: var(--space-6); color: var(--muted); line-height: 1.6; }
 .modal__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+
+@media (max-width: 560px) {
+  .app-header {
+    padding-inline: var(--space-3);
+  }
+
+  .app-nav {
+    inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+
+  .app-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-nav button {
+    flex: 0 0 auto;
+    padding-inline: var(--space-3);
+  }
+
+  .content {
+    width: calc(100% - 32px);
+    padding-block-start: var(--space-4);
+  }
+}

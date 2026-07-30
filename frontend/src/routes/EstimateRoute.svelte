@@ -1181,4 +1181,10 @@
   .col-company-spec { inline-size: 300px; }
   .col-id { inline-size: 130px; }
   .col-note { inline-size: 120px; }
+
+  @media (max-width: 560px) {
+    .document-catalog .catalog-controls {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
