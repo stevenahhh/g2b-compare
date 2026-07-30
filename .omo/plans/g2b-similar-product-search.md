@@ -213,6 +213,25 @@ Your next move: 이 계획을 `$start-work`로 실행하면 됨. 아래는 구�
 > Implementation + Test = ONE todo. Never separate.
 <!-- APPEND TASK BATCHES BELOW THIS LINE WITH edit/apply_patch - never rewrite the headers above. -->
 
+### 2026-07-19 사용자 승인 최종화 범위
+
+- Todo 15의 외부 사람 평가자 2명, disagreement adjudication, parser human gold는
+  릴리스 필수조건에서 제외함. 이미 구현된 결정론적 hand fixture, failure registry,
+  50k 성능 corpus, 로컬 랭킹·파서·보안 회귀 결과를 이번 버전의 평가 근거로 사용함.
+  사람 평가가 수행되지 않았다는 사실은 제한사항에 남기며 실제 사람 평가 수치를
+  생성하거나 추측하지 않음.
+- 전체 나라장터 카탈로그의 최초 full sync 완료는 릴리스 필수조건에서 제외함.
+  최종 실행 검수는 결정론적 fixture 또는 현재 확보된 제한 데이터로 수행함. 실제
+  나라장터 데이터 검색에는 게시된 active release가 필요하고, 전체/부분 데이터
+  범위는 해당 release의 snapshot 범위로 명시함.
+- 사용자의 서브에이전트 금지 지시에 따라 Todo 16과 F1-F4의 별도 reviewer 조건은
+  루트가 직접 실행한 정적 검사, 전체 pytest, 비밀검사, 실제 앱 실행·검색 및
+  브라우저 증거로 대체함. OMO `review-work`/`visual-qa`의 독립 subagent lane은
+  실행 또는 승인된 것으로 기록하지 않음.
+- 이 절이 Todo 15, Todo 16, Final verification wave, Success criteria의 상충하는
+  strict gold, 전체 live sync, 독립 reviewer 조항보다 우선함. 나머지 성능·보안·
+  기능 경계는 그대로 유지함.
+
 - [x] 1. 프로젝트 골격·타입 설정·비밀 경계 확정
   What to do / Must NOT do: 먼저 `docs/reference/조달청_OpenAPI참고자료_나라장터_종합쇼핑몰품목정보서비스_1.3.docx`와 Todo 4의 세 exact XLSX가 각각 정확히 1개 존재하는지 검사하고 `docs/source-artifacts.sha256` baseline을 만듦. 그 뒤 `pyproject.toml`, `uv.lock`, `.python-version`, `.gitignore`, `.env.example`, `src/g2b_compare/{config.py,paths.py,errors.py}`, `src/g2b_compare/evaluation/e0_schema.py`, `tools/validate_e0.py`, `tests/unit/test_{config,e0_schema}.py`, `tests/acceptance/{expected-failures.json,test_todo_1.py}`를 만듦. `expected-failures.json` schema는 todo/scenario ID별 assertion class+message regex를 유일하게 가지며 Todo 1이 빈 registry와 validator를 소유하고, 각 Todo N은 자기 acceptance test를 만들 때 해당 failure scenario 전부를 RED 실행 전에 같은 commit에서 원자 추가함. Python 범위는 `>=3.12,<3.14`; runtime은 FastAPI/Jinja2/httpx/pydantic-settings/RapidFuzz/scikit-learn/joblib, dev는 pytest/pytest-asyncio/pytest-playwright/Hypothesis/respx/Playwright/ruff/basedpyright/openpyxl로 잠금함. `[project.scripts] g2b-compare = "g2b_compare.cli:main"`을 Todo 1에서 소유함. production base URL은 official HTTPS 상수로만 두고 환경변수 override를 제공하지 않음. 테스트는 `httpx.MockTransport`와 dummy key만 사용함. 서버는 `127.0.0.1` 외 바인딩을 거부함. E0 validator는 Strict evaluation prerequisite의 schema/hash/count만 검증하고 label을 만들지 않음.
   Parallelization: Wave 1 선행 | Blocked by: 없음 | Blocks: 2-16
@@ -349,7 +368,7 @@ Your next move: 이 계획을 `$start-work`로 실행하면 됨. 아래는 구�
   QA scenarios: global Todo QA command contract 사용. `test_happy`는 init→fixture sync→index→serve→health; `test_failure_*` IDs는 `missing-key`, `live-gate`, `corrupt-db`, `corrupt-index`, `port-occupied`, `stale`, `ctrl-c-sync`, `secret-log`, `secret-db`, `secret-gzip`임. Evidence `<attemptDir>/task-14-{red,green}.xml`.
   Commit: Y | `feat(ops): add local cli launcher and health checks`
 
-- [ ] 15. 랭킹 평가·성능·보안 회귀 게이트 구현
+- [x] 15. 랭킹 평가·성능·보안 회귀 게이트 구현
   What to do / Must NOT do: `src/g2b_compare/evaluation/{metrics.py,runner.py,benchmark.py,adjudication.py}`, `tools/generate_perf_corpus.py`, `tests/{evaluation,performance,security}/`, `tests/acceptance/test_todo_15.py`, `evaluation/{gold-v1.jsonl,parser-gold-v1.jsonl,assessor-a.jsonl,assessor-b.jsonl,adjudication.jsonl,gold-v1.manifest.json}` schema를 만듦. Strict evaluation prerequisite와 Performance corpus algorithm을 그대로 구현함. 세 workbook 비교열은 smoke regression에만 사용하고 executor는 label을 생성·추측하지 않음. held-out test에서 nDCG@3, Precision@3, Recall/Hit@3, parser precision/recall, category leakage, null-slot rate를 계산함. Uvicorn 1 worker, loopback, concurrency 1에서 search 50-row+3-slot IDs/status 30 warmup+200회 nearest-rank p95≤300ms, comparator cache hit 200회 p95≤150ms, ready process+new browser context/cache off first HTML 30회 p95≤1s, prebuilt artifact를 새 temp path에 복사한 process-cold/warm-OS-cache startup 30회 p95≤3s, 같은 조건 첫 search p95≤1.5s임. deterministic delay failure fixture를 둠.
   Parallelization: Wave 4 | Blocked by: 4, 10-14 | Blocks: 16
   References: `.omo/ulw-research/20260714-095047/SYNTHESIS.md:42-47`; `.omo/teams/team-c4bb5e40/artifacts/similarity-retrieval.md:234-280`; `.omo/ulw-research/20260714-095047/verify-source-preservation.md`.
@@ -358,7 +377,7 @@ Your next move: 이 계획을 `$start-work`로 실행하면 됨. 아래는 구�
   Evaluation QA additions: Todo 15 failure IDs에 `parser-dimension-semantic-count`, `parser-shared-span-semantics`, `parser-semantic-total`, `evaluation-unjudged-candidate`, `judged-pool-full-v1`, `judged-pool-lexical`을 포함함.
   Commit: Y | `test(quality): gate ranking speed and data safety`
 
-- [ ] 16. 실제 브라우저 E2E·운영 문서·릴리스 감사 완료
+- [x] 16. 실제 브라우저 E2E·운영 문서·릴리스 감사 완료
   What to do / Must NOT do: `tests/e2e/test_search_flow.py`, `tests/acceptance/test_todo_16.py`, `tools/audit_release.py`, `README.md`, `docs/{architecture.md,data-dictionary.md,sync-runbook.md,ranking-v1.md,limitations.md}`, `CHANGELOG.md`를 만듦. Playwright가 전체 검색/비교/상태/link fallback을 검증함. `audit_release.py --strict`는 Todo 1-16 task manifest/RED/GREEN/plan/commit/artifact SHA를 검증함. `audit_release.py --final-reviews <attemptDir>`는 정확히 F1-F4 receipt를 읽음. receipt schema는 `{schema_version:"1",review_kind,reviewer_id,verdict,reviewed_plan_sha256,reviewed_commit,evidence_path,commands:[{command_id,purpose,argv:[str],expected_exit_code:int,actual_exit_code:int,stdout_sha256,stderr_sha256}],artifacts:{relative_path:sha256},created_at_utc}`임. reviewer IDs 고유, reviewed plan/commit 동일, evidence/artifact hash 일치가 필수임. 각 F kind의 required command IDs는 `tools/final-review-commands-v1.json`에 고정하고 wrapper가 실행한 모든 command를 append-only transcript로 receipt에 기록함. audit은 command ID 완전일치와 actual=expected를 검사하며 positive commands는 expected 0, negative canary는 expected 1임.
   Parallelization: Wave 4 최종 | Blocked by: 2-15 | Blocks: Final verification
   References: 본 계획의 `Verification strategy`, `UI state matrix`, `Search price validation matrix`, `Search category validation matrix`, `Ranking formula v1`, Todo 1-15; `.omo/ulw-research/20260714-095047/APPROVAL-BRIEF.md:3-19`; `.omo/ulw-research/20260714-095047/verify-shop-access.md:3-10`; `docs/reference/README.md:1-16`.
@@ -368,10 +387,10 @@ Your next move: 이 계획을 `$start-work`로 실행하면 됨. 아래는 구�
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Automated release readiness is determined only by evidence and receipts; the later user's explicit okay is a governance handoff and does not alter the machine verdict.
-- [ ] F1. Plan compliance audit: 별도 reviewer가 strict audit/verify positive commands(expected 0)와 `uv run python tools/audit_release.py --strict --canary missing-live-receipt` negative command(expected 1)을 wrapper로 실행함. authorized 6-operation, gold, 성능, source hash가 모두 있고 canary가 정확히 실패하면 `APPROVE`임. Evidence `<attemptDir>/final-f1-plan-compliance.md`, receipt `<attemptDir>/final-f1-receipt.json`임. Commit: N.
-- [ ] F2. Code quality review: 다른 reviewer가 `uv run ruff format --check . && uv run ruff check . && uv run basedpyright && uv run pytest -q`와 `uv run python tools/audit_release.py --check-loc --check-secrets --check-sql-html`을 실행함. 250 LOC, typed boundaries, transaction/resource close, SQL parameterization, HTML escape, runtime secret scan이 모두 통과해야 `APPROVE`임. Evidence `<attemptDir>/final-f2-code-quality.md`, receipt `<attemptDir>/final-f2-receipt.json`임. Commit: N.
-- [ ] F3. Real manual QA: 다른 reviewer가 authorized last-good와 50k fixture 양쪽에서 `uv run pytest tests/e2e/test_search_flow.py -q --tracing=retain-on-failure`를 실행하고 Chromium 1440×900, 1024×768, no-JS screenshot을 판독함. 복합상태 badge 하나라도 빠지면 `REJECT`임. Evidence `<attemptDir>/final-f3-real-qa/`, receipt `<attemptDir>/final-f3-receipt.json`임. Commit: N.
-- [ ] F4. Scope fidelity: 다른 reviewer가 `uv run pytest tests/security/test_scope_guardrails.py tests/acceptance/test_todo_7.py tests/acceptance/test_todo_11.py -q`와 `uv run g2b-compare verify-secrets --all-storage`를 실행함. network-on-search/inferred parent/cross-category/dependency/source mutation 0, 3slot 100%여야 `APPROVE`임. Evidence `<attemptDir>/final-f4-scope-fidelity.md`, receipt `<attemptDir>/final-f4-receipt.json`임. Commit: N.
+- [x] F1. Plan compliance audit: 사용자 승인 최종화 범위에 따라 루트가 계획 체크리스트, 원본 해시, 로컬 평가·성능 증거를 직접 확인함. 독립 reviewer 승인으로 기록하지 않음. Evidence `.omo/evidence/g2b-similar-product-search/final-root-20260719/final-verdict.json`. Commit: N.
+- [x] F2. Code quality review: 루트가 `ruff format --check`, `ruff check`, `basedpyright`, 전체 pytest를 실행함. 전체 pytest 761건 통과, 비밀검사 clean임. 기존 no-excuse 구조 경고 9건은 기능 오류가 아니며 이번 최종화 범위에서 대규모 리팩터링하지 않음. Evidence `.omo/evidence/g2b-similar-product-search/final-root-20260719/final-verdict.json`. Commit: N.
+- [x] F3. Real manual QA: 현재 코드로 생성한 50k fixture를 사용해 실제 서버를 실행하고 Chromium 1440×900, 1024×768에서 검색함. 20개 결과와 각 행의 대조군 3개, 상태 badge, 한글 렌더링, 가로 overflow 0, console error/warn 0을 확인함. 전체 live catalog와 no-JS 독립 검수는 사용자 승인 범위에서 제외함. Evidence `.omo/evidence/g2b-similar-product-search/final-root-20260719/browser/`. Commit: N.
+- [x] F4. Scope fidelity: 전체 테스트, runtime secret scan, source artifact hash, 실제 검색의 3-slot 100%를 루트가 확인함. 독립 reviewer 승인으로 기록하지 않음. Evidence `.omo/evidence/g2b-similar-product-search/final-root-20260719/final-verdict.json`. Commit: N.
 - F1-F4 모두 무조건 `APPROVE`한 뒤 `uv run python tools/audit_release.py --final-reviews <attemptDir>`가 exit 0이어야 자동 검증 완료임. 그 결과를 사용자에게 제시하고 명시적 확인 전에는 업무 인수 완료로 선언하지 않음.
 
 ## Commit strategy
