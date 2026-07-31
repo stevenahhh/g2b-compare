@@ -7,7 +7,8 @@ from contextlib import closing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, final, override
 
-from g2b_compare.db.sql import query
+from g2b_compare.db.migrate import MIGRATION_DIRECTORY
+from g2b_compare.db.sql import as_text, query
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -88,6 +89,7 @@ def build_runtime_database(
             "UPDATE priority_company_quarantine SET raw_json = '{}'"
         )
         _ = connection.execute("COMMIT")
+        _compact_product_descriptions(connection)
         _ = connection.execute("VACUUM")
         _ = query(connection, "PRAGMA journal_mode = DELETE").fetchone()
 
@@ -97,3 +99,33 @@ def build_runtime_database(
         source_bytes=resolved_source.stat().st_size,
         runtime_bytes=renamed_destination.stat().st_size,
     )
+
+
+def _compact_product_descriptions(connection: sqlite3.Connection) -> None:
+    raw_rows = query(
+        connection,
+        """
+        SELECT DISTINCT response_body_sha256
+        FROM priority_product_description_observations
+        WHERE response_body_sha256 IS NOT NULL
+        """
+    ).fetchall()
+    body_shas = tuple(as_text(row[0]) for row in raw_rows)
+    _ = connection.execute("DROP TABLE priority_product_description_state")
+    _ = connection.execute(
+        "DROP TABLE priority_product_description_observations"
+    )
+    for body_sha in body_shas:
+        _ = query(
+            connection,
+            """
+            DELETE FROM raw_blobs
+            WHERE body_sha = ?
+              AND body_sha NOT IN (SELECT body_sha FROM sync_pages)
+            """,
+            (body_sha,),
+        )
+    migration = (
+        MIGRATION_DIRECTORY / "0006_priority_product_descriptions.sql"
+    ).read_text(encoding="utf-8")
+    _ = connection.executescript(migration)

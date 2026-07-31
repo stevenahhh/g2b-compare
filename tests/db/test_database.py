@@ -25,7 +25,11 @@ def test_migration_is_idempotent_when_database_is_empty(tmp_path: Path) -> None:
             "SELECT COUNT(*), MIN(version) FROM schema_migrations",
         ).fetchone()
     assert row is not None
-    assert (as_int(row[0]), as_text(row[1])) == (5, "0001_initial")
+    migration_versions = {path.stem for path in MIGRATION_DIRECTORY.glob("*.sql")}
+    assert (as_int(row[0]), as_text(row[1])) == (
+        len(migration_versions),
+        "0001_initial",
+    )
 
 
 def test_migration_accepts_crlf_checkout(tmp_path: Path) -> None:
@@ -33,7 +37,7 @@ def test_migration_accepts_crlf_checkout(tmp_path: Path) -> None:
     migrations.mkdir()
     for source in MIGRATION_DIRECTORY.glob("*.sql"):
         target = migrations / source.name
-        target.write_bytes(
+        _ = target.write_bytes(
             source.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
         )
 
@@ -47,7 +51,7 @@ def test_migration_accepts_legacy_crlf_receipts(tmp_path: Path) -> None:
     migrations.mkdir()
     for source in MIGRATION_DIRECTORY.glob("*.sql"):
         target = migrations / source.name
-        target.write_bytes(
+        _ = target.write_bytes(
             source.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
         )
 

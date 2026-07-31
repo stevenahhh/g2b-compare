@@ -63,6 +63,10 @@ class RawRetentionRepository:
                 )
                 SELECT DISTINCT body_sha FROM sync_pages
                 WHERE id IN (SELECT id FROM protected_pages)
+                UNION
+                SELECT response_body_sha256
+                FROM priority_product_description_observations
+                WHERE response_body_sha256 IS NOT NULL
                 """,
             ).fetchall()
         return frozenset(as_text(row[0]) for row in rows)

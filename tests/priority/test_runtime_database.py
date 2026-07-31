@@ -2,11 +2,20 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from hashlib import sha256
 from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter
 
+from g2b_compare.db.raw import RawBlobStore
 from g2b_compare.db.sql import as_text, query
+from g2b_compare.priority_description import (
+    ProductDetailContent,
+    ProductDetailObservation,
+    ProductDetailTarget,
+)
+from g2b_compare.priority_description_crawl import DETAIL_ENDPOINT
+from g2b_compare.priority_description_store import ProductDescriptionStore
 from g2b_compare.priority_store import PriorityStore
 from g2b_compare.runtime_database import build_runtime_database
 
@@ -69,6 +78,38 @@ def test_build_runtime_database_keeps_only_runtime_product_payload(
             (raw,),
         )
 
+    target = ProductDetailTarget(
+        product_id="25000001",
+        contract_item_management_number="0023H0324_1040000122",
+        source_url=(
+            "https://shop.g2b.go.kr/link/GMSF001_01/"
+            "?ctrtItemMngNo=0023H0324_1040000122"
+        ),
+    )
+    receipt = RawBlobStore(tmp_path / "raw").put(
+        b'{"ErrorCode":"0"}',
+        "application/json",
+    )
+    _ = ProductDescriptionStore(source).record(
+        ProductDetailObservation(
+            target=target,
+            endpoint_url=DETAIL_ENDPOINT,
+            request_fingerprint="a" * 64,
+            outcome="stored",
+            observed_at="2026-07-31T00:00:00+00:00",
+            response_receipt=receipt,
+            content=ProductDetailContent(
+                decoded_html="<p>상세 설명</p>",
+                detail_text="상세 설명",
+                detail_html_sha256=sha256(
+                    "<p>상세 설명</p>".encode()
+                ).hexdigest(),
+            ),
+            http_status=200,
+            error_code=None,
+        )
+    )
+
     # When: a separate runtime database is built.
     result = build_runtime_database(source, destination)
 
@@ -81,6 +122,14 @@ def test_build_runtime_database_keeps_only_runtime_product_payload(
         offer_raw = query(
             connection,
             "SELECT raw_json FROM priority_product_offers"
+        ).fetchone()
+        runtime_observations = query(
+            connection,
+            "SELECT COUNT(*) FROM priority_product_description_observations",
+        ).fetchone()
+        runtime_states = query(
+            connection,
+            "SELECT COUNT(*) FROM priority_product_description_state",
         ).fetchone()
     with sqlite3.connect(source) as connection:
         source_raw = query(
@@ -98,6 +147,8 @@ def test_build_runtime_database_keeps_only_runtime_product_payload(
     }
     assert offer_raw is not None
     assert as_text(offer_raw[0]) == "{}"
+    assert runtime_observations == (0,)
+    assert runtime_states == (0,)
     assert source_raw is not None
     assert as_text(source_raw[0]) == raw
     assert result.destination == destination.resolve()
