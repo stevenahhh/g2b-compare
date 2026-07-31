@@ -5,7 +5,7 @@
 | 경로 | 내용 |
 |---|---|
 | `.g2b/g2b.sqlite3` | sync, snapshot, release, cache 메타데이터 |
-| `.g2b/raw/` | SHA-256로 주소화된 gzip 원문 응답 |
+| `.g2b/raw/` | SHA-256로 주소화된 gzip 원문 응답, 압축 해제하면 수신한 exact bytes와 일치 |
 | `.g2b/docs/api-contract-observed.json` | 런타임에서 사용하는 검증 API 계약 |
 | `.g2b/releases/current/` | 게시된 release DB와 검색 index |
 
@@ -22,6 +22,26 @@
 | `source_records` | 검증 완료 후 게시 가능한 원천 record |
 | `source_snapshots` | operation 단위 불변 source 세대 |
 | `active_source_snapshots` | operation별 현재 source pointer |
+
+## 우선조달 상품 설명
+
+| 테이블 | 내용 |
+|---|---|
+| `priority_products` | 본품의 `product_id`, 정규 `detail_url`, 기존 provider `raw_json`. 설명 보강은 `raw_json`을 바꾸지 않음 |
+| `priority_product_description_observations` | `stored`, `missing`, `failed` 시도를 수정과 삭제 없이 누적 |
+| `priority_product_description_state` | 상품별 최신 observation을 가리키는 원자적 pointer |
+
+observation은 대상 `product_id`, `contract_item_management_number`, `page_url`,
+관찰된 `endpoint_url`, 요청 fingerprint, HTTP status, error code, 관찰 시각을
+고정함. bounded 응답이 있으면 `response_body_sha256`가 `raw_blobs`의 exact
+response bytes를 가리키며, `stored`와 `missing`에서는 JSON bytes임. `stored`행에는
+HTML entity를 푼 `decoded_html`, 정규화된 한국어 plain
+text인 `detail_text`, HTML SHA-256, parser version도 들어감. `missing`은 해당
+관찰 시각에 게시된 설명이 없었다는 결과이며 영구 속성이 아님.
+
+원문 pruning은 observation이 참조하는 모든 응답을 보호함. Compact runtime DB는
+설명 consumer가 따로 설계될 때까지 두 설명 테이블을 빈 상태로 만들고, 설명에서만
+참조한 `raw_blobs`행도 제외함.
 
 ## 정규화와 release
 
