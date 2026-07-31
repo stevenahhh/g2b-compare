@@ -264,7 +264,10 @@ async def test_verified_option_is_added_with_parent_context(tmp_path: Path) -> N
     assert added.status_code == 303
     assert "본품 [25454886] &gt; 옵션 [25560063]" in editor.text
     assert "5,431,000" in editor.text
-    assert editor.text.count("data-comparison") == 3
+    assert editor.text.count("data-comparison") == 1
+    assert 'data-product-id="25560063"' in editor.text
+    assert "비교 물품 2개가 필요함" in editor.text
+    assert 'aria-disabled="true"' in editor.text
 
 
 @pytest.mark.asyncio

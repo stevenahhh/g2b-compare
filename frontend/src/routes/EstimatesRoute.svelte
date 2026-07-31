@@ -54,7 +54,7 @@
 </header>
 <div class="page-actions">
   <button type="button" onclick={create} disabled={creating}>
-    {#if creating}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>새 내역 여는 중</span>{:else}새 내역 시작{/if}
+    {#if creating}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>새 문서 여는 중</span>{:else}새 문서{/if}
   </button>
   <button class="button--secondary" type="button" onclick={retry} disabled={syncing}>
     {#if syncing}<span class="loading-label"><span class="loading-spinner" aria-hidden="true"></span>동기화 중</span>{:else}동기화 재시도{/if}
@@ -84,7 +84,7 @@
     {/each}
   </section>
 {:else}
-  <section class="empty-state estimate-state"><h2>저장된 내역 없음</h2><p>새 내역을 시작하거나 검색 화면에서 품목을 추가하세요.</p></section>
+  <section class="empty-state estimate-state"><h2>저장된 내역 없음</h2><p>새 문서를 만들거나 검색 화면에서 품목을 추가하세요.</p></section>
 {/if}
 {#if deleting}
   <Modal open kind="confirm" title="문서 삭제" message="이 문서를 삭제할까요? 연결이 복구되면 삭제 상태가 서버에도 반영됨." confirmLabel="삭제" onConfirm={remove} onCancel={() => deleting = null} />

@@ -133,3 +133,45 @@ def test_export_rejects_line_without_two_comparison_products(tmp_path: Path) -> 
             draft.id,
             tmp_path / "blocked.xlsx",
         )
+
+
+def test_export_rejects_draft_pinned_to_a_different_template(tmp_path: Path) -> None:
+    database = tmp_path / "g2b.sqlite3"
+    draft = _draft_with_lines(database, 1)
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE estimate_drafts SET template_sha256 = ? WHERE id = ?",
+            ("a" * 64, draft.id),
+        )
+
+    with pytest.raises(
+        services.EstimateExportError,
+        match="기준 템플릿 해시가 일치하지 않음",
+    ):
+        services.EstimateExporter(database).export(
+            draft.id,
+            tmp_path / "blocked.xlsx",
+        )
+
+
+def test_export_accepts_koreanet_baseline_for_other_selected_product(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "g2b.sqlite3"
+    draft = _draft_with_lines(database, 1)
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """
+            UPDATE estimate_comparisons
+            SET product_id = ?, company_snapshot = ?
+            WHERE estimate_line_id = ? AND slot = 'A'
+            """,
+            ("25454886", "주식회사 코리아넷", draft.lines[0].id),
+        )
+
+    exported = services.EstimateExporter(database).export(
+        draft.id,
+        tmp_path / "koreanet-baseline.xlsx",
+    )
+
+    assert exported.is_file()

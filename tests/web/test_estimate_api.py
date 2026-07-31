@@ -167,6 +167,102 @@ async def test_put_replay_is_exact_and_quantity_only_reuses_comparisons(
 
 
 @pytest.mark.asyncio
+async def test_refresh_comparisons_reseeds_current_candidate_snapshots(
+    tmp_path: Path,
+) -> None:
+    # Given: one saved document whose B candidate changed after initial seeding.
+    database = tmp_path / "g2b.sqlite3"
+    _seed_three_products(database)
+    app = _api_app(database)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        original = await client.put(f"/api/estimates/{ESTIMATE_ID}", json=_document())
+        with sqlite3.connect(database) as connection:
+            connection.execute(
+                """
+                UPDATE priority_products
+                SET company_name = ?, price_won = ?
+                WHERE product_id = ?
+                """,
+                ("Refreshed B Corp", 1_060, "25454887"),
+            )
+
+        # When: the client explicitly refreshes the persisted comparison group.
+        refreshed = await client.post(
+            f"/api/estimates/{ESTIMATE_ID}/refresh-comparisons"
+        )
+
+    # Then: all slots are returned from current catalog snapshots.
+    assert original.status_code == 200
+    assert original.json()["lines"][0]["comparisons"][1]["company_snapshot"] == (
+        "B Corp"
+    )
+    assert refreshed.status_code == 200
+    comparisons = refreshed.json()["lines"][0]["comparisons"]
+    assert [item["slot"] for item in comparisons] == ["A", "B", "C"]
+    refreshed_by_product = {item["product_id"]: item for item in comparisons}
+    assert refreshed_by_product["25454887"]["company_snapshot"] == "Refreshed B Corp"
+    assert refreshed_by_product["25454887"]["price_won_snapshot"] == 1_060
+    assert refreshed.json()["export_ready"] is True
+
+
+@pytest.mark.asyncio
+async def test_refresh_comparisons_preserves_identifier_boundaries(
+    tmp_path: Path,
+) -> None:
+    # Given: an empty estimate database.
+    app = _api_app(tmp_path / "g2b.sqlite3")
+
+    # When: refresh targets a missing valid ID and one malformed ID.
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        missing = await client.post(
+            f"/api/estimates/{ESTIMATE_ID}/refresh-comparisons"
+        )
+        malformed = await client.post("/api/estimates/not-hex/refresh-comparisons")
+
+    # Then: the established path boundary distinguishes missing from malformed.
+    assert missing.status_code == 404
+    assert malformed.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_refresh_comparisons_rolls_back_when_reseeding_fails(
+    tmp_path: Path,
+) -> None:
+    # Given: a saved comparison set and a trigger interrupting refreshed inserts.
+    database = tmp_path / "g2b.sqlite3"
+    _seed_three_products(database)
+    app = _api_app(database)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app, raise_app_exceptions=False),
+        base_url="http://test",
+    ) as client:
+        original = await client.put(f"/api/estimates/{ESTIMATE_ID}", json=_document())
+        with sqlite3.connect(database) as connection:
+            connection.execute(
+                """
+                CREATE TRIGGER fail_comparison_refresh
+                BEFORE INSERT ON estimate_comparisons
+                BEGIN SELECT RAISE(ABORT, 'forced refresh interruption'); END
+                """
+            )
+
+        # When: reseeding is interrupted after deleting the transaction-local rows.
+        interrupted = await client.post(
+            f"/api/estimates/{ESTIMATE_ID}/refresh-comparisons"
+        )
+        persisted = await client.get(f"/api/estimates/{ESTIMATE_ID}")
+
+    # Then: SQLite rollback retains every previously published comparison.
+    assert original.status_code == 200
+    assert interrupted.status_code == 500
+    assert persisted.json() == original.json()
+
+
+@pytest.mark.asyncio
 async def test_product_identity_change_keeps_koreanet_as_comparison_a(
     tmp_path: Path,
 ) -> None:

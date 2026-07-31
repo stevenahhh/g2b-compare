@@ -99,8 +99,41 @@ export function putSyncedEstimate(document) {
   );
 }
 
+export function replaceSyncedEstimate(snapshot, document) {
+  return withStore("estimates", "readwrite", async (store) => {
+    const current = await requestResult(store.get(snapshot.id));
+    if (
+      current === undefined ||
+      current.pendingSync ||
+      current.deleted ||
+      JSON.stringify(current.document) !== JSON.stringify(snapshot.document)
+    )
+      return false;
+    await requestResult(
+      store.put({
+        id: document.id,
+        document,
+        everSynced: true,
+        pendingSync: false,
+        deleted: false,
+        error: null,
+      }),
+    );
+    return true;
+  });
+}
+
 export function getEstimate(id) {
   return withStore("estimates", "readonly", (store) => requestResult(store.get(id)));
+}
+
+export function discardSyncedEstimate(id) {
+  return withStore("estimates", "readwrite", async (store) => {
+    const record = await requestResult(store.get(id));
+    if (record === undefined || record.pendingSync) return false;
+    await requestResult(store.delete(id));
+    return true;
+  });
 }
 
 export function getAllEstimates() {

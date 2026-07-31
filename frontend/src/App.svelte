@@ -22,7 +22,7 @@
   let search = $state("");
   let offline = $state(!navigator.onLine);
   let modal = $state(null);
-  let estimateRevision = $state(0);
+  let estimateRevision = $state({ id: "", sequence: 0 });
   const writeState = createLatestStateWriter((state) => putAppState(STATE_KEY, state));
   const pageTitle = $derived(view === "catalog" ? "검색" : view === "estimates" ? "문서 작성" : view === "estimate" ? "문서 작성" : "데이터");
 
@@ -47,7 +47,30 @@
     void runSync();
   }
   function closeModal() { modal = null; }
-  function estimateChanged() { estimateRevision += 1; }
+  function estimateChanged(event) {
+    if (typeof event === "string") {
+      estimateRevision = {
+        id: event,
+        sequence: estimateRevision.sequence + 1,
+      };
+      return;
+    }
+    if (!event?.data) {
+      estimateRevision = {
+        id: "",
+        sequence: estimateRevision.sequence + 1,
+      };
+      return;
+    }
+    try {
+      estimateRevision = {
+        id: JSON.parse(event.data)?.id ?? "",
+        sequence: estimateRevision.sequence + 1,
+      };
+    } catch {
+      return;
+    }
+  }
   async function retrySync() {
     modal = null;
     try {
@@ -112,8 +135,16 @@
   {#if offline}<OfflineBanner onRetry={confirmRetry} />{/if}
   <main id="main" class="shell__body" tabindex="-1"><div class="content" data-route={view}>
     {#if view === "catalog"}<CatalogRoute {search} onSearch={updateSearch} onFailure={reportCoreFailure} onSynced={estimateChanged} />
-    {:else if view === "estimates"}<EstimatesRoute revision={estimateRevision} onNavigate={navigate} onFailure={reportCoreFailure} />
-    {:else if view === "estimate" && estimateId}<EstimateRoute id={estimateId} onNavigate={navigate} onFailure={reportCoreFailure} onSynced={estimateChanged} />
+    {:else if view === "estimates"}<EstimatesRoute revision={estimateRevision.sequence} onNavigate={navigate} onFailure={reportCoreFailure} />
+    {:else if view === "estimate" && estimateId}<EstimateRoute
+        id={estimateId}
+        revision={estimateRevision.id === estimateId
+          ? estimateRevision.sequence
+          : 0}
+        onNavigate={navigate}
+        onFailure={reportCoreFailure}
+        onSynced={estimateChanged}
+      />
     {:else if view === "data"}<DataRoute onFailure={reportCoreFailure} />{/if}
   </div></main>
 </div>

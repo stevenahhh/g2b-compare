@@ -39,6 +39,7 @@ from .estimate_selection import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path as FilePath
 
 CLIENT_ID_PATTERN: Final = r"^[0-9a-fA-F]{32}$"
@@ -127,6 +128,14 @@ def build_estimate_api_router(database: FilePath) -> APIRouter:
         ESTIMATE_EVENTS.publish(EstimateEvent("estimate-saved", estimate_id))
         return _document_response(database, draft)
 
+    router.add_api_route(
+        "/api/estimates/{estimate_id}/refresh-comparisons",
+        _build_refresh_comparisons_endpoint(database, store),
+        methods=["POST"],
+        response_model=EstimateDocumentResponse,
+        name="refresh_estimate_comparisons",
+    )
+
     @router.delete("/api/estimates/{estimate_id}", status_code=204)
     def delete_estimate(
         estimate_id: Annotated[str, Path(pattern=CLIENT_ID_PATTERN)],
@@ -136,6 +145,26 @@ def build_estimate_api_router(database: FilePath) -> APIRouter:
         return Response(status_code=204)
 
     return router
+
+
+def _build_refresh_comparisons_endpoint(
+    database: FilePath,
+    store: EstimateStore,
+) -> Callable[[str], EstimateDocumentResponse]:
+    def refresh_estimate_comparisons(
+        estimate_id: Annotated[str, Path(pattern=CLIENT_ID_PATTERN)],
+    ) -> EstimateDocumentResponse:
+        try:
+            draft = store.refresh_comparisons(
+                estimate_id,
+                seed_document_comparisons_in_transaction,
+            )
+        except EstimateNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        ESTIMATE_EVENTS.publish(EstimateEvent("estimate-saved", estimate_id))
+        return _document_response(database, draft)
+
+    return refresh_estimate_comparisons
 
 
 def _document_response(

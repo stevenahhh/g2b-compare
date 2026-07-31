@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import io
 import json
+import re
 import threading
 import time
 from collections import Counter, defaultdict
@@ -13,15 +14,17 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import parse_qs, urlparse
 
-from openpyxl import Workbook, load_workbook
 import pytest
 import uvicorn
+from anyio import Path as AsyncPath
+from openpyxl import Workbook, load_workbook
 from playwright.async_api import BrowserContext, Page, Route, async_playwright, expect
 
 from g2b_compare.web import app as app_module
 
 DIST = Path("src/g2b_compare/web/frontend_dist")
 EVIDENCE = Path(".omo/evidence/svelte-spa-single-user")
+REFRESH_EVIDENCE = Path(".omo/evidence/document-ui-refresh")
 
 
 @pytest.fixture(scope="module")
@@ -75,7 +78,9 @@ def _product(number: int = 1) -> dict[str, object]:
 def _option() -> dict[str, object]:
     return {
         "parent_product_id": "00000001",
+        "parent_name": "실외형 네트워크 카메라",
         "relation_id": "REL-PTZ-01",
+        "relation_kind": "component",
         "product_id": "00000002",
         "name": "PTZ 추가 선택품목",
         "spec": "30배 광학 줌",
@@ -84,6 +89,7 @@ def _option() -> dict[str, object]:
         "company_name": "주식회사 옵션",
         "detail_url": "https://example.test/detail/option",
         "g2b_url": "https://example.test/g2b/option",
+        "image_url": "",
         "attributes": [{"name": "광학줌", "value": "30", "unit": "배"}],
     }
 
@@ -150,7 +156,9 @@ async def _install_contract_routes(
     offline: dict[str, bool],
     *,
     total_count: int = 90,
-) -> None:
+    refresh_gate: tuple[asyncio.Event, asyncio.Event] | None = None,
+) -> asyncio.Queue[int]:
+    sync_events: asyncio.Queue[int] = asyncio.Queue()
     async def api(route: Route) -> None:
         request = route.request
         path = urlparse(request.url).path
@@ -167,17 +175,55 @@ async def _install_contract_routes(
             items = [_product(number) for number in range(first, min(first + page_size, total_count + 1))]
             await route.fulfill(json={"items": items, "page": page_number, "page_count": page_count, "total_count": total_count})
             return
-        if path == "/api/catalog/products/00000001/options" and request.method == "GET":
-            await route.fulfill(json={"items": [_option()], "page": 1, "page_count": 1, "total_count": 1})
+        if path == "/api/catalog/relations" and request.method == "GET":
+            query = parse_qs(urlparse(request.url).query)
+            items = [_option()] if query.get("category") == ["selection"] else []
+            await route.fulfill(
+                json={
+                    "items": items,
+                    "page": 1,
+                    "page_count": 1,
+                    "total_count": len(items),
+                }
+            )
+            return
+        if (
+            path.startswith("/api/catalog/products/")
+            and path.endswith("/options")
+            and request.method == "GET"
+        ):
+            await route.fulfill(
+                json={
+                    "items": [_option()],
+                    "page": 1,
+                    "page_count": 1,
+                    "total_count": 1,
+                }
+            )
             return
         if path == "/api/estimates" and request.method == "GET":
             await route.fulfill(json=[{"id": estimate_id, "title": document["title"], "updated_at": "2026-07-22T10:00:01+00:00", "line_count": len(document["lines"])} for estimate_id, document in estimates.items()])
+            return
+        if path.endswith("/refresh-comparisons") and request.method == "POST":
+            estimate_id = path.split("/")[-2]
+            if refresh_gate is not None:
+                started, release = refresh_gate
+                started.set()
+                await release.wait()
+            refreshed = _remote_estimate(estimate_id, estimates[estimate_id])
+            for line in refreshed["lines"]:
+                line["comparisons"][0]["company_snapshot"] = "새 비교군"
+            await route.fulfill(status=200, json=refreshed)
             return
         if path.startswith("/api/estimates/"):
             estimate_id = path.rsplit("/", 1)[-1]
             if request.method == "PUT":
                 estimates[estimate_id] = json.loads(request.post_data or "{}")
-                await route.fulfill(status=200, json=_remote_estimate(estimate_id, estimates[estimate_id]))
+                await route.fulfill(
+                    status=200,
+                    json=_remote_estimate(estimate_id, estimates[estimate_id]),
+                )
+                sync_events.put_nowait(len(estimates[estimate_id]["lines"]))
                 return
             if request.method == "DELETE":
                 estimates.pop(estimate_id, None)
@@ -189,6 +235,7 @@ async def _install_contract_routes(
         await route.fulfill(status=404, json={"detail": "unhandled test contract"})
 
     await page.route("**/api/**", api)
+    return sync_events
 
 
 async def _read_estimates(page: Page) -> list[dict[str, object]]:
@@ -207,13 +254,36 @@ async def _read_estimates(page: Page) -> list[dict[str, object]]:
 
 
 async def _wait_for_server_lines(
-    estimates: dict[str, dict[str, object]], line_count: int
+    sync_events: asyncio.Queue[int],
+    line_count: int,
 ) -> None:
-    for _ in range(100):
-        if any(len(document["lines"]) >= line_count for document in estimates.values()):
+    while True:
+        synced_lines = await asyncio.wait_for(sync_events.get(), timeout=5)
+        if synced_lines >= line_count:
             return
-        await asyncio.sleep(0.02)
-    raise AssertionError(f"server did not receive an estimate with {line_count} lines")
+
+
+async def _capture_responsive(
+    page: Page,
+    stem: str,
+    evidence: Path = EVIDENCE,
+) -> None:
+    for width, height in ((375, 812), (768, 900), (1280, 900)):
+        await page.set_viewport_size({"width": width, "height": height})
+        await page.mouse.move(1, 1)
+        await page.evaluate(
+            """() => Promise.all(
+              document.getAnimations()
+                .filter((animation) =>
+                  Number.isFinite(animation.effect?.getTiming().iterations ?? 1)
+                )
+                .map((animation) => animation.finished.catch(() => undefined))
+            )"""
+        )
+        await page.screenshot(
+            path=evidence / f"{stem}-{width}x{height}.png",
+            full_page=False,
+        )
 
 
 
@@ -227,32 +297,44 @@ async def test_svelte_spa_catalog_to_comparison_journey(spa_url: str) -> None:
         browser = await playwright.chromium.launch()
         context = await browser.new_context(viewport={"width": 1440, "height": 900}, accept_downloads=True)
         page = await context.new_page()
-        await _install_contract_routes(page, estimates, counters, offline)
-        await page.goto(spa_url, wait_until="networkidle")
-        await page.get_by_role("button", name="다크 모드").click()
-        assert await page.locator("html").get_attribute("data-theme") == "dark"
-        await page.reload(wait_until="networkidle")
-        assert await page.locator("html").get_attribute("data-theme") == "dark"
-        await expect(page.get_by_role("button", name="라이트 모드")).to_be_visible()
+        sync_events = await _install_contract_routes(
+            page,
+            estimates,
+            counters,
+            offline,
+        )
+        _ = await page.goto(spa_url, wait_until="networkidle")
         await expect(page.get_by_text("실외형 네트워크 카메라").first).to_be_visible()
         assert await page.locator(".catalog-card").count() > 0
         assert await page.locator(".catalog-card").count() <= 60
         assert await page.locator(".g2b-link").first.evaluate("node => getComputedStyle(node).width") == "150px"
         catalog = page.locator(".catalog-scroll")
-        for number in (31, 61):
-            await catalog.evaluate("element => { element.scrollTop = element.scrollHeight; element.dispatchEvent(new Event('scroll')); }")
-            await expect(page.get_by_text(f"보조 카메라 {number}")).to_be_visible()
+        for page_number in (2, 3):
+            async with page.expect_response(
+                lambda response, expected=page_number: (
+                    urlparse(response.url).path == "/api/catalog/products"
+                    and parse_qs(urlparse(response.url).query).get("page")
+                    == [str(expected)]
+                )
+            ):
+                await catalog.evaluate(
+                    "element => { element.scrollTop = element.scrollHeight; "
+                    "element.dispatchEvent(new Event('scroll')); }"
+                )
+        assert counters["GET"]["/api/catalog/products"] == 3
         assert await page.locator(".catalog-card").count() <= 60
         logical_rows = await page.evaluate(
             """() => {
-              const spacers = [...document.querySelectorAll(
-                ".catalog-grid > .virtual-spacer"
-              )];
+              const grid = document.querySelector(".catalog-grid");
+              const rowHeight = parseFloat(
+                grid.style.getPropertyValue("--catalog-row")
+              );
+              const spacers = [...grid.querySelectorAll(".virtual-spacer")];
               const hidden = spacers.reduce(
-                (total, node) => total + parseFloat(node.style.height || "0") / 176,
+                (total, node) => total + parseFloat(node.style.height || "0") / rowHeight,
                 0
               );
-              return hidden + document.querySelectorAll(".catalog-card").length;
+              return hidden + grid.querySelectorAll(".catalog-card").length;
             }"""
         )
         assert logical_rows >= 90
@@ -264,26 +346,57 @@ async def test_svelte_spa_catalog_to_comparison_journey(spa_url: str) -> None:
         await page.get_by_role("button", name="실외형 네트워크 카메라").click()
         await expect(page.get_by_text("PTZ 추가 선택품목")).to_be_visible()
         await expect(page.get_by_text("해상도").first).to_be_visible()
-        await expect(page.get_by_text("광학줌")).to_be_visible()
-        await page.locator(".catalog-card").first.get_by_role("button", name="주품목 추가").click()
-        await _wait_for_server_lines(estimates, 1)
-        await page.locator(".option-row").get_by_role("button", name="추가").click()
-        await _wait_for_server_lines(estimates, 2)
-        await page.get_by_role("link", name="관급내역").click()
+        await expect(page.get_by_text("30배 광학 줌")).to_be_visible()
+        await page.locator(".catalog-card").first.get_by_role(
+            "button", name="리스트에 추가"
+        ).click()
+        await _wait_for_server_lines(sync_events, 1)
+        await page.get_by_role("button", name="문서 작성").click()
         await expect(page.locator(".estimate-summary")).to_have_count(1)
         await page.locator(".estimate-summary__open").click()
-        await expect(page.locator(".estimate-line")).to_have_count(2)
-        for slot in ("A:", "B:", "C:"):
-            await expect(page.get_by_text(slot, exact=False).first).to_be_visible()
-        await expect(page.get_by_text("해상도").first).to_be_visible()
-        await expect(page.get_by_text("광학줌").first).to_be_visible()
-        async with page.expect_download() as tsv_download:
-            await page.get_by_role("button", name="TSV 내려받기").click()
-        tsv = await tsv_download.value
-        assert tsv.suggested_filename.endswith(".tsv")
-        tsv_content = Path(await tsv.path()).read_text(encoding="utf-8")
-        assert "품명\t규격\t업체\t단위\t단가\t수량\t금액" in tsv_content
-        assert "실외형 네트워크 카메라\t4K · IP66\t주식회사 화면\t대\t1250000\t1\t1250000" in tsv_content
+        title_button = page.locator(".page-title-edit")
+        original_title = await title_button.text_content()
+        await title_button.click()
+        title_input = page.get_by_role("textbox", name="문서 제목")
+        await expect(title_input).to_be_focused()
+        await title_input.fill("취소할 제목")
+        await title_input.press("Escape")
+        await expect(title_button).to_have_text(original_title or "")
+
+        await page.get_by_role("button", name="내역 추가").click()
+        product_search = page.locator("#document-product-search")
+        await expect(product_search).to_be_focused()
+        await page.locator("#document-product-sort").focus()
+        await page.locator("#document-product-sort").press("Escape")
+        await expect(page.locator(".document-search-overlay")).not_to_have_class(
+            re.compile(r"\bis-open\b")
+        )
+        await expect(product_search).to_be_focused()
+        await page.get_by_role("button", name="내역 추가").click()
+        await expect(
+            page.locator(".document-search-overlay .catalog-card").first
+        ).to_be_visible()
+        await page.locator(
+            ".document-search-overlay .catalog-card__select"
+        ).first.click()
+        await expect(page.locator(".document-option-panel")).to_be_visible()
+        await page.locator(".document-option-row").first.get_by_role(
+            "button", name="리스트에 추가"
+        ).click()
+        await _wait_for_server_lines(sync_events, 2)
+        await expect(page.locator(".document-table tbody tr")).to_have_count(2)
+        for heading in ("적용회사(A사)", "B사", "C사"):
+            await expect(
+                page.get_by_role("columnheader", name=heading, exact=True)
+            ).to_be_visible()
+        document_table = page.locator(".document-table")
+        await expect(document_table).to_contain_text("3840×2160, IP66")
+        await expect(document_table).to_contain_text("30배 광학 줌")
+        tooltip_trigger = page.locator(".spec-tooltip-trigger").first
+        await tooltip_trigger.focus()
+        await expect(page.get_by_role("tooltip")).to_be_visible()
+        await tooltip_trigger.press("Escape")
+        await expect(page.get_by_role("tooltip")).to_have_count(0)
         await page.route(
             "**/estimates/*/export.xlsx",
             lambda route: route.fulfill(
@@ -302,8 +415,234 @@ async def test_svelte_spa_catalog_to_comparison_journey(spa_url: str) -> None:
         workbook = load_workbook(io.BytesIO(Path(await xlsx.path()).read_bytes()), data_only=True)
         assert workbook["관급내역"]["A2"].value == "실외형 네트워크 카메라"
         assert workbook["관급내역"]["B2"].value == 1
-        await page.screenshot(path=EVIDENCE / "catalog-comparison-1440x900.png", full_page=False)
+        await _capture_responsive(page, "catalog-comparison")
         (EVIDENCE / "catalog-comparison-counters.json").write_text(json.dumps({method: dict(count) for method, count in counters.items()}, ensure_ascii=False, indent=2), encoding="utf-8")
+        await context.close()
+        await browser.close()
+
+
+async def _read_document_ui_contract(page: Page) -> dict[str, int]:
+    return {
+        "tsv": await page.get_by_role(
+            "button", name="TSV 내려받기", exact=True
+        ).count(),
+        "refresh": await page.get_by_role(
+            "button", name="비교군 새로고침", exact=True
+        ).count(),
+        "comparison_region": await page.get_by_role(
+            "region", name="단가 비교표", exact=True
+        ).count(),
+        "comparison_heading": await page.get_by_role(
+            "heading", name="비교군 목록", exact=True
+        ).count(),
+        "comparison_copy": await page.get_by_text(
+            "현재 단가를 기준으로 A·B·C 후보를 문서에 고정함",
+            exact=True,
+        ).count(),
+        "scroll_copy": await page.get_by_text(
+            "좌우로 스크롤해 B·C 후보까지 확인",
+            exact=True,
+        ).count(),
+        "refresh_in_actions": await page.locator(
+            ".page-actions .comparison-refresh"
+        ).count(),
+        "refresh_in_table": await page.locator(
+            ".document-sheet .comparison-refresh"
+        ).count(),
+    }
+
+
+async def _read_document_list_contract(page: Page) -> dict[str, int]:
+    return {
+        "new_document": await page.get_by_role(
+            "button", name="새 문서", exact=True
+        ).count(),
+        "legacy_start": await page.get_by_role(
+            "button", name="새 내역 시작", exact=True
+        ).count(),
+    }
+
+
+async def _capture_mobile_refreshed_candidate(page: Page) -> None:
+    await page.set_viewport_size({"width": 375, "height": 812})
+    await page.locator(".document-table-wrap").evaluate(
+        "element => { element.scrollLeft = 500; }"
+    )
+    refreshed_company = page.get_by_role(
+        "cell",
+        name="새 비교군",
+        exact=True,
+    )
+    assert await refreshed_company.evaluate(
+        """element => {
+          const bounds = element.getBoundingClientRect();
+          return bounds.left >= 0 && bounds.right <= innerWidth;
+        }"""
+    )
+    _ = await page.screenshot(
+        path=REFRESH_EVIDENCE / "editor-refreshed-candidate-375x812.png",
+        full_page=False,
+    )
+
+
+@pytest.mark.asyncio
+async def test_svelte_spa_document_ui_refresh_contract(spa_url: str) -> None:
+    # Given: the live SPA uses a deterministic estimate API contract.
+    await AsyncPath(REFRESH_EVIDENCE).mkdir(parents=True, exist_ok=True)
+    estimates: dict[str, dict[str, object]] = {}
+    counters: dict[str, Counter[str]] = defaultdict(Counter)
+    offline = {"enabled": False}
+    refresh_started = asyncio.Event()
+    refresh_release = asyncio.Event()
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch()
+        context = await browser.new_context(viewport={"width": 1280, "height": 900})
+        page = await context.new_page()
+        await page.add_init_script(
+            """class ContractEventSource {
+              static current;
+              constructor() {
+                this.listeners = new Map();
+                ContractEventSource.current = this;
+              }
+              addEventListener(name, listener) {
+                const listeners = this.listeners.get(name) ?? [];
+                listeners.push(listener);
+                this.listeners.set(name, listeners);
+              }
+              close() {}
+              emit(name, data) {
+                for (const listener of this.listeners.get(name) ?? []) {
+                  listener(new MessageEvent(name, {
+                    data: JSON.stringify(data)
+                  }));
+                }
+              }
+            }
+            window.EventSource = ContractEventSource;
+            window.__emitEstimateEvent = (name, id) =>
+              ContractEventSource.current?.emit(name, { id });"""
+        )
+        sync_events = await _install_contract_routes(
+            page,
+            estimates,
+            counters,
+            offline,
+            refresh_gate=(refresh_started, refresh_release),
+        )
+        _ = await page.goto(spa_url, wait_until="networkidle")
+        await page.get_by_role("button", name="문서 작성").click()
+        await page.get_by_role("button", name="물품 검색", exact=True).click()
+        await expect(page.locator(".catalog-card").first).to_be_visible()
+        await page.locator(".catalog-card").first.get_by_role(
+            "button", name="리스트에 추가"
+        ).click()
+        await _wait_for_server_lines(sync_events, 1)
+        await page.get_by_role("button", name="문서 작성").click()
+        await expect(page.locator(".estimate-summary")).to_have_count(1)
+        list_contract = await _read_document_list_contract(page)
+        await _capture_responsive(page, "list", REFRESH_EVIDENCE)
+        await page.locator(".estimate-summary__open").click()
+        refresh_button = page.locator(".comparison-refresh")
+        await expect(refresh_button).to_be_visible()
+        await expect(refresh_button).to_be_enabled()
+        await expect(refresh_button).to_have_accessible_name("비교군 새로고침")
+        editor_contract = await _read_document_ui_contract(page)
+        await _capture_responsive(page, "editor", REFRESH_EVIDENCE)
+
+        # When: the requested document-list and editor surface is inspected.
+        observed = {**list_contract, **editor_contract}
+
+        # Then: legacy/TSV controls are absent and refresh owns a named region.
+        assert observed == {
+            "new_document": 1,
+            "legacy_start": 0,
+            "tsv": 0,
+            "refresh": 1,
+            "comparison_region": 1,
+            "comparison_heading": 0,
+            "comparison_copy": 0,
+            "scroll_copy": 0,
+            "refresh_in_actions": 1,
+            "refresh_in_table": 0,
+        }
+        refresh_path = next(iter(estimates))
+        async with page.expect_response(
+            lambda response: (
+                urlparse(response.url).path
+                == f"/api/estimates/{refresh_path}/refresh-comparisons"
+                and response.request.method == "POST"
+            )
+        ):
+            _ = await page.evaluate(
+                "() => document.querySelector('.comparison-refresh').click()"
+            )
+            try:
+                await asyncio.wait_for(refresh_started.wait(), timeout=5)
+                await expect(refresh_button).to_be_disabled()
+                await expect(refresh_button).to_have_text("새로고침 중")
+                await expect(page.locator(".document-table-wrap")).to_have_attribute(
+                    "aria-busy",
+                    "true",
+                )
+                await expect(
+                    page.get_by_role("button", name="내역 추가", exact=True)
+                ).to_be_disabled()
+                await expect(
+                    page.locator(".document-table .document-sequence button").first
+                ).to_be_disabled()
+                await expect(
+                    page.locator(
+                        ".document-search-overlay .catalog-card__actions button"
+                    ).first
+                ).to_be_disabled()
+                await _capture_responsive(
+                    page,
+                    "editor-refreshing",
+                    REFRESH_EVIDENCE,
+                )
+            finally:
+                _ = refresh_release.set()
+        await expect(page.locator(".document-table")).to_contain_text("새 비교군")
+        await expect(refresh_button).to_have_text("새로고침 완료")
+        assert (
+            counters["POST"][f"/api/estimates/{refresh_path}/refresh-comparisons"]
+            == 1
+        )
+        await _capture_responsive(
+            page,
+            "editor-refreshed",
+            REFRESH_EVIDENCE,
+        )
+        await _capture_mobile_refreshed_candidate(page)
+        remote_gets_before_event = counters["GET"][
+            f"/api/estimates/{refresh_path}"
+        ]
+        external_title = "외부에서 갱신된 문서"
+        estimates[refresh_path] = {
+            **estimates[refresh_path],
+            "title": external_title,
+        }
+        _ = await page.evaluate(
+            "id => window.__emitEstimateEvent('estimate-saved', id)",
+            refresh_path,
+        )
+        await expect(page.locator(".document-table")).to_contain_text("비교알파")
+        assert (
+            counters["GET"][f"/api/estimates/{refresh_path}"]
+            == remote_gets_before_event + 1
+        )
+        await expect(page.get_by_role("heading", level=1)).to_have_text(
+            external_title
+        )
+        estimates.pop(refresh_path)
+        _ = await page.evaluate(
+            "id => window.__emitEstimateEvent('estimate-deleted', id)",
+            refresh_path,
+        )
+        await expect(page.get_by_role("heading", level=2)).to_have_text(
+            "문서를 찾을 수 없음"
+        )
         await context.close()
         await browser.close()
 
@@ -318,7 +657,13 @@ async def test_svelte_spa_warm_cache_offline_latest_state_replay(spa_url: str) -
         browser = await playwright.chromium.launch()
         context: BrowserContext = await browser.new_context(viewport={"width": 1440, "height": 900})
         page = await context.new_page()
-        await _install_contract_routes(page, estimates, counters, offline, total_count=10_000)
+        sync_events = await _install_contract_routes(
+            page,
+            estimates,
+            counters,
+            offline,
+            total_count=10_000,
+        )
         await page.goto(spa_url, wait_until="networkidle")
         await page.get_by_role("button", name="실외형 네트워크 카메라").click()
         await expect(page.get_by_text("PTZ 추가 선택품목")).to_be_visible()
@@ -328,7 +673,7 @@ async def test_svelte_spa_warm_cache_offline_latest_state_replay(spa_url: str) -
               open.onerror = () => reject(open.error);
               open.onsuccess = () => {
                 const tx = open.result.transaction('catalog_cache', 'readonly');
-                const get = tx.objectStore('catalog_cache').get('catalog::price_asc:1');
+                const get = tx.objectStore('catalog_cache').get('catalog:v3:주식회사 코리아넷::price_asc:1');
                 get.onerror = () => reject(get.error);
                 get.onsuccess = () => resolve({milliseconds: performance.now() - start, found: Boolean(get.result?.value)});
               };
@@ -338,9 +683,11 @@ async def test_svelte_spa_warm_cache_offline_latest_state_replay(spa_url: str) -
         assert timing["milliseconds"] < 100
         assert await page.locator(".catalog-card").count() <= 60
         assert await page.locator(".catalog-card").count() < 10_000
-        await page.locator(".catalog-card").first.get_by_role("button", name="주품목 추가").click()
-        await _wait_for_server_lines(estimates, 1)
-        await page.get_by_role("link", name="관급내역").click()
+        await page.locator(".catalog-card").first.get_by_role(
+            "button", name="리스트에 추가"
+        ).click()
+        await _wait_for_server_lines(sync_events, 1)
+        await page.get_by_role("button", name="문서 작성").click()
         await expect(page.locator(".estimate-summary")).to_have_count(1)
         await page.locator(".estimate-summary__open").click()
         estimate_id = (await page.locator(".route-id").text_content()).split(": ", 1)[1]
@@ -353,23 +700,26 @@ async def test_svelte_spa_warm_cache_offline_latest_state_replay(spa_url: str) -
         await _activate_service_worker(page)
         offline["enabled"] = True
         await context.set_offline(True)
-        quantity = page.locator(".estimate-line input[type=number]")
-        await quantity.fill("7")
+        offline_title = "오프라인 문서"
+        await page.locator(".page-title-edit").click()
+        title_input = page.get_by_role("textbox", name="문서 제목")
+        await title_input.fill(offline_title)
+        await title_input.press("Enter")
         for _ in range(100):
             pending = await _read_estimates(page)
-            if pending and pending[0]["pendingSync"] and pending[0]["document"]["lines"][0]["quantity"] == "7":
+            if pending and pending[0]["pendingSync"] and pending[0]["document"]["title"] == offline_title:
                 break
             await asyncio.sleep(0.02)
         else:
-            raise AssertionError("offline quantity edit was not persisted")
-        await page.get_by_role("link", name="검색", exact=True).click()
+            raise AssertionError("offline title edit was not persisted")
+        await page.get_by_role("button", name="물품 검색", exact=True).click()
         await expect(page.locator(".catalog-card").first).to_be_visible()
         await expect(page.locator(".offline-banner")).to_be_visible()
-        await page.get_by_role("link", name="관급내역").click()
+        await page.get_by_role("button", name="문서 작성").click()
         await page.locator(".estimate-summary__open").click()
         records = await _read_estimates(page)
         assert records[0]["pendingSync"] is True
-        assert records[0]["document"]["lines"][0]["quantity"] == "7"
+        assert records[0]["document"]["title"] == offline_title
         await page.get_by_role("button", name="삭제").first.click()
         for _ in range(100):
             tombstone = await _read_estimates(page)
@@ -382,7 +732,7 @@ async def test_svelte_spa_warm_cache_offline_latest_state_replay(spa_url: str) -
         await expect(page.locator(".offline-banner")).to_be_visible()
         records = await _read_estimates(page)
         assert len(records) == 1 and records[0]["deleted"] is True and records[0]["pendingSync"] is True
-        await page.screenshot(path=EVIDENCE / "warm-cache-offline-pending.png", full_page=False)
+        await _capture_responsive(page, "warm-cache-offline-pending")
         for _ in range(100):
             failed = await _read_estimates(page)
             if failed and failed[0]["error"]:
@@ -394,7 +744,7 @@ async def test_svelte_spa_warm_cache_offline_latest_state_replay(spa_url: str) -
         counters["DELETE"].clear()
         offline["enabled"] = False
         await context.set_offline(False)
-        await page.get_by_role("link", name="관급내역").click()
+        await page.get_by_role("button", name="문서 작성", exact=True).click()
         await page.get_by_role("button", name="재시도").click()
         await expect(page.locator(".estimate-summary")).to_have_count(0)
         for _ in range(100):

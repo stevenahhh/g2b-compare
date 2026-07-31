@@ -7,6 +7,7 @@ import {
   DATABASE_NAME,
   completeEstimateSync,
   deleteEstimate,
+  discardSyncedEstimate,
   getAllEstimates,
   getAppState,
   getCatalogCache,
@@ -17,6 +18,7 @@ import {
   putAppState,
   putCatalogCache,
   putEstimate,
+  replaceSyncedEstimate,
   putSyncedEstimate,
 } from "./db.js";
 
@@ -221,6 +223,52 @@ describe("IndexedDB latest-state storage", () => {
       pendingSync: false,
       deleted: false,
       error: null,
+    });
+  });
+
+  it("discards external deletions without losing pending local edits", async () => {
+    const synced = {
+      id: "a".repeat(32),
+      title: "Synced",
+      lines: [{ id: "5".repeat(32), quantity: 1 }],
+    };
+    await putSyncedEstimate(synced);
+
+    await expect(discardSyncedEstimate(synced.id)).resolves.toBe(true);
+    await expect(getEstimate(synced.id)).resolves.toBeUndefined();
+
+    const pending = { ...synced, id: "b".repeat(32), title: "Pending" };
+    await putEstimate(pending);
+    await expect(discardSyncedEstimate(pending.id)).resolves.toBe(false);
+    await expect(getEstimate(pending.id)).resolves.toMatchObject({
+      document: pending,
+      pendingSync: true,
+    });
+  });
+
+  it("replaces external updates only while the local snapshot is unchanged", async () => {
+    const original = {
+      id: "c".repeat(32),
+      title: "Original",
+      lines: [{ id: "6".repeat(32), quantity: 1 }],
+    };
+    const external = { ...original, title: "External" };
+    await putSyncedEstimate(original);
+    const snapshot = await getEstimate(original.id);
+
+    await expect(replaceSyncedEstimate(snapshot, external)).resolves.toBe(true);
+    await expect(getEstimate(original.id)).resolves.toMatchObject({
+      document: external,
+      pendingSync: false,
+    });
+
+    const current = await getEstimate(original.id);
+    const pending = { ...external, title: "Local pending" };
+    await putEstimate(pending);
+    await expect(replaceSyncedEstimate(current, original)).resolves.toBe(false);
+    await expect(getEstimate(original.id)).resolves.toMatchObject({
+      document: pending,
+      pendingSync: true,
     });
   });
 });

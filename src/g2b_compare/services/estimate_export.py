@@ -31,7 +31,6 @@ TEMPLATE_OVERWRITE: Final = "기준 템플릿은 덮어쓸 수 없음"
 TEMPLATE_HASH_CHANGED: Final = "기준 템플릿 해시가 일치하지 않음"
 TEMPLATE_SHEETS_CHANGED: Final = "기준 템플릿 시트 순서가 바뀜"
 COMPARISONS_REQUIRED: Final = "비교 물품 2개가 필요함"
-ANCHOR_FIRST: Final = "A사에 선택한 물품을 배치해야 함"
 INVALID_SLOT: Final = "비교 슬롯이 올바르지 않음"
 
 
@@ -58,6 +57,8 @@ class EstimateExporter:
         draft = EstimateStore(self.database).get_draft(estimate_id)
         comparisons = _read_comparisons(self.database, draft)
         _validate_comparisons(draft, comparisons)
+        if draft.template_sha256 != self.manifest.template_sha256:
+            raise EstimateExportError(TEMPLATE_HASH_CHANGED)
         with ZipFile(self.template) as archive:
             entries = {name: archive.read(name) for name in archive.namelist()}
         write_draft(entries, self.manifest, draft, comparisons)
@@ -125,8 +126,6 @@ def _validate_comparisons(
         values = comparisons[line.id]
         if tuple(item.slot for item in values) != ("A", "B", "C"):
             raise EstimateExportError(COMPARISONS_REQUIRED)
-        if values[0].product_id != line.product_id:
-            raise EstimateExportError(ANCHOR_FIRST)
 
 
 def _slot(value: str) -> Literal["A", "B", "C"]:
