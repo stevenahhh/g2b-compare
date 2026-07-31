@@ -53,13 +53,37 @@ uv run python .\scripts\start.py --home .g2b --provision-only
 uv run python .\scripts\start.py --home .g2b --no-browser
 ```
 
+### 다른 머신에서 내부망 공개
+
+런처는 머신별 IP를 코드에 넣지 않고 `0.0.0.0:8765`에 bind하므로, 저장소와
+사용할 HOME 디렉터리를 준비한 다른 Windows 머신에서도 같은 명령으로 실행할
+수 있음.
+
+```powershell
+uv sync --frozen
+uv run python .\scripts\start.py --home D:\g2b-data --no-browser
+```
+
+실행 머신에서는 `http://127.0.0.1:8765/`로 확인하고, 같은 AP·내부망의 다른
+머신에서는 `http://<실행_머신의_IPv4>:8765/`로 접속함. 실행 머신의 IPv4는
+`ipconfig`로 확인함. Windows 방화벽 알림이 표시되면 사설·도메인 네트워크만
+허용하고, 공유기 포트 포워딩은 설정하지 않음. `Ctrl+C`로 런처를 종료하면
+자식 서버도 함께 종료됨.
+
+이미 준비된 HOME을 별도 provisioning 없이 바로 제공할 때는 다음 명령도
+동일하게 전체 인터페이스에 bind함.
+
+```powershell
+uv run g2b-compare --home D:\g2b-data serve --host 0.0.0.0 --port 8765
+```
+
 새 HOME에는 저장소의 검증된 `docs/api-contract-observed.json`이 자동 복사됨.
 최초 전체 동기화는 API 호출 한도 때문에 여러 날 걸릴 수 있음. 안전 한도에서
 중단되면 저장된 페이지 다음부터 재개되므로 24시간 rolling window가 지난 뒤
 같은 명령을 다시 실행하면 됨.
 
-준비가 끝나면 기본 주소는 `http://127.0.0.1:8765/`임. 외부 주소로 bind하지
-않음.
+준비가 끝나면 이 머신에서 여는 기본 주소는 `http://127.0.0.1:8765/`이며,
+서버 자체는 내부망 공유를 위해 모든 IPv4 인터페이스에 bind함.
 
 ## 주요 명령
 
