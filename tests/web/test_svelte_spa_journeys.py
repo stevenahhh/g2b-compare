@@ -454,6 +454,7 @@ async def _read_document_ui_contract(page: Page) -> dict[str, int]:
 
 async def _read_document_list_contract(page: Page) -> dict[str, int]:
     return {
+        "home": await page.get_by_role("button", name="홈", exact=True).count(),
         "new_document": await page.get_by_role(
             "button", name="새 문서", exact=True
         ).count(),
@@ -555,6 +556,7 @@ async def test_svelte_spa_document_ui_refresh_contract(spa_url: str) -> None:
 
         # Then: legacy/TSV controls are absent and refresh owns a named region.
         assert observed == {
+            "home": 0,
             "new_document": 1,
             "legacy_start": 0,
             "tsv": 0,

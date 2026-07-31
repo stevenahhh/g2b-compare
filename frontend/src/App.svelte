@@ -124,9 +124,6 @@
   <a class="skip-link" href="#main">본문으로 건너뛰기</a>
   <header class="app-header">
     <nav class="app-nav" aria-label="주요 메뉴">
-      <button class="home-link" type="button" aria-label="홈" title="홈" onclick={() => showView("catalog")}>
-        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7"></path><path d="M6 10v10h12V10M10 20v-6h4v6"></path></svg>
-      </button>
       <button type="button" aria-current={view === "estimates" || view === "estimate" ? "page" : undefined} onclick={() => showView("estimates")}>문서 작성</button>
       <button type="button" aria-current={view === "catalog" ? "page" : undefined} onclick={() => showView("catalog")}>물품 검색</button>
       <button type="button" aria-current={view === "data" ? "page" : undefined} onclick={() => showView("data")}>데이터 상태</button>

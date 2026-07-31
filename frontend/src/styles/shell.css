@@ -7,8 +7,6 @@
 .app-nav button { display: inline-flex; min-height: 44px; align-items: center; padding-inline: var(--space-4); border-radius: var(--radius-control); color: var(--muted); background: transparent; border: 0; text-decoration: none; font-weight: 500; white-space: nowrap; }
 .app-nav button:hover { color: var(--ink); background: var(--surface-subtle); }
 .app-nav button[aria-current="page"] { color: var(--accent-dark); background: var(--surface-selected); }
-.app-nav .home-link { inline-size: 44px; justify-content: center; padding-inline: 0; color: var(--ink); }
-.app-nav svg { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .shell__body { grid-row: 3; min-inline-size: 0; min-block-size: 0; overflow: auto; outline: 0; scrollbar-gutter: stable; }
 .content { width: min(1480px, calc(100% - 48px)); margin-inline: auto; padding-block: var(--space-5) var(--space-8); }
