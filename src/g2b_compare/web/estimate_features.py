@@ -44,13 +44,32 @@ def option_requirements(kind: str, text: str) -> frozenset[str]:
             if match is not None
             else frozenset()
         )
-    return frozenset(
+    result = {
         f"number:{match.group(1)}{match.group(2)}"
         for match in re.finditer(
             r"(\d+(?:\.\d+)?)\s*(port|tb|gb|ch|mm|m)",
             normalized,
         )
+    }
+    dimension = re.search(
+        r"(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s*mm",
+        normalized,
     )
+    if dimension is not None:
+        result.add("dimension:" + "x".join(dimension.groups()))
+    inch = re.search(r"(\d+(?:\.\d+)?)\s*[\"”]", text)
+    if inch is not None:
+        result.add(f"inch:{_number_key(inch.group(1))}")
+    surge = re.search(
+        r"(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)\s*ka",
+        text.casefold(),
+    )
+    if surge is not None:
+        result.add(f"surge:{surge.group(1)}/{surge.group(2)}ka")
+    for marker in ("수신기", "송신기"):
+        if marker in normalized:
+            result.add(f"role:{marker}")
+    return frozenset(result)
 
 
 def product_features(

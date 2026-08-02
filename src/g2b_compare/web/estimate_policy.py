@@ -17,6 +17,7 @@ from .estimate_models import (
     KOREANET_COMPANY,
     PRICE_LADDER_PERCENTAGES,
 )
+from .estimate_models import BundleCandidate as _BundleCandidate
 from .estimate_models import (
     MainCandidate as _MainCandidate,
 )
@@ -39,15 +40,13 @@ def choose_main_alternatives(  # noqa: C901
     eligible = tuple(
         item
         for item in ranked
-        if item.view.company != KOREANET_COMPANY
+        if item.view.company != baseline.view.company
         and item.view.price_won >= baseline.view.price_won
     )
     if not eligible:
         return ()
-    best_compatibility = eligible[0].key[:5]
-    preferred = tuple(item for item in eligible if item.key[:5] == best_compatibility)
     chosen: list[_MainCandidate] = []
-    companies = {KOREANET_COMPANY}
+    companies = {baseline.view.company}
     product_ids = {baseline.view.product_id}
 
     def choose(item: _MainCandidate, percentage: int | None) -> None:
@@ -64,17 +63,12 @@ def choose_main_alternatives(  # noqa: C901
         product_ids.add(item.view.product_id)
 
     for percentage in PRICE_LADDER_PERCENTAGES:
-        for item in preferred:
+        for item in eligible:
             choose(item, percentage)
             if len(chosen) == ALTERNATIVE_COUNT:
                 break
         if len(chosen) == ALTERNATIVE_COUNT:
             break
-    if len(chosen) < ALTERNATIVE_COUNT:
-        for item in preferred:
-            choose(item, None)
-            if len(chosen) == ALTERNATIVE_COUNT:
-                break
     if len(chosen) < ALTERNATIVE_COUNT:
         for item in eligible:
             choose(item, None)
@@ -84,11 +78,90 @@ def choose_main_alternatives(  # noqa: C901
         sorted(
             chosen,
             key=lambda item: (
+                item.view.price_won,
                 item.source_row,
                 item.view.company.encode("utf-8"),
                 item.view.product_id,
             ),
         )
+    )
+
+
+def choose_bundle_alternatives(
+    bundles: tuple[_BundleCandidate, ...],
+    selected: _BundleCandidate,
+    *,
+    distinct_product_ids: bool = False,
+) -> tuple[_BundleCandidate, ...]:
+    """Choose the two cheapest complete company-distinct bundles above A."""
+    return rank_bundle_alternatives(
+        bundles,
+        selected,
+        distinct_product_ids=distinct_product_ids,
+    )[:ALTERNATIVE_COUNT]
+
+
+def rank_bundle_alternatives(
+    bundles: tuple[_BundleCandidate, ...],
+    selected: _BundleCandidate,
+    *,
+    distinct_product_ids: bool = False,
+) -> tuple[_BundleCandidate, ...]:
+    """Rank each company's cheapest complete eligible bundle."""
+    by_company: dict[str, _BundleCandidate] = {}
+    for bundle in bundles:
+        if bundle.main.view.company == selected.main.view.company:
+            continue
+        if bundle.main.view.price_won < selected.main.view.price_won:
+            continue
+        if bundle.total_price_won < selected.total_price_won:
+            continue
+        if (
+            distinct_product_ids
+            and bundle.main.view.product_id == selected.main.view.product_id
+        ):
+            continue
+        current = by_company.get(bundle.main.view.company)
+        key = (
+            bundle.total_price_won - selected.total_price_won,
+            bundle.main.key[:5],
+            bundle.main.source_row,
+            bundle.main.view.product_id,
+        )
+        if current is None or key < (
+            current.total_price_won - selected.total_price_won,
+            current.main.key[:5],
+            current.main.source_row,
+            current.main.view.product_id,
+        ):
+            by_company[bundle.main.view.company] = bundle
+    return tuple(
+        sorted(
+            by_company.values(),
+            key=lambda bundle: (
+                bundle.total_price_won - selected.total_price_won,
+                bundle.main.key[:5],
+                bundle.main.source_row,
+                bundle.main.view.company.encode("utf-8"),
+                bundle.main.view.product_id,
+            ),
+        )
+    )
+
+
+def selected_main(
+    ranked: tuple[_MainCandidate, ...],
+    line: EstimateLine,
+) -> _MainCandidate | None:
+    """Return the candidate representing the product selected into slot A."""
+    return next(
+        (
+            item
+            for item in ranked
+            if item.view.product_id == line.product_id
+            and item.view.company == line.company_snapshot
+        ),
+        None,
     )
 
 
@@ -105,9 +178,12 @@ def requires_distinct_product_ids(
     line: EstimateLine,
 ) -> bool:
     """Require distinct product identities for sensitive 8-port switches."""
-    if _line_component(line) != "switch" or "ports:8" not in _option_requirements(
-        "switch", line.spec_snapshot
-    ):
+    if _line_component(line) != "switch":
+        return False
+    requirements = _option_requirements("switch", line.spec_snapshot)
+    if "ports:24" in requirements and line.quantity > 1:
+        return True
+    if "ports:8" not in requirements or line.quantity > 1:
         return False
     if line.line_kind == "main":
         return True

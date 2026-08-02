@@ -1,0 +1,941 @@
+{
+  "schema": "g2b-comparison-reference-v1",
+  "documents": [
+    {
+      "workbook": "순천 향교 CCTV 구매 설치 - 내역서(관급)(0706수정).xlsx",
+      "worksheet": "단가조사",
+      "rows": [
+        {
+          "row": 5,
+          "quantity": "1",
+          "spec": "고정형, 200만화소, 4배줌",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25454886",
+              "company": "코리아넷",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 3281000
+            },
+            {
+              "slot": "B",
+              "product_id": "25844997",
+              "company": "인텔리빅스",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 3425000
+            },
+            {
+              "slot": "C",
+              "product_id": "25205029",
+              "company": "에스카",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 3370000
+            }
+          ]
+        },
+        {
+          "row": 6,
+          "quantity": "5",
+          "spec": "고정형, 200만화소, 4배줌",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25104211",
+              "company": "코리아넷",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 1487000
+            },
+            {
+              "slot": "B",
+              "product_id": "24194252",
+              "company": "인텔리빅스",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 1620000
+            },
+            {
+              "slot": "C",
+              "product_id": "24479041",
+              "company": "에스카",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 1516000
+            }
+          ]
+        },
+        {
+          "row": 7,
+          "quantity": "1",
+          "spec": "16ch",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25560063",
+              "company": "코리아넷",
+              "spec": "16ch",
+              "price_won": 5431000
+            },
+            {
+              "slot": "B",
+              "product_id": "23221272",
+              "company": "시큐인포",
+              "spec": "16ch",
+              "price_won": 5624000
+            },
+            {
+              "slot": "C",
+              "product_id": "25560063",
+              "company": "에스카",
+              "spec": "16ch",
+              "price_won": 6036000
+            }
+          ]
+        },
+        {
+          "row": 8,
+          "quantity": "1",
+          "spec": "24port PoE",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25527067",
+              "company": "코리아넷",
+              "spec": "24port PoE",
+              "price_won": 1552000
+            },
+            {
+              "slot": "B",
+              "product_id": "25527067",
+              "company": "인텔리빅스",
+              "spec": "24port PoE",
+              "price_won": 1693000
+            },
+            {
+              "slot": "C",
+              "product_id": "25527067",
+              "company": "에스카",
+              "spec": "24port PoE",
+              "price_won": 1696000
+            }
+          ]
+        },
+        {
+          "row": 9,
+          "quantity": "1",
+          "spec": "8port PoE",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22943457",
+              "company": "코리아넷",
+              "spec": "8port PoE",
+              "price_won": 295000
+            },
+            {
+              "slot": "B",
+              "product_id": "23641018",
+              "company": "인텔리빅스",
+              "spec": "8port PoE",
+              "price_won": 504000
+            },
+            {
+              "slot": "C",
+              "product_id": "23578440",
+              "company": "에스카",
+              "spec": "8port PoE",
+              "price_won": 529000
+            }
+          ]
+        },
+        {
+          "row": 10,
+          "quantity": "2",
+          "spec": "6TB",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "24432409",
+              "company": "코리아넷",
+              "spec": "6TB",
+              "price_won": 392000
+            },
+            {
+              "slot": "B",
+              "product_id": "24172505",
+              "company": "시큐인포",
+              "spec": "6TB",
+              "price_won": 570000
+            },
+            {
+              "slot": "C",
+              "product_id": "25534746",
+              "company": "에스카",
+              "spec": "6TB",
+              "price_won": 770000
+            }
+          ]
+        },
+        {
+          "row": 11,
+          "quantity": "80",
+          "spec": "F-CV 3C×2.5㎟",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22067190",
+              "company": "코리아넷",
+              "spec": "F-CV 3C×2.5㎟",
+              "price_won": 4600
+            },
+            {
+              "slot": "B",
+              "product_id": "22067190",
+              "company": "인텔리빅스",
+              "spec": "F-CV 3C×2.5㎟",
+              "price_won": 4600
+            },
+            {
+              "slot": "C",
+              "product_id": "22067190",
+              "company": "에스카",
+              "spec": "F-CV 3C×2.5㎟",
+              "price_won": 4600
+            }
+          ]
+        },
+        {
+          "row": 12,
+          "quantity": "135",
+          "spec": "CAT.5E/CM 4P",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22067194",
+              "company": "코리아넷",
+              "spec": "CAT.5E/CM 4P",
+              "price_won": 2740
+            },
+            {
+              "slot": "B",
+              "product_id": "22067194",
+              "company": "인텔리빅스",
+              "spec": "CAT.5E/CM 4P",
+              "price_won": 2740
+            },
+            {
+              "slot": "C",
+              "product_id": "22067194",
+              "company": "에스카",
+              "spec": "CAT.5E/CM 4P",
+              "price_won": 2740
+            }
+          ]
+        },
+        {
+          "row": 13,
+          "quantity": "6",
+          "spec": "종합시험",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22066421",
+              "company": "코리아넷",
+              "spec": "종합시험",
+              "price_won": 109760
+            },
+            {
+              "slot": "B",
+              "product_id": "22066421",
+              "company": "인텔리빅스",
+              "spec": "종합시험",
+              "price_won": 109760
+            },
+            {
+              "slot": "C",
+              "product_id": "22066421",
+              "company": "에스카",
+              "spec": "종합시험",
+              "price_won": 109760
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "workbook": "전남 광양시 아트케이션 관광스테이 확충사업 CCTV 설비 - 내역서(관급)(최종).xlsx",
+      "worksheet": "단가조사",
+      "rows": [
+        {
+          "row": 5,
+          "quantity": "5",
+          "spec": "고정형, 200만화소, 4배줌",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25454886",
+              "company": "코리아넷",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 3281000
+            },
+            {
+              "slot": "B",
+              "product_id": "25844997",
+              "company": "인텔리빅스",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 3425000
+            },
+            {
+              "slot": "C",
+              "product_id": "25205029",
+              "company": "에스카",
+              "spec": "고정형, 200만화소, 4배줌",
+              "price_won": 3370000
+            }
+          ]
+        },
+        {
+          "row": 6,
+          "quantity": "1",
+          "spec": "36ch",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25560065",
+              "company": "코리아넷",
+              "spec": "36ch",
+              "price_won": 8347000
+            },
+            {
+              "slot": "B",
+              "product_id": "25560065",
+              "company": "인텔리빅스",
+              "spec": "36ch",
+              "price_won": 9075000
+            },
+            {
+              "slot": "C",
+              "product_id": "25560065",
+              "company": "에스카",
+              "spec": "36ch",
+              "price_won": 8368000
+            }
+          ]
+        },
+        {
+          "row": 7,
+          "quantity": "1",
+          "spec": "CMS station",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "23674721",
+              "company": "코리아넷",
+              "spec": "CMS station",
+              "price_won": 2266000
+            },
+            {
+              "slot": "B",
+              "product_id": "23674721",
+              "company": "시큐인포",
+              "spec": "CMS station",
+              "price_won": 2266500
+            },
+            {
+              "slot": "C",
+              "product_id": "23674721",
+              "company": "지성이엔지",
+              "spec": "CMS station",
+              "price_won": 2266500
+            }
+          ]
+        },
+        {
+          "row": 8,
+          "quantity": "5",
+          "spec": "6TB",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25534746",
+              "company": "코리아넷",
+              "spec": "6TB",
+              "price_won": 738000
+            },
+            {
+              "slot": "B",
+              "product_id": "25279484",
+              "company": "시큐인포",
+              "spec": "6TB",
+              "price_won": 925000
+            },
+            {
+              "slot": "C",
+              "product_id": "25534746",
+              "company": "에스카",
+              "spec": "6TB",
+              "price_won": 770000
+            }
+          ]
+        },
+        {
+          "row": 9,
+          "quantity": "2",
+          "spec": "24port PoE",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25527067",
+              "company": "코리아넷",
+              "spec": "24port PoE",
+              "price_won": 1552000
+            },
+            {
+              "slot": "B",
+              "product_id": "24068378",
+              "company": "인텔리빅스",
+              "spec": "24port PoE",
+              "price_won": 1775000
+            },
+            {
+              "slot": "C",
+              "product_id": "25696520",
+              "company": "에스카",
+              "spec": "24port PoE",
+              "price_won": 1613000
+            }
+          ]
+        },
+        {
+          "row": 10,
+          "quantity": "2",
+          "spec": "8port PoE",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22765080",
+              "company": "코리아넷",
+              "spec": "8port PoE",
+              "price_won": 333000
+            },
+            {
+              "slot": "B",
+              "product_id": "23641018",
+              "company": "인텔리빅스",
+              "spec": "8port PoE",
+              "price_won": 504000
+            },
+            {
+              "slot": "C",
+              "product_id": "23641018",
+              "company": "에스카",
+              "spec": "8port PoE",
+              "price_won": 462000
+            }
+          ]
+        },
+        {
+          "row": 11,
+          "quantity": "2",
+          "spec": "전원/통신용, 40/20kA",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22816460",
+              "company": "코리아넷",
+              "spec": "전원/통신용, 40/20kA",
+              "price_won": 181000
+            },
+            {
+              "slot": "B",
+              "product_id": "23192770",
+              "company": "명광",
+              "spec": "전원/통신용, 40/20kA",
+              "price_won": 282300
+            },
+            {
+              "slot": "C",
+              "product_id": "23192770",
+              "company": "디라직",
+              "spec": "전원/통신용, 40/20kA",
+              "price_won": 282300
+            }
+          ]
+        },
+        {
+          "row": 12,
+          "quantity": "1",
+          "spec": "600×1800×750mm",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22065235",
+              "company": "코리아넷",
+              "spec": "600×1800×750mm",
+              "price_won": 789290
+            },
+            {
+              "slot": "B",
+              "product_id": "22065235",
+              "company": "파로스",
+              "spec": "600×1800×750mm",
+              "price_won": 789290
+            },
+            {
+              "slot": "C",
+              "product_id": "22065235",
+              "company": "에스카",
+              "spec": "600×1800×750mm",
+              "price_won": 789290
+            }
+          ]
+        },
+        {
+          "row": 13,
+          "quantity": "5",
+          "spec": "200×200×200mm",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22067204",
+              "company": "코리아넷",
+              "spec": "200×200×200mm",
+              "price_won": 66730
+            },
+            {
+              "slot": "B",
+              "product_id": "22067204",
+              "company": "파로스",
+              "spec": "200×200×200mm",
+              "price_won": 66730
+            },
+            {
+              "slot": "C",
+              "product_id": "22067204",
+              "company": "에스카",
+              "spec": "200×200×200mm",
+              "price_won": 66730
+            }
+          ]
+        },
+        {
+          "row": 14,
+          "quantity": "4",
+          "spec": "4C",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22065237",
+              "company": "코리아넷",
+              "spec": "4C",
+              "price_won": 72520
+            },
+            {
+              "slot": "B",
+              "product_id": "22065237",
+              "company": "파로스",
+              "spec": "4C",
+              "price_won": 72520
+            },
+            {
+              "slot": "C",
+              "product_id": "22065237",
+              "company": "에스카",
+              "spec": "4C",
+              "price_won": 72520
+            }
+          ]
+        },
+        {
+          "row": 15,
+          "quantity": "16",
+          "spec": "SM-3 ST",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22067185",
+              "company": "코리아넷",
+              "spec": "SM-3 ST",
+              "price_won": 8720
+            },
+            {
+              "slot": "B",
+              "product_id": "22067185",
+              "company": "파로스",
+              "spec": "SM-3 ST",
+              "price_won": 8720
+            },
+            {
+              "slot": "C",
+              "product_id": "22067185",
+              "company": "에스카",
+              "spec": "SM-3 ST",
+              "price_won": 8720
+            }
+          ]
+        },
+        {
+          "row": 16,
+          "quantity": "16",
+          "spec": "광케이블시험시험및측정",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22066418",
+              "company": "코리아넷",
+              "spec": "광케이블시험시험및측정",
+              "price_won": 54290
+            },
+            {
+              "slot": "B",
+              "product_id": "22066418",
+              "company": "파로스",
+              "spec": "광케이블시험시험및측정",
+              "price_won": 54290
+            },
+            {
+              "slot": "C",
+              "product_id": "22066418",
+              "company": "에스카",
+              "spec": "광케이블시험시험및측정",
+              "price_won": 54290
+            }
+          ]
+        },
+        {
+          "row": 17,
+          "quantity": "16",
+          "spec": "광케이블보통12코어이하접속",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22066417",
+              "company": "코리아넷",
+              "spec": "광케이블보통12코어이하접속",
+              "price_won": 27930
+            },
+            {
+              "slot": "B",
+              "product_id": "22066417",
+              "company": "파로스",
+              "spec": "광케이블보통12코어이하접속",
+              "price_won": 27930
+            },
+            {
+              "slot": "C",
+              "product_id": "22066417",
+              "company": "에스카",
+              "spec": "광케이블보통12코어이하접속",
+              "price_won": 27930
+            }
+          ]
+        },
+        {
+          "row": 18,
+          "quantity": "30",
+          "spec": "종합시험",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22066421",
+              "company": "코리아넷",
+              "spec": "종합시험",
+              "price_won": 109760
+            },
+            {
+              "slot": "B",
+              "product_id": "22066421",
+              "company": "파로스",
+              "spec": "종합시험",
+              "price_won": 109760
+            },
+            {
+              "slot": "C",
+              "product_id": "22066421",
+              "company": "에스카",
+              "spec": "종합시험",
+              "price_won": 109760
+            }
+          ]
+        },
+        {
+          "row": 19,
+          "quantity": "25",
+          "spec": "돔카메라, 200만화소, 3배줌",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25005969",
+              "company": "세은",
+              "spec": "돔카메라, 200만화소, 3배줌",
+              "price_won": 812000
+            },
+            {
+              "slot": "B",
+              "product_id": "24658142",
+              "company": "서전일렉스",
+              "spec": "돔카메라, 200만화소, 3배줌",
+              "price_won": 1100000
+            },
+            {
+              "slot": "C",
+              "product_id": "25035587",
+              "company": "두원전자통신",
+              "spec": "돔카메라, 200만화소, 3배줌",
+              "price_won": 1426380
+            }
+          ]
+        },
+        {
+          "row": 20,
+          "quantity": "2",
+          "spec": "CCTV설치안내(대)",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "24465873",
+              "company": "태정이엔지",
+              "spec": "CCTV설치안내(대)",
+              "price_won": 215000
+            },
+            {
+              "slot": "B",
+              "product_id": "25980115",
+              "company": "현명",
+              "spec": "CCTV설치안내(대)",
+              "price_won": 230000
+            },
+            {
+              "slot": "C",
+              "product_id": "23994037",
+              "company": "비전정보통신",
+              "spec": "CCTV설치안내(대)",
+              "price_won": 350000
+            }
+          ]
+        },
+        {
+          "row": 21,
+          "quantity": "1",
+          "spec": "방범감시시스템",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25897674",
+              "company": "홍석",
+              "spec": "방범감시시스템",
+              "price_won": 197000
+            },
+            {
+              "slot": "B",
+              "product_id": "24307874",
+              "company": "진명아이앤씨",
+              "spec": "방범감시시스템",
+              "price_won": 277000
+            },
+            {
+              "slot": "C",
+              "product_id": "25861820",
+              "company": "포딕스시스템",
+              "spec": "방범감시시스템",
+              "price_won": 508000
+            }
+          ]
+        },
+        {
+          "row": 22,
+          "quantity": "2",
+          "spec": "300×400×200mm",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "24515216",
+              "company": "홍석",
+              "spec": "300×400×200mm",
+              "price_won": 717000
+            },
+            {
+              "slot": "B",
+              "product_id": "23124409",
+              "company": "진명아이앤씨",
+              "spec": "300×400×200mm",
+              "price_won": 879000
+            },
+            {
+              "slot": "C",
+              "product_id": "24394838",
+              "company": "디라직",
+              "spec": "300×400×200mm",
+              "price_won": 826000
+            }
+          ]
+        },
+        {
+          "row": 23,
+          "quantity": "4",
+          "spec": "Single Mode, 1310nm, 20km",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "23564972",
+              "company": "홍석",
+              "spec": "Single Mode, 1310nm, 20km",
+              "price_won": 66000
+            },
+            {
+              "slot": "B",
+              "product_id": "23564972",
+              "company": "진명아이앤씨",
+              "spec": "Single Mode, 1310nm, 20km",
+              "price_won": 66000
+            },
+            {
+              "slot": "C",
+              "product_id": "23564972",
+              "company": "포딕스시스템",
+              "spec": "Single Mode, 1310nm, 20km",
+              "price_won": 66000
+            }
+          ]
+        },
+        {
+          "row": 24,
+          "quantity": "1",
+          "spec": "8ch",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "22482421",
+              "company": "홍석",
+              "spec": "8ch",
+              "price_won": 232800
+            },
+            {
+              "slot": "B",
+              "product_id": "24804791",
+              "company": "파로스",
+              "spec": "8ch",
+              "price_won": 548000
+            },
+            {
+              "slot": "C",
+              "product_id": "24142052",
+              "company": "이노뎁",
+              "spec": "8ch",
+              "price_won": 891000
+            }
+          ]
+        },
+        {
+          "row": 25,
+          "quantity": "2",
+          "spec": "24\"",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "25234963",
+              "company": "홍석",
+              "spec": "24\"",
+              "price_won": 353000
+            },
+            {
+              "slot": "B",
+              "product_id": "24347852",
+              "company": "명광",
+              "spec": "24\"",
+              "price_won": 378000
+            },
+            {
+              "slot": "C",
+              "product_id": "24347852",
+              "company": "디라직",
+              "spec": "24\"",
+              "price_won": 378000
+            }
+          ]
+        },
+        {
+          "row": 26,
+          "quantity": "2",
+          "spec": "1CH IP 수신기",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "23304295",
+              "company": "홍석",
+              "spec": "1CH IP 수신기",
+              "price_won": 123000
+            },
+            {
+              "slot": "B",
+              "product_id": "23810138",
+              "company": "인텔리빅스",
+              "spec": "1CH IP 수신기",
+              "price_won": 124000
+            },
+            {
+              "slot": "C",
+              "product_id": "24991382",
+              "company": "에스카",
+              "spec": "1CH IP 수신기",
+              "price_won": 289000
+            }
+          ]
+        },
+        {
+          "row": 27,
+          "quantity": "2",
+          "spec": "1CH IP 송신기",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "23304294",
+              "company": "홍석",
+              "spec": "1CH IP 송신기",
+              "price_won": 123000
+            },
+            {
+              "slot": "B",
+              "product_id": "24991385",
+              "company": "이노뎁",
+              "spec": "1CH IP 송신기",
+              "price_won": 184000
+            },
+            {
+              "slot": "C",
+              "product_id": "24991381",
+              "company": "에스카",
+              "spec": "1CH IP 송신기",
+              "price_won": 196000
+            }
+          ]
+        },
+        {
+          "row": 28,
+          "quantity": "1",
+          "spec": "540×500×540mm",
+          "comparisons": [
+            {
+              "slot": "A",
+              "product_id": "24827583",
+              "company": "홍석",
+              "spec": "540×500×540mm",
+              "price_won": 443000
+            },
+            {
+              "slot": "B",
+              "product_id": "24827583",
+              "company": "명광",
+              "spec": "540×500×540mm",
+              "price_won": 443000
+            },
+            {
+              "slot": "C",
+              "product_id": "23679479",
+              "company": "송우인포텍",
+              "spec": "540×500×540mm",
+              "price_won": 445000
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

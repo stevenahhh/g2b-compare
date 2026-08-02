@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from g2b_compare.priority_models import ProductAttribute
 
 COMPARISON_SLOT_COUNT: Final = 3
@@ -45,3 +47,14 @@ class OptionCandidate:
     view: ComparisonView
     item_name: str
     match_text: str
+    source_priority: int = 1
+    source_order: int = 2_147_483_647
+
+
+@dataclass(frozen=True, slots=True)
+class BundleCandidate:
+    """One compatible main product with its aligned option snapshots."""
+
+    main: MainCandidate
+    options: tuple[ComparisonView, ...]
+    total_price_won: Decimal

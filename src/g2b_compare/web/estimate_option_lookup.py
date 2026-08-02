@@ -8,7 +8,6 @@ from g2b_compare.db.sql import as_int, as_text, query
 
 from .estimate_models import (
     ALTERNATIVE_COUNT,
-    KOREANET_COMPANY,
     ComparisonView,
 )
 from .estimate_models import (
@@ -45,10 +44,50 @@ def same_option_relation_alternatives(
         AND company_name <> ? AND relation_price_won >= ?
         ORDER BY relation_price_won, company_name, relation_id
         """,
-        (line.product_id, KOREANET_COMPANY, line.unit_price_won_snapshot),
+        (line.product_id, line.company_snapshot, line.unit_price_won_snapshot),
     ).fetchall()
     alternatives: list[ComparisonView] = []
-    companies = {KOREANET_COMPANY}
+    companies = {line.company_snapshot}
+    for row in rows:
+        company = as_text(row[2])
+        if company in companies:
+            continue
+        _item_name, spec = _parse_option_label(as_text(row[3]))
+        alternatives.append(
+            ComparisonView(
+                "",
+                as_text(row[1]),
+                as_text(row[0]),
+                company,
+                spec,
+                as_int(row[4]),
+            )
+        )
+        companies.add(company)
+        if len(alternatives) == ALTERNATIVE_COUNT:
+            break
+    return tuple(alternatives)
+
+
+def higher_same_option_relation_alternatives(
+    connection: sqlite3.Connection,
+    line: EstimateLine,
+) -> tuple[ComparisonView, ...]:
+    """Return strictly higher-priced offers for the selected product."""
+    rows = query(
+        connection,
+        """
+        SELECT relation_id, option_product_id, company_name, raw_label,
+        relation_price_won
+        FROM priority_contract_options
+        WHERE option_product_id = ? AND active = 1
+        AND company_name <> ? AND relation_price_won > ?
+        ORDER BY relation_price_won, company_name, relation_id
+        """,
+        (line.product_id, line.company_snapshot, line.unit_price_won_snapshot),
+    ).fetchall()
+    alternatives: list[ComparisonView] = []
+    companies = {line.company_snapshot}
     for row in rows:
         company = as_text(row[2])
         if company in companies:
@@ -116,7 +155,8 @@ def group_option_candidates(
                     as_int(row[4]),
                 ),
                 item_name,
-                f"{spec} {details}",
+                f"{raw_label} {spec} {details}",
+                0,
             )
         )
     return tuple(result)

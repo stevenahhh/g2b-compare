@@ -37,12 +37,8 @@ export function comparisonAttributes(
     ? (comparison.attributes ?? [])
     : [];
 }
-export function comparisonSpec(document, remote, comparison, line, details) {
-  return conciseSpec(
-    comparison.spec_snapshot,
-    comparisonAttributes(document, remote, comparison, line, details),
-    documentItemName(line.item_name_snapshot, line.spec_snapshot),
-  );
+export function comparisonSpec(_document, _remote, comparison) {
+  return comparison.spec_snapshot;
 }
 export const appliedPrice = (line, details) =>
   comparisonFor(details, "A")?.price_won_snapshot ??

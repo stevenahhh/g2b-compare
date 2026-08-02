@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { loadDocumentProducts } from "./catalog.js";
-import { tableTsv } from "./comparison.js";
+import { comparisonSpec, tableTsv } from "./comparison.js";
 import { appendDocumentLine } from "./document.js";
 import { closeOnEscape, titleKeyAction } from "./keyboard.js";
 
@@ -84,6 +84,62 @@ describe("document line mutations", () => {
 });
 
 describe("comparison TSV", () => {
+  it("preserves the exact comparison specification for display", () => {
+    const line = {
+      id: "line-1",
+      line_kind: "main",
+      item_name_snapshot: "영상감시장치",
+      spec_snapshot: "원본 품목 규격",
+    };
+    const comparison = {
+      slot: "A",
+      spec_snapshot: "고정형, 200만화소, 4배줌",
+      attributes: [{ name: "종류", value: "보조카메라" }],
+    };
+    const document = { lines: [line] };
+    const details = { id: line.id, comparisons: [comparison] };
+    const remote = { lines: [details] };
+
+    expect(comparisonSpec(document, remote, comparison, line, details)).toBe(
+      "고정형, 200만화소, 4배줌",
+    );
+  });
+
+  it("copies the exact comparison specification", () => {
+    const line = {
+      ...product,
+      id: "line-1",
+      line_kind: "main",
+      item_name_snapshot: "영상감시장치",
+      spec_snapshot: "원본 품목 규격",
+      unit_snapshot: "대",
+      unit_price_won_snapshot: 100,
+    };
+    const document = { lines: [line] };
+    const remote = {
+      lines: [
+        {
+          id: line.id,
+          attributes: [],
+          comparisons: [
+            {
+              slot: "A",
+              company_snapshot: "회사",
+              spec_snapshot: "고정형, 200만화소, 4배줌",
+              product_id: "00000001",
+              price_won_snapshot: 100,
+              attributes: [{ name: "종류", value: "보조카메라" }],
+            },
+          ],
+        },
+      ],
+    };
+
+    const copied = tableTsv(document, remote).split("\n")[1].split("\t");
+
+    expect(copied[5]).toBe("고정형, 200만화소, 4배줌");
+  });
+
   it("keeps clipboard columns while neutralizing formulas", () => {
     const document = {
       lines: [

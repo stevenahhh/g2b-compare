@@ -420,7 +420,7 @@ async def test_shared_contract_option_relations_fill_distinct_companies(
 
 
 @pytest.mark.asyncio
-async def test_koreanet_is_baseline_and_other_companies_are_not_cheaper(
+async def test_selected_product_is_baseline_and_alternatives_are_not_cheaper(
     tmp_path: Path,
 ) -> None:
     # Given: a non-Koreanet selection and same-category candidates around its price.
@@ -438,7 +438,7 @@ async def test_koreanet_is_baseline_and_other_companies_are_not_cheaper(
     app = FastAPI()
     app.include_router(build_estimate_api_router(database))
     payload = {
-        "title": "Koreanet baseline",
+        "title": "selected baseline",
         "lines": [
             {
                 "id": "a" * 32,
@@ -464,20 +464,17 @@ async def test_koreanet_is_baseline_and_other_companies_are_not_cheaper(
     ) as client:
         response = await client.put(f"/api/estimates/{'e' * 32}", json=payload)
 
-    # Then: Koreanet is A and every distinct-company comparison costs at least A.
+    # Then: the selected product is A and cheaper candidates are excluded.
     assert response.status_code == 200
     comparisons = response.json()["lines"][0]["comparisons"]
-    assert comparisons[0]["company_snapshot"] == "주식회사 코리아넷"
+    assert comparisons[0]["company_snapshot"] == "선택사"
     assert {item["company_snapshot"] for item in comparisons[1:]} == {
+        "주식회사 코리아넷",
         "동가사",
-        "상한사",
     }
     baseline_price = comparisons[0]["price_won_snapshot"]
-    assert baseline_price == 1_000
-    assert all(
-        baseline_price <= item["price_won_snapshot"] <= baseline_price * 2.1
-        for item in comparisons[1:]
-    )
+    assert baseline_price == 900
+    assert all(baseline_price <= item["price_won_snapshot"] for item in comparisons[1:])
 
 
 def test_option_selection_prefers_relation_label_over_product_spec(

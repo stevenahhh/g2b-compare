@@ -58,8 +58,8 @@ def _draft_with_lines(database: Path, count: int) -> services.EstimateDraft:
                             else f"26{line.line_no:05d}{slot_index}"
                         ),
                         None,
-                        f"{slot} 공급사",
-                        f"비교 규격 {slot}",
+                        (line.company_snapshot if slot == "A" else f"{slot} 공급사"),
+                        (line.spec_snapshot if slot == "A" else f"비교 규격 {slot}"),
                         price,
                     )
                     for slot_index, (slot, price) in enumerate(
@@ -99,7 +99,7 @@ def test_export_preserves_template_and_maps_one_or_nine_lines(
     assert quantity_sheet["A8"].value == "1-1"
     assert quantity_sheet["B8"].value == "영상감시장치 1"
     assert quantity_sheet["F8"].value == 1
-    assert price_sheet["F5"].value == "A 공급사"
+    assert price_sheet["F5"].value == "A 공급사 1"
     assert price_sheet["I5"].value == 1_000_001
     assert price_sheet["E5"].value == "=MIN(I5,M5,Q5)"
     assert procurement_sheet["L19"].value == "=SUM(L5:L17)"
@@ -111,7 +111,7 @@ def test_export_preserves_template_and_maps_one_or_nine_lines(
         assert price_sheet["F6"].value is None
     else:
         assert quantity_sheet["B16"].value == "영상감시장치 9"
-        assert price_sheet["F13"].value == "A 공급사"
+        assert price_sheet["F13"].value == "A 공급사 9"
 
     with ZipFile(exported) as archive:
         drawing = archive.read("xl/drawings/drawing5.xml")
@@ -154,7 +154,7 @@ def test_export_rejects_draft_pinned_to_a_different_template(tmp_path: Path) -> 
         )
 
 
-def test_export_accepts_koreanet_baseline_for_other_selected_product(
+def test_export_rejects_mismatched_comparison_a_identity(
     tmp_path: Path,
 ) -> None:
     database = tmp_path / "g2b.sqlite3"
@@ -169,9 +169,11 @@ def test_export_accepts_koreanet_baseline_for_other_selected_product(
             ("25454886", "주식회사 코리아넷", draft.lines[0].id),
         )
 
-    exported = services.EstimateExporter(database).export(
-        draft.id,
-        tmp_path / "koreanet-baseline.xlsx",
-    )
-
-    assert exported.is_file()
+    with pytest.raises(
+        services.EstimateExportError,
+        match="비교 물품 2개가 필요함",
+    ):
+        services.EstimateExporter(database).export(
+            draft.id,
+            tmp_path / "koreanet-baseline.xlsx",
+        )

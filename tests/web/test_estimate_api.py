@@ -218,9 +218,7 @@ async def test_refresh_comparisons_preserves_identifier_boundaries(
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        missing = await client.post(
-            f"/api/estimates/{ESTIMATE_ID}/refresh-comparisons"
-        )
+        missing = await client.post(f"/api/estimates/{ESTIMATE_ID}/refresh-comparisons")
         malformed = await client.post("/api/estimates/not-hex/refresh-comparisons")
 
     # Then: the established path boundary distinguishes missing from malformed.
@@ -263,7 +261,7 @@ async def test_refresh_comparisons_rolls_back_when_reseeding_fails(
 
 
 @pytest.mark.asyncio
-async def test_product_identity_change_keeps_koreanet_as_comparison_a(
+async def test_product_identity_change_reseeds_selected_product_as_comparison_a(
     tmp_path: Path,
 ) -> None:
     # Given: a persisted line anchored to Koreanet.
@@ -283,11 +281,11 @@ async def test_product_identity_change_keeps_koreanet_as_comparison_a(
             f"/api/estimates/{ESTIMATE_ID}", json=_document([changed_line])
         )
 
-    # Then: comparison A remains the Koreanet baseline.
+    # Then: comparison A follows the newly selected product identity.
     assert response.status_code == 200
     comparisons = response.json()["lines"][0]["comparisons"]
     assert comparisons[0]["slot"] == "A"
-    assert comparisons[0]["product_id"] == "25454886"
+    assert comparisons[0]["product_id"] == "25454887"
 
 
 @pytest.mark.asyncio
@@ -354,7 +352,7 @@ async def test_stale_option_snapshot_is_preserved_and_not_export_ready(
     assert body["lines"][0]["relation_id"] == "cached-relation"
     assert body["lines"][0]["item_name_snapshot"] == "Cached option"
     comparison_slots = [item["slot"] for item in body["lines"][0]["comparisons"]]
-    assert comparison_slots == []
+    assert comparison_slots == ["A"]
     assert body["export_ready"] is False
 
 

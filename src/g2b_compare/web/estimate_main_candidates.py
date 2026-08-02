@@ -107,7 +107,7 @@ def rank_main_candidates(  # noqa: C901, PLR0912, PLR0915
     if len({as_text(row[1]) for row in rows}) < COMPARISON_SLOT_COUNT:
         rows = query(connection, candidate_sql, tuple(parameters[:1])).fetchall()
     cable_signature = _cable_signature(line.item_name_snapshot, line.spec_snapshot)
-    by_company: dict[str, _MainCandidate] = {}
+    by_identity: dict[tuple[str, str], _MainCandidate] = {}
     for row in rows:
         product_id = as_text(row[0])
         company = as_text(row[1])
@@ -121,7 +121,7 @@ def rank_main_candidates(  # noqa: C901, PLR0912, PLR0915
         core, components = _product_features(spec, as_text(row[4]))
         key = (
             len(anchor_core - core),
-            len(core - anchor_core),
+            0,
             len(components - allowed_components),
             -len(components & allowed_components),
             len(components - anchor_components),
@@ -134,9 +134,10 @@ def rank_main_candidates(  # noqa: C901, PLR0912, PLR0915
             as_int(row[5]),
             key,
         )
-        current = by_company.get(company)
+        identity = (product_id, company)
+        current = by_identity.get(identity)
         if current is None or candidate.key < current.key:
-            by_company[company] = candidate
+            by_identity[identity] = candidate
     if filters:
         fallback_sql = candidate_sql.replace("product.raw_json", "''")
         for row in query(
@@ -146,10 +147,15 @@ def rank_main_candidates(  # noqa: C901, PLR0912, PLR0915
         ).fetchall():
             product_id = as_text(row[0])
             company = as_text(row[1])
-            spec = as_text(row[2])
-            price = as_int(row[3])
             candidate = _MainCandidate(
-                ComparisonView("", product_id, None, company, spec, price),
+                ComparisonView(
+                    "",
+                    product_id,
+                    None,
+                    company,
+                    as_text(row[2]),
+                    as_int(row[3]),
+                ),
                 as_int(row[5]),
                 (
                     1_000_000,
@@ -157,12 +163,13 @@ def rank_main_candidates(  # noqa: C901, PLR0912, PLR0915
                     1_000_000,
                     0,
                     1_000_000,
-                    int(price < line.unit_price_won_snapshot),
-                    abs(price - line.unit_price_won_snapshot),
+                    int(as_int(row[3]) < line.unit_price_won_snapshot),
+                    abs(as_int(row[3]) - line.unit_price_won_snapshot),
                     product_id,
                 ),
             )
-            current = by_company.get(company)
+            identity = (product_id, company)
+            current = by_identity.get(identity)
             if current is None or candidate.key < current.key:
-                by_company[company] = candidate
-    return tuple(sorted(by_company.values(), key=lambda item: item.key))
+                by_identity[identity] = candidate
+    return tuple(sorted(by_identity.values(), key=lambda item: item.key))

@@ -126,6 +126,14 @@ def _validate_comparisons(
         values = comparisons[line.id]
         if tuple(item.slot for item in values) != ("A", "B", "C"):
             raise EstimateExportError(COMPARISONS_REQUIRED)
+        selected = values[0]
+        if (
+            selected.product_id != line.product_id
+            or selected.company != line.company_snapshot
+            or selected.spec != line.spec_snapshot
+            or selected.price_won != line.unit_price_won_snapshot
+        ):
+            raise EstimateExportError(COMPARISONS_REQUIRED)
 
 
 def _slot(value: str) -> Literal["A", "B", "C"]:
