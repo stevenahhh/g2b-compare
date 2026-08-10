@@ -13,7 +13,7 @@ lang: ko-KR
 ## G2B 유사제품 검색·견적 자동화 프로젝트
 
 이 문서는 프로젝트를 구성하는 Python 백엔드, Svelte 프론트엔드,
-Electron 견적 프로그램의 <span class="nowrap">개발 원칙과 작업 완료 기준을</span> 한 문서로 정리한 것이다.
+Tauri 데스크톱과 Electron 견적 프로그램의 <span class="nowrap">개발 원칙과 작업 완료 기준을</span> 한 문서로 정리한 것이다.
 
 ### 문서 목적
 
@@ -28,7 +28,8 @@ Electron 견적 프로그램의 <span class="nowrap">개발 원칙과 작업 완
 |---|---|---|
 | Python 서비스 | `src/g2b_compare/` | 수집, 검색, 비교, API |
 | 웹 화면 | `frontend/` | 카탈로그와 견적 SPA |
-| 데스크톱 앱 | `electron-estimator/` | 견적 계산과 엑셀 출력 |
+| Tauri 데스크톱 | `desktop/` | 로컬 카탈로그와 견적 CRUD |
+| Electron 견적 앱 | `electron-estimator/` | 견적 계산과 엑셀 출력 |
 | 검증 코드 | `tests/`, 각 패키지 `tests/` | 회귀 및 인수 검증 |
 
 > 핵심 원칙: 출처가 확인되는 데이터만 사용하고, 실패한 작업은 마지막 정상 상태를 훼손하지 않으며, 동일 입력은 동일 결과를 만들어야 한다.
@@ -45,14 +46,14 @@ Electron 견적 프로그램의 <span class="nowrap">개발 원칙과 작업 완
 G2B 계약·원천 데이터
         ↓
 수집·동기화 → SQLite 릴리스 → 정규화·검색·순위화
-                                    ↓
-                         FastAPI + Svelte SPA
+                                    ├→ FastAPI + Svelte SPA
+                                    └→ Tauri + AppData g2b.sqlite3
 
 공식 기준 데이터 → Electron 계산 엔진 → 신규/기존 엑셀 출력
 ```
 
-Python 서비스와 Electron 프로그램은 같은 저장소에 있지만 독립된 제품이다.
-<span class="nowrap">Python 서비스의 빌드 성공만으로 Electron 변경이</span> 검증된 것은 아니며, 반대도 같다.
+Python 서비스, Tauri 데스크톱, Electron 프로그램은 같은 저장소에 있지만 독립된
+제품이다. 한 제품의 빌드 성공만으로 다른 제품의 변경이 검증된 것은 아니다.
 
 ## 공통 개발 원칙
 
@@ -276,12 +277,14 @@ uv run basedpyright
 
 <section class="page">
 
-# 6. Svelte 프론트엔드 개발 지침
+# 6. 레거시 Svelte 웹 프론트엔드 개발 지침
 
 ## 담당 범위
 
 `frontend/`는 카탈로그 조회, 견적 목록·편집, 데이터 상태를 제공하는
 Svelte 5 SPA이다. IndexedDB를 사용해 <span class="nowrap">오프라인 편집과 동기화 대기를</span> 지원한다.
+이 절의 서버 동기화 상태 모델은 브라우저 SPA에만 적용한다. Tauri의 로컬 저장
+기준은 7절을 따른다.
 
 ## 상태·동기화 기준
 
@@ -318,7 +321,54 @@ IndexedDB 테스트는 `fake-indexeddb`를 사용한다. UI 변경은 브라우�
 
 <section class="page">
 
-# 7. Electron 견적 프로그램 개발 지침
+# 7. Tauri 데스크톱 개발 지침
+
+## 담당 범위
+
+`desktop/`은 설치형 카탈로그, 견적 목록과 편집기, 데이터 상태 화면을 제공한다.
+Svelte renderer는 표시와 임시 편집 상태를 맡고, Rust 명령은 AppData의 로컬 DB,
+파일, 네트워크 권한 경계를 맡는다.
+
+## 견적 저장 기준
+
+- AppData의 `g2b.sqlite3`가 Tauri 견적의 유일한 권위 저장소다.
+- 성공한 native create, update, delete는 오프라인에서도 최종 결과다.
+- 성공한 native CRUD 뒤에 서버 확인, pending 상태, tombstone을 만들지 않는다.
+- 일반 CRUD는 `offline-replay.sqlite3`에 항목을 추가하지 않는다.
+- 견적 목록과 편집기는 항상 현재 저장된 문서와 revision을 읽는다.
+- 다른 데스크톱 창이나 프로세스의 saved/deleted 이벤트는 현재 저장 내용을 다시
+  읽게 하되, 저장되지 않은 편집기 변경을 덮어쓰지 않는다.
+
+## 가져오기와 복구 기준
+
+`offline-replay.sqlite3`는 가져온 변경과 중단된 복구 작업만 담는다. replay는
+가져온 변경의 기준 revision을 현재 저장된 문서와 비교하고, 일치하는 변경만
+`g2b.sqlite3`에 순서대로 한 번 materialize한다. 적용 확인이 끝난 항목은 다시
+적용하지 않는다. 현재 저장된 변경과 충돌하거나 적용에 실패한 항목은 원인을
+남기고 명시적 해결 또는 재시도 전까지 보존한다.
+
+revision 충돌은 `current saved change`와 `imported change`의 관계로 설명한다.
+external desktop event는 다른 데스크톱 writer가 보낸 알림이며 서버의 저장본을
+뜻하지 않는다.
+
+## 검증 명령
+
+```powershell
+cd desktop
+npm test -- --run
+npm run build
+cd src-tauri
+cargo test
+```
+
+견적 변경은 native CRUD 성공 뒤 replay queue가 비어 있는지 확인한다. 복구 변경은
+재시작과 중복 retry 뒤에도 `g2b.sqlite3`에 정확히 한 번만 반영되는지 검증한다.
+
+</section>
+
+<section class="page">
+
+# 8. Electron 견적 프로그램 개발 지침
 
 ## 담당 범위
 
@@ -366,7 +416,7 @@ npm run test:security
 
 <section class="page">
 
-# 8. Electron 보안·레거시 엑셀 작업 기준
+# 9. Electron 보안·레거시 엑셀 작업 기준
 
 ## Main process 보안
 
@@ -409,7 +459,7 @@ E2E 편의를 위해 sender 검증이나 capability 검증을 약화하지 않�
 
 <section class="page">
 
-# 9. 테스트·완료 기준 체크리스트
+# 10. 테스트·완료 기준 체크리스트
 
 ## 테스트 작성 기준
 
@@ -447,8 +497,16 @@ cd frontend
 npm test -- --run
 npm run build
 
+# Tauri desktop
+cd ../desktop
+npm test -- --run
+npm run build
+cd src-tauri
+cargo test
+cd ../..
+
 # Electron
-cd ../electron-estimator
+cd electron-estimator
 npm run verify:all
 ```
 

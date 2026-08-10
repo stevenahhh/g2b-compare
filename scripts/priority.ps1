@@ -14,11 +14,15 @@ if ([string]::IsNullOrWhiteSpace($env:G2B_SERVICE_KEY)) {
     if (Test-Path -LiteralPath $envFile) {
         foreach ($line in Get-Content -LiteralPath $envFile) {
             if ($line.StartsWith("G2B_SERVICE_KEY=")) {
-                $env:G2B_SERVICE_KEY = $line.Substring(16).Trim('"', "'")
+                $env:G2B_SERVICE_KEY = $line.Substring("G2B_SERVICE_KEY=".Length).Trim()
                 break
             }
         }
     }
+}
+
+if ([string]::IsNullOrWhiteSpace($env:G2B_SERVICE_KEY)) {
+    throw "G2B_SERVICE_KEY must be supplied through the environment or .env"
 }
 
 Push-Location $root

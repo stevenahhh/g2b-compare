@@ -1,0 +1,1 @@
+"""Desktop quality-assurance tooling."""

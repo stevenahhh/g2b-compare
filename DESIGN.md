@@ -69,6 +69,7 @@ primary state는 하나만 노출하고 보조 상태는 정렬된 토큰으로 
 - 본품과 하위 품목은 이미지 영역을 항상 유지하며 이미지 URL이 없거나 로드에 실패하면 공통 대체 이미지를 표시함.
 - 표면의 깊이는 기존 `surface`, `canvas`, `line`, `ink` 토큰을 `color-mix()`로 조합하며 새로운 임의 색상을 추가하지 않음.
 - 공용 primitive에 `.app-header`, `.app-nav`, `.content`, `.panel`, `.button`, `.data-card`, `.comparison-list`를 포함함.
+- `.app-update`는 헤더 우측의 compact 상태 primitive로 사용함. 시작 시 조용히 최신 버전을 확인하고, 새 버전이 있을 때만 강조색 버튼을 노출함. 설치 전에는 사용자 데이터가 유지되고 앱이 다시 시작됨을 확인하며, 다운로드 중에는 수치 진행률과 `aria-live` 상태를 제공함.
 - 상품·관급내역 데이터는 장식용 카드보다 읽기 순서와 스캔 속도를 우선하고, 숫자는 tabular figures를 사용함.
 - 로딩 상태는 공용 `.loading-spinner`, `.loading-placeholder`, `.loading-card` primitive를 사용함. 원형 진행 표시는 작업 중임을 명시하고, 아직 도착하지 않은 텍스트·이미지 자리는 기존 레이아웃 크기를 유지하는 shimmer placeholder로 표시함. 기존 데이터가 있으면 유지한 채 진행 표시만 병행함.
 - 문서 작성의 물품 검색 결과는 검색 입력에 포커스할 때 입력부 아래 오버레이로 열고, 바깥 클릭·Escape·닫기 버튼으로 닫음. 결과 목록은 문서 표의 세로 공간을 차지하지 않음.

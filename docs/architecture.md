@@ -30,6 +30,24 @@ bounded body는 `.g2b/raw`에 content-addressed gzip으로 보존함. 파싱 결
 인증, 응답 schema, 429 문제가 생기면 새 작업 dispatch를 멈춰 사이트 변경이나
 호출 제한을 먼저 확인하게 함.
 
+## Tauri 데스크톱 견적 저장 경계
+
+Tauri 데스크톱은 사용자 AppData의 `g2b.sqlite3`를 읽으며, 견적에 대해서는 이
+DB만 권위 저장소로 사용함. 견적 생성, 조회, 수정, 삭제와 비교군 새로고침은 Rust
+명령이 이 DB에서 트랜잭션으로 처리함. 성공한 명령은 네트워크 상태와 관계없이
+최종 저장 결과이며, 후속 서버 승인을 기다리지 않음.
+
+일반 견적 CRUD는 `offline-replay.sqlite3`에 항목을 추가하지 않음. 이 별도 DB는
+가져온 변경이나 중단된 복구 작업만 보관하는 recovery journal임. replay는 해당
+변경을 현재 저장 revision과 대조해 `g2b.sqlite3`에 순서대로 materialize함. 적용된
+항목은 같은 변경을 다시 만들지 않도록 확인 처리하며, 충돌하거나 실패한 항목은
+명시적으로 해결하거나 다시 시도할 때까지 보존함.
+
+다른 데스크톱 창이나 프로세스가 보낸 saved/deleted 이벤트는 현재 저장 내용을
+다시 읽게 하는 신호임. 이벤트 자체는 별도 권위가 아니며, 편집기의 저장되지 않은
+변경을 덮어쓰면 안 됨. 결정 근거는
+[ADR 0001](adr/0001-tauri-local-estimate-authority.md)에 기록함.
+
 ## 경계
 
 - 네트워크 접근은 contract capture, sync, 명시적 상품 설명 보강에만 있음.
@@ -56,5 +74,8 @@ bounded body는 `.g2b/raw`에 content-addressed gzip으로 보존함. 파싱 결
 | `search/` | exact membership, FTS5, TF-IDF index |
 | `ranking/` | 규격·가격 feature와 3-slot 순위 |
 | `services/` | 검색·비교 use case와 release 읽기 |
-| `web/` | 데스크톱 웹 UI와 상태 표시 |
+| `web/` | 레거시 웹 UI와 상태 표시 |
+| `desktop/src/` | Tauri 데스크톱 화면과 현재 편집 상태 |
+| `desktop/src-tauri/src/estimate/` | `g2b.sqlite3` 견적 CRUD와 비교군 새로고침 |
+| `desktop/src-tauri/src/offline_replay.rs` | 가져오기와 복구 변경의 exact-once materialization |
 | `observability/` | CLI, health, readiness, 비밀검사 |

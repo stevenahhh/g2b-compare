@@ -32,6 +32,8 @@ outputs/
 tmp/
 scripts/.g2b/
 *.log
+*.orig
+NUL
 
 # Agent and local tool state
 .omo/

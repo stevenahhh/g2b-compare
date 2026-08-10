@@ -1,0 +1,46 @@
+[package]
+name = "g2b-compare-desktop"
+version = "0.1.0"
+description = "나라장터 물품 비교 데스크톱 앱"
+authors = ["G2B Compare"]
+edition = "2024"
+rust-version = "1.85"
+build = "build.rs"
+
+[lib]
+name = "g2b_compare_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "=2.6.3", features = [] }
+
+[dependencies]
+arboard = { version = "=3.6.1", default-features = false }
+fs2 = "=0.4.3"
+reqwest = { version = "=0.13.4", default-features = false, features = ["blocking", "query", "rustls"] }
+rusqlite = { version = "=0.40.1", features = ["bundled"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "=1.0.151"
+quick-xml = "=0.38.3"
+sha2 = "=0.10.9"
+tauri = { version = "=2.11.5", features = [] }
+tauri-plugin-process = "=2.3.1"
+tauri-plugin-updater = "=2.10.1"
+thiserror = "=2.0.19"
+time = { version = "=0.3.45", features = ["formatting"] }
+zip = { version = "=2.4.2", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+xmltree = "=0.11.0"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "deny"
+pedantic = "deny"
+nursery = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
