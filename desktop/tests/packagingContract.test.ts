@@ -12,11 +12,14 @@ const capabilityPath = join(tauriRoot, "capabilities", "main.json");
 const config = JSON.parse(readFileSync(configPath, "utf8")) as JsonObject;
 const bundle = config.bundle as JsonObject;
 const security = (config.app as JsonObject).security as JsonObject;
-const capability = JSON.parse(readFileSync(capabilityPath, "utf8")) as JsonObject;
+const capability = JSON.parse(
+  readFileSync(capabilityPath, "utf8"),
+) as JsonObject;
 const plugins = (config.plugins ?? {}) as JsonObject;
 const updater = (plugins.updater ?? {}) as JsonObject;
 
-const nsis = ((bundle.windows as JsonObject | undefined)?.nsis ?? {}) as JsonObject;
+const nsis = ((bundle.windows as JsonObject | undefined)?.nsis ??
+  {}) as JsonObject;
 
 const frontendFiles = [
   ...filesUnder(join(desktopRoot, "dist")),
@@ -41,13 +44,19 @@ describe("Tauri 2 Windows packaging contract", () => {
 
   it("bundles only the generated compressed seed resource", () => {
     expect(bundle.resources).toEqual(["resources/seed.sqlite3.zip"]);
-    const tauriScript = readFileSync(join(desktopRoot, "scripts", "tauri.ps1"), "utf8");
+    const tauriScript = readFileSync(
+      join(desktopRoot, "scripts", "tauri.ps1"),
+      "utf8",
+    );
     expect(tauriScript).toContain("seed.sqlite3");
     expect(tauriScript).toContain("seedHashPath");
-    expect(tauriScript).toContain("FileShare]::ReadWrite -bor [IO.FileShare]::Delete");
+    expect(tauriScript).toContain(
+      "FileShare]::ReadWrite -bor [IO.FileShare]::Delete",
+    );
     expect(tauriScript).toContain("Publish-Atomically");
     expect(tauriScript).toContain("Get-StreamSha256");
     expect(tauriScript).toContain("entryDigest.Hash -ceq $SourceHash");
+    expect(tauriScript).toContain('$env:GITHUB_ACTIONS -ne "true"');
   });
 
   it("keeps the CSP and Windows capability least-privilege", () => {
@@ -101,7 +110,9 @@ describe("Tauri 2 Windows packaging contract", () => {
     expect(workflow).toContain("tauri-apps/tauri-action@v1");
     expect(workflow).toContain("owner: stevenahhh");
     expect(workflow).toContain("repo: g2b-compare-releases");
-    expect(workflow).toContain("GITHUB_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}");
+    expect(workflow).toContain(
+      "GITHUB_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}",
+    );
     expect(workflow).toContain("uploadUpdaterJson: true");
     expect(workflow).toContain("updaterJsonPreferNsis: true");
     expect(workflow).toContain("[IO.Compression.ZipFile]::OpenRead");
@@ -127,7 +138,9 @@ describe("Tauri 2 Windows packaging contract", () => {
     const debugFallback = buildScript.indexOf("None => DEBUG_KEY");
     expect(releaseStart).toBeGreaterThanOrEqual(0);
     expect(debugFallback).toBeGreaterThan(releaseStart);
-    expect(buildScript.slice(releaseStart, debugFallback)).toMatch(/return Err/u);
+    expect(buildScript.slice(releaseStart, debugFallback)).toMatch(
+      /return Err/u,
+    );
   });
 
   it("publishes stable identity and includes the required Windows icon resource", () => {
@@ -138,14 +151,21 @@ describe("Tauri 2 Windows packaging contract", () => {
 
     const icons = bundle.icon;
     expect(icons).toEqual(["../../KakaoTalk_20260804_113126254.png"]);
-    expect(existsSync(resolve(tauriRoot, String((icons as string[])[0])))).toBe(true);
+    expect(existsSync(resolve(tauriRoot, String((icons as string[])[0])))).toBe(
+      true,
+    );
     expect(existsSync(join(tauriRoot, "icons", "icon.ico"))).toBe(true);
 
     const app = readFileSync(join(desktopRoot, "src", "App.svelte"), "utf8");
-    const header = readFileSync(join(desktopRoot, "src", "lib", "components", "AppHeader.svelte"), "utf8");
+    const header = readFileSync(
+      join(desktopRoot, "src", "lib", "components", "AppHeader.svelte"),
+      "utf8",
+    );
     expect(app).toContain('from "../../KakaoTalk_20260804_113126254.png"');
     expect(app).toContain('rel="icon" type="image/png" href={brandIcon}');
-    expect(header).toContain('from "../../../../KakaoTalk_20260804_113126254.png"');
+    expect(header).toContain(
+      'from "../../../../KakaoTalk_20260804_113126254.png"',
+    );
   });
 
   it("contains no plaintext service key in frontend source or dist", () => {

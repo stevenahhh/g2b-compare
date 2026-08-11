@@ -233,7 +233,9 @@ Ensure-SeedArchive
 $targetRoot = Join-Path $env:LOCALAPPDATA "G2BCompareDesktop\cargo-target"
 $tauri = Join-Path $PSScriptRoot "..\node_modules\.bin\tauri.cmd"
 
-$env:CARGO_TARGET_DIR = $targetRoot
+if ($env:GITHUB_ACTIONS -ne "true") {
+    $env:CARGO_TARGET_DIR = $targetRoot
+}
 $env:CARGO_INCREMENTAL = "0"
 & $tauri @TauriArguments
 exit $LASTEXITCODE
