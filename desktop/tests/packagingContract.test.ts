@@ -97,7 +97,7 @@ describe("Tauri 2 Windows packaging contract", () => {
       "utf8",
     );
     expect(workflow).toContain("tags:");
-    expect(workflow).toContain("- 'app-v*'");
+    expect(workflow).toMatch(/- ["']app-v\*["']/u);
     expect(workflow).toContain("tauri-apps/tauri-action@v1");
     expect(workflow).toContain("owner: stevenahhh");
     expect(workflow).toContain("repo: g2b-compare-releases");

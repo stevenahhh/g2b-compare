@@ -3,7 +3,7 @@ name: Release Tauri desktop
 on:
   push:
     tags:
-      - 'app-v*'
+      - "app-v*"
 
 permissions:
   contents: write
@@ -11,6 +11,11 @@ permissions:
 concurrency:
   group: tauri-release-${{ github.ref }}
   cancel-in-progress: false
+
+env:
+  SEED_RELEASE_TAG: seed-v2026-08-10
+  SEED_ARCHIVE_SHA256: 388452628cd615b2dcdbc38396e3879c47016934766455af6eadd91fc62a1628
+  SEED_SOURCE_SHA256: 35490295dc6cccae428715b0da4d44f78f654d9f44f65e6c9b0b07f21f3dd695
 
 jobs:
   publish:
@@ -45,6 +50,33 @@ jobs:
             throw "Release tag must be $expected"
           }
 
+      - name: Download and verify approved seed
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
+        run: |
+          $resources = Join-Path $PWD "desktop\src-tauri\resources"
+          New-Item -ItemType Directory -Path $resources -Force | Out-Null
+          gh release download $env:SEED_RELEASE_TAG `
+            --repo stevenahhh/g2b-compare-releases `
+            --pattern "seed.sqlite3.zip" `
+            --pattern "seed.sqlite3.zip.sha256" `
+            --dir $resources
+          if ($LASTEXITCODE -ne 0) {
+            throw "Approved seed download failed with exit code $LASTEXITCODE."
+          }
+
+          $archive = Join-Path $resources "seed.sqlite3.zip"
+          $sidecar = Join-Path $resources "seed.sqlite3.zip.sha256"
+          $archiveHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          $sourceHash = (Get-Content -LiteralPath $sidecar -Raw).Trim().ToLowerInvariant()
+          if ($archiveHash -cne $env:SEED_ARCHIVE_SHA256) {
+            throw "Approved seed archive SHA-256 does not match the pinned release input."
+          }
+          if ($sourceHash -cne $env:SEED_SOURCE_SHA256) {
+            throw "Approved seed source SHA-256 does not match the pinned release input."
+          }
+
       - name: Install frontend dependencies
         working-directory: desktop
         run: npm ci
@@ -77,8 +109,15 @@ jobs:
           tagName: app-v__VERSION__
           releaseName: G2B Compare Desktop v__VERSION__
           releaseBody: |
-            서명된 Windows NSIS 설치 파일과 자동 업데이트 메타데이터입니다.
-            초안 검토 후 게시하면 설치된 앱에서 업데이트를 감지합니다.
+            나라장터 품목 검색·견적 문서 자동화 Tauri 데스크톱의 Windows 릴리스입니다.
+
+            포함 자산:
+            - 사용자별 설치 방식의 NSIS 설치 파일
+            - Tauri updater용 서명 archive와 `.sig`
+            - 자동 업데이트 탐색 메타데이터 `latest.json`
+
+            이 버전은 승인된 seed 데이터 자산을 SHA-256으로 검증한 뒤 빌드합니다.
+            설치 전에 기존 AppData의 견적·설정·출력 파일을 별도 백업하십시오.
           releaseDraft: true
           prerelease: false
           uploadUpdaterJson: true
