@@ -77,6 +77,24 @@ jobs:
             throw "Approved seed source SHA-256 does not match the pinned release input."
           }
 
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead($archive)
+          try {
+            if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].FullName -cne "seed.sqlite3") {
+              throw "Approved seed archive must contain exactly one seed.sqlite3 entry."
+            }
+          }
+          finally {
+            $zip.Dispose()
+          }
+
+          [IO.Compression.ZipFile]::ExtractToDirectory($archive, $resources)
+          $database = Join-Path $resources "seed.sqlite3"
+          $extractedHash = (Get-FileHash -LiteralPath $database -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($extractedHash -cne $sourceHash) {
+            throw "Extracted seed database SHA-256 does not match the approved source hash."
+          }
+
       - name: Install frontend dependencies
         working-directory: desktop
         run: npm ci

@@ -104,6 +104,10 @@ describe("Tauri 2 Windows packaging contract", () => {
     expect(workflow).toContain("GITHUB_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}");
     expect(workflow).toContain("uploadUpdaterJson: true");
     expect(workflow).toContain("updaterJsonPreferNsis: true");
+    expect(workflow).toContain("[IO.Compression.ZipFile]::OpenRead");
+    expect(workflow).toContain("Entries.Count -ne 1");
+    expect(workflow).toContain("ExtractToDirectory");
+    expect(workflow).toContain("$extractedHash -cne $sourceHash");
     expect(workflow).toContain("TAURI_SIGNING_PRIVATE_KEY");
     expect(workflow).toContain("TAURI_SIGNING_PRIVATE_KEY_PASSWORD");
     expect(workflow).toContain("G2B_SERVICE_KEY");
