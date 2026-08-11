@@ -2,7 +2,8 @@ dist/
 node_modules/
 src-tauri/target/
 src-tauri/gen/
-src-tauri/icons/
+src-tauri/icons/*
+!src-tauri/icons/icon.ico
 src-tauri/resources/seed.sqlite3
 src-tauri/resources/seed.sqlite3-shm
 src-tauri/resources/seed.sqlite3-wal

@@ -126,7 +126,7 @@ describe("Tauri 2 Windows packaging contract", () => {
     expect(buildScript.slice(releaseStart, debugFallback)).toMatch(/return Err/u);
   });
 
-  it("publishes stable per-user identity and references the supplied PNG without a binary copy", () => {
+  it("publishes stable identity and includes the required Windows icon resource", () => {
     expect(config.productName).toBe("G2B Compare Desktop");
     expect(config.version).toMatch(/^\d+\.\d+\.\d+$/u);
     expect(config.identifier).toBe("kr.co.g2bcompare.desktop");
@@ -135,6 +135,7 @@ describe("Tauri 2 Windows packaging contract", () => {
     const icons = bundle.icon;
     expect(icons).toEqual(["../../KakaoTalk_20260804_113126254.png"]);
     expect(existsSync(resolve(tauriRoot, String((icons as string[])[0])))).toBe(true);
+    expect(existsSync(join(tauriRoot, "icons", "icon.ico"))).toBe(true);
 
     const app = readFileSync(join(desktopRoot, "src", "App.svelte"), "utf8");
     const header = readFileSync(join(desktopRoot, "src", "lib", "components", "AppHeader.svelte"), "utf8");
