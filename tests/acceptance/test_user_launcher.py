@@ -47,6 +47,18 @@ def test_quick_start_uses_single_double_click_entrypoint() -> None:
     assert "더블클릭" in guide
     assert ".env" in guide
     assert "Ctrl+C" in guide
+    assert "자동으로 설치" in guide
+
+
+def test_user_launcher_can_install_python_without_manual_setup() -> None:
+    launcher = (PROJECT_ROOT / "scripts" / "start-user.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    assert "winget" in launcher
+    assert "Python.Python.3.12" in launcher
+    assert "python-3.12.10-amd64.exe" in launcher
+    assert "InstallAllUsers=0" in launcher
 
 
 def _decode_powershell(value: bytes) -> str:

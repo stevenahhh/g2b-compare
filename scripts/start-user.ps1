@@ -51,6 +51,62 @@ function Resolve-Python {
     return $null
 }
 
+function Install-Python {
+    Write-Host "  Python is not installed. Installing Python 3.12..." (
+        -ForegroundColor Cyan
+    )
+    $Winget = Get-Command winget -ErrorAction SilentlyContinue
+    if ($Winget) {
+        & $Winget.Source install --id Python.Python.3.12 --exact `
+            --scope user --silent --accept-package-agreements `
+            --accept-source-agreements --disable-interactivity
+        if ($LASTEXITCODE -eq 0) {
+            $env:Path = (
+                "$env:LOCALAPPDATA\Programs\Python\Python312;" +
+                "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts;" +
+                $env:Path
+            )
+            $Installed = Resolve-Python
+            if ($Installed) {
+                return $Installed
+            }
+        }
+    }
+
+    $InstallerUrl = (
+        "https://www.python.org/ftp/python/3.12.10/" +
+        "python-3.12.10-amd64.exe"
+    )
+    $InstallerPath = Join-Path $env:TEMP "python-3.12.10-amd64.exe"
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = (
+            [Net.SecurityProtocolType]::Tls12
+        )
+        Invoke-WebRequest -Uri $InstallerUrl -OutFile $InstallerPath -TimeoutSec 120
+        $Process = Start-Process -FilePath $InstallerPath -ArgumentList @(
+            "/quiet",
+            "InstallAllUsers=0",
+            "PrependPath=1",
+            "Include_test=0",
+            "Include_launcher=1",
+            "InstallLauncherAllUsers=0"
+        ) -Wait -PassThru
+        if ($Process.ExitCode -eq 0) {
+            $env:Path = (
+                "$env:LOCALAPPDATA\Programs\Python\Python312;" +
+                "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts;" +
+                $env:Path
+            )
+            return Resolve-Python
+        }
+    } catch {
+        return $null
+    } finally {
+        Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction SilentlyContinue
+    }
+    return $null
+}
+
 function Resolve-Uv {
     $Uv = Get-Command uv -ErrorAction SilentlyContinue
     if ($Uv) {
@@ -287,12 +343,15 @@ if ($CheckOnly) {
 Write-Step 3 5 "Checking the Python runtime..."
 $Python = Resolve-Python
 if (-not $Python) {
-    Write-Failure "Python 3.12 or 3.13 was not found." @(
-        "Install Python 3.12 from https://www.python.org/downloads/",
-        "Enable 'Add python.exe to PATH' during installation.",
-        "Then double-click START_APP.bat again."
-    )
-    exit 1
+    $Python = Install-Python
+    if (-not $Python) {
+        Write-Failure "Python automatic installation failed." @(
+            "Check your internet connection and Windows installation permissions.",
+            "Install Python 3.12 from https://www.python.org/downloads/ if needed.",
+            "Then double-click START_APP.bat again."
+        )
+        exit 1
+    }
 }
 
 $Version = & $Python.Command @($Python.Prefix) -c (
